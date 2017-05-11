@@ -6,13 +6,16 @@
 #include "net-protocal-stacks/nonblocking/nb-socket-service.h"
 #include "socket-service-factory.h"
 
-namespace net {
-ISocketService* SocketServiceFactory::CreateService(std::shared_ptr<net_local_info_t> nlt, INetStackWorkerPolicy *cp) {
+namespace netty {
+    namespace net {
+        ISocketService *
+        SocketServiceFactory::CreateService(std::shared_ptr<net_local_info_t> nlt, INetStackWorkerPolicy *cp) {
 #ifdef __linux__
-    return new NBSocketService(nlt, cp);
+            return new NBSocketService(nlt, cp);
 #else // xio、poll、etc.
-    return nullptr;
+            return nullptr;
 #endif
-}
-}
+        }
+    } // namespace net
+} // namespace netty
 

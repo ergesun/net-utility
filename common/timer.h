@@ -14,96 +14,101 @@
 #include "spin-lock.h"
 #include "common-def.h"
 
-namespace common {
-/**
- * 一个拥有一个检测、触发线程的操作安全的定时器。
- * 使用此定时器回调函数一定要是瞬时的。
- * TODO(sunchao)：添加一个线程池、一个到期任务队列用来执行到期的作业？还是觉得这项任务交给用户比较合适。
- */
-class Timer {
-public:
-    typedef std::function<void(void*)> TimerCallback, *TimerCallbackPointer;
-    typedef TimerCallbackPointer EventId;
-    struct Event {
+namespace netty {
+    namespace common {
         /**
-         * 事件的一个上下文，可作用户传递数据使用。
+         * 一个拥有一个检测、触发线程的操作安全的定时器。
+         * 使用此定时器回调函数一定要是瞬时的。
+         * TODO(sunchao)：添加一个线程池、一个到期任务队列用来执行到期的作业？还是觉得这项任务交给用户比较合适。
          */
-        void         *ctx;
-        /**
-         * 每个不同的事件订阅一定要不同的callback(即新的function的地址)用以作为唯一区分。
-         */
-        TimerCallbackPointer callback;
+        class Timer {
+        public:
+            typedef std::function<void(void *)> TimerCallback, *TimerCallbackPointer;
+            typedef TimerCallbackPointer EventId;
 
-        Event() : ctx(nullptr), callback(nullptr) {}
-        Event(void *c, TimerCallbackPointer cb) : ctx(c), callback(cb) {}
-        Event(const Event &ev) {
-            this->ctx = ev.ctx;
-            this->callback = ev.callback;
-        }
+            struct Event {
+                /**
+                 * 事件的一个上下文，可作用户传递数据使用。
+                 */
+                void *ctx;
+                /**
+                 * 每个不同的事件订阅一定要不同的callback(即新的function的地址)用以作为唯一区分。
+                 */
+                TimerCallbackPointer callback;
 
-        Event& operator=(const Event &ev) {
-            this->ctx = ev.ctx;
-            this->callback = ev.callback;
-            return *this;
-        }
-    };
+                Event() : ctx(nullptr), callback(nullptr) {}
 
-    typedef std::multimap<uctime_t, Event> TimerEvents;
-    typedef std::map<EventId, TimerEvents::iterator> EventsTable;
+                Event(void *c, TimerCallbackPointer cb) : ctx(c), callback(cb) {}
 
-    Timer() = default;
-    ~Timer();
+                Event(const Event &ev) {
+                    this->ctx = ev.ctx;
+                    this->callback = ev.callback;
+                }
 
-    /**
-     * 启动timer。
-     */
-    void Start();
+                Event &operator=(const Event &ev) {
+                    this->ctx = ev.ctx;
+                    this->callback = ev.callback;
+                    return *this;
+                }
+            };
 
-    /**
-     * 停止timer。
-     */
-    void Stop();
+            typedef std::multimap<uctime_t, Event> TimerEvents;
+            typedef std::map<EventId, TimerEvents::iterator> EventsTable;
 
-    /**
-     * 订阅事件：在指定的时间点触发。
-     * @param when 从epoch到触发的时间。
-     * @return 返回订阅事件的id，可用于取消。
-     */
-    EventId SubscribeEventAt(uctime_t when, Event &ev);
+            Timer() = default;
 
-    /**
-     * 订阅事件：从现在开始指定的时间后触发。
-     * @param duration 等待触发的时间。
-     * @return 返回订阅事件的id，可用于取消。
-     */
-    EventId SubscribeEventAfter(uctime_t duration, Event &ev);
+            ~Timer();
 
-    /**
-     * 取消指定事件的订阅。
-     * @param eventId 取消的事件的唯一id。
-     */
-    bool UnsubscribeEvent(EventId eventId);
+            /**
+             * 启动timer。
+             */
+            void Start();
 
-    /**
-     * 取消所有事件的订阅。
-     */
-    void UnsubscribeAllEvent();
+            /**
+             * 停止timer。
+             */
+            void Stop();
 
-private:
-    /**
-     * 事件处理线程。
-     */
-    void process();
+            /**
+             * 订阅事件：在指定的时间点触发。
+             * @param when 从epoch到触发的时间。
+             * @return 返回订阅事件的id，可用于取消。
+             */
+            EventId SubscribeEventAt(uctime_t when, Event &ev);
 
-private:
-    bool m_stop = true;
-    TimerEvents m_mapSubscribedEvents;
-    EventsTable m_mapEventsEntry;
-    std::mutex m_evs_mtx;
-    std::condition_variable m_cv;
-    std::thread *m_pWorkThread = nullptr;
-    spin_lock_t m_thread_safe_sl = UNLOCKED;
-}; // class Timer
-}  // namespace common
+            /**
+             * 订阅事件：从现在开始指定的时间后触发。
+             * @param duration 等待触发的时间。
+             * @return 返回订阅事件的id，可用于取消。
+             */
+            EventId SubscribeEventAfter(uctime_t duration, Event &ev);
 
+            /**
+             * 取消指定事件的订阅。
+             * @param eventId 取消的事件的唯一id。
+             */
+            bool UnsubscribeEvent(EventId eventId);
+
+            /**
+             * 取消所有事件的订阅。
+             */
+            void UnsubscribeAllEvent();
+
+        private:
+            /**
+             * 事件处理线程。
+             */
+            void process();
+
+        private:
+            bool m_stop = true;
+            TimerEvents m_mapSubscribedEvents;
+            EventsTable m_mapEventsEntry;
+            std::mutex m_evs_mtx;
+            std::condition_variable m_cv;
+            std::thread *m_pWorkThread = nullptr;
+            spin_lock_t m_thread_safe_sl = UNLOCKED;
+        }; // class Timer
+    }  // namespace common
+}  // namespace netty
 #endif //NET_COMMON_TIMER_H

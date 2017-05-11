@@ -9,12 +9,15 @@
 #include "../../../../../common-def.h"
 #include "ievent-handler.h"
 
-namespace net {
-class PosixTcpServerEventHandler : public IEventHandler {
-public:
-    virtual int HandleReadEvent() override;
-    virtual int HandleWriteEvent() override;
-};
-}
+namespace netty {
+    namespace net {
+        class PosixTcpServerEventHandler : public IEventHandler {
+        public:
+            virtual int HandleReadEvent() override;
+
+            virtual int HandleWriteEvent() override;
+        };
+    } // namespace net
+} // namespace netty
 
 #endif //NET_CORE_POSIXTCPCONNECTION_H

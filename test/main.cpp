@@ -4,8 +4,8 @@
 #include "../common/common-utils.h"
 #include "../net/common-def.h"
 
-using namespace common;
-using namespace net;
+using namespace netty::common;
+using namespace netty::net;
 
 int main() {
     /*************************************test timer**************************************/

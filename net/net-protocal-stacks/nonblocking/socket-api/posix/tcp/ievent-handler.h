@@ -6,13 +6,17 @@
 #ifndef NET_CORE_POSIX_TCP_IEVENTHANDLER_H
 #define NET_CORE_POSIX_TCP_IEVENTHANDLER_H
 
-namespace net {
-class IEventHandler {
-public:
-    virtual ~IEventHandler() {}
-    virtual int HandleReadEvent() = 0;
-    virtual int HandleWriteEvent() = 0;
-}; // interface IEventHandler
-}  // namespace net
+namespace netty {
+    namespace net {
+        class IEventHandler {
+        public:
+            virtual ~IEventHandler() {}
+
+            virtual int HandleReadEvent() = 0;
+
+            virtual int HandleWriteEvent() = 0;
+        }; // interface IEventHandler
+    }  // namespace net
+} // namespace netty
 
 #endif //NET_CORE_POSIX_TCP_IEVENTHANDLER_H

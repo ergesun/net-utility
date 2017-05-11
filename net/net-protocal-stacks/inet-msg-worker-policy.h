@@ -9,17 +9,22 @@
 #include "../../common/common-def.h"
 #include "../common-def.h"
 
-namespace net {
-class INetMessageWorker;
+namespace netty {
+    namespace net {
+        class INetMessageWorker;
+
 /**
  * worker管理策略。
  */
-class GCC_INTERNAL INetStackWorkerPolicy {
-public:
-    virtual ~INetStackWorkerPolicy() = default;
-    virtual INetMessageWorker* GetWorker(net_peer_info_t &npt) = 0;
-    virtual void PutWorker(INetMessageWorker *conn) = 0;
-}; // interface INetStackWorkerPolicy
-}  // namespace net
+        class GCC_INTERNAL INetStackWorkerPolicy {
+        public:
+            virtual ~INetStackWorkerPolicy() = default;
+
+            virtual INetMessageWorker *GetWorker(net_peer_info_t &npt) = 0;
+
+            virtual void PutWorker(INetMessageWorker *conn) = 0;
+        }; // interface INetStackWorkerPolicy
+    }  // namespace net
+} // namespace netty
 
 #endif //NET_CORE_ICONNECTIONMANAGER_H

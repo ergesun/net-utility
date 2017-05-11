@@ -3,36 +3,34 @@
  * a Creative Commons Attribution 3.0 Unported License(https://creativecommons.org/licenses/by/3.0/).
  */
 
-#ifndef NET_CORE_POSIX_TCP_NET_STACK_WORKER_H
-#define NET_CORE_POSIX_TCP_NET_STACK_WORKER_H
-
-#include "../../../../../../common/common-def.h"
-#include "../../net-stack-msg-worker.h"
+#ifndef NET_CORE_NETSTACKMESSAGEWORKER_H
+#define NET_CORE_NETSTACKMESSAGEWORKER_H
 
 namespace netty {
     namespace net {
         /**
-         * 本类负责具体的socket函数处理。
+         * 本类负责对message的处理。具体的socket实现类要继承于此类。
          */
-        class GCC_INTERNAL PosixTcpNetStackWorker : public ANetStackMessageWorker {
+        class ANetStackMessageWorker {
         public:
+            void SendMessage();
+
+            void HandleMessage();
+
             /**
              * 错误: 返回false(无论是[socket错误或对端关闭]还是[codec校验错误])
              * 正常: 返回true(即便是遇到了EAGAIN，只要没有发生错误)
              * @return
              */
-            bool Recv();
+            virtual bool Recv() = 0;
 
             /**
              * 发送缓冲队列里面的数据。
              * @return
              */
-            bool Write();
-
-        private:
-
+            virtual bool Write() = 0;
         };
     } // namespace net
 } // namespace netty
 
-#endif //NET_CORE_POSIX_TCP_NET_STACK_WORKER_H
+#endif //NET_CORE_NETSTACKMESSAGEWORKER_H

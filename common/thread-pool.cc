@@ -3,9 +3,3 @@
  * a Creative Commons Attribution 3.0 Unported License(https://creativecommons.org/licenses/by/3.0/).
  */
 
-#include "net-stack-worker.h"
-
-namespace netty {
-    namespace net {
-    } // namespace net
-} // namespace netty

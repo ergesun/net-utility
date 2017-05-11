@@ -8,12 +8,14 @@
 
 #include "common-def.h"
 
-namespace common {
-class CommonUtils {
-public:
-    static uctime_t get_current_time();
-    static int set_nonblocking(int fd);
-}; // class CommonUtils
-}  // namespace common
+namespace netty {
+    namespace common {
+        class CommonUtils {
+        public:
+            static uctime_t get_current_time();
 
+            static int set_nonblocking(int fd);
+        }; // class CommonUtils
+    }  // namespace common
+}  // namespace netty
 #endif //NET_COMMON_COMMON_UTILS_H

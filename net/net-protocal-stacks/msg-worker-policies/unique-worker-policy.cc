@@ -5,22 +5,24 @@
 
 #include "unique-worker-policy.h"
 
-namespace net {
+namespace netty {
+    namespace net {
 
-INetMessageWorker *UniqueWorkerPolicy::GetWorker(net_peer_info_t &npt) {
-    return nullptr;
-}
+        INetMessageWorker *UniqueWorkerPolicy::GetWorker(net_peer_info_t &npt) {
+            return nullptr;
+        }
 
-void UniqueWorkerPolicy::PutWorker(INetMessageWorker *worker) {
+        void UniqueWorkerPolicy::PutWorker(INetMessageWorker *worker) {
 
-}
+        }
 
-INetMessageWorker* UniqueWorkerPolicy::lookup_conn(net_peer_info_t &npt) {
-    auto p = m_hmap_workers.find(npt);
-    if (m_hmap_workers.end() != p) {
-        return p->second;
-    }
+        INetMessageWorker *UniqueWorkerPolicy::lookup_conn(net_peer_info_t &npt) {
+            auto p = m_hmap_workers.find(npt);
+            if (m_hmap_workers.end() != p) {
+                return p->second;
+            }
 
-    return nullptr;
-}
-}  // namespace net
+            return nullptr;
+        }
+    }  // namespace net
+}  // namespace netty

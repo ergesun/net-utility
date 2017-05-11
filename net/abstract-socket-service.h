@@ -9,17 +9,19 @@
 #include "../common/common-def.h"
 #include "isocket-service.h"
 
-namespace net {
-class GCC_INTERNAL ASocketService : public ISocketService {
-public:
-    ASocketService(std::shared_ptr<net_local_info_t> nl) : m_nlt(nl) {}
+namespace netty {
+    namespace net {
+        class GCC_INTERNAL ASocketService : public ISocketService {
+        public:
+            ASocketService(std::shared_ptr<net_local_info_t> nl) : m_nlt(nl) {}
 
-protected:
-    /**
-     * 本地监听的地址协议信息。
-     */
-    std::shared_ptr<net_local_info_t> m_nlt;
-};
-}
+        protected:
+            /**
+             * 本地监听的地址协议信息。
+             */
+            std::shared_ptr<net_local_info_t> m_nlt;
+        };
+    } // namespace net
+} // namespace netty
 
 #endif //NET_CORE_ABSTRACT_SOCKET_SERVICE_H

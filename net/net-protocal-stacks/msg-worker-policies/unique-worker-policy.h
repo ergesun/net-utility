@@ -10,32 +10,34 @@
 
 #include "../inet-msg-worker-policy.h"
 
-namespace net {
-/**
- * 两个节点间复用同一连接的策略。
- */
-class GCC_INTERNAL UniqueWorkerPolicy : public INetStackWorkerPolicy {
-public:
-    ~UniqueWorkerPolicy() {}
+namespace netty {
+    namespace net {
+        /**
+         * 两个节点间复用同一连接的策略。
+         */
+        class GCC_INTERNAL UniqueWorkerPolicy : public INetStackWorkerPolicy {
+        public:
+            ~UniqueWorkerPolicy() {}
 
-    /**
-     * 获取一个worker。
-     * @param npit
-     * @return
-     */
-    virtual INetMessageWorker *GetWorker(net_peer_info_t &npit) override;
-    /**
-     * 销毁一个worker。
-     * @param worker
-     */
-    virtual void PutWorker(INetMessageWorker *worker) override;
+            /**
+             * 获取一个worker。
+             * @param npit
+             * @return
+             */
+            virtual INetMessageWorker *GetWorker(net_peer_info_t &npit) override;
 
-private:
-    INetMessageWorker* lookup_conn(net_peer_info_t &npt);
+            /**
+             * 销毁一个worker。
+             * @param worker
+             */
+            virtual void PutWorker(INetMessageWorker *worker) override;
 
-private:
-    std::unordered_map<net_peer_info_t, INetMessageWorker*> m_hmap_workers;
-}; // class UniqueWorkerPolicy
-}  // namespace net
+        private:
+            INetMessageWorker *lookup_conn(net_peer_info_t &npt);
 
+        private:
+            std::unordered_map<net_peer_info_t, INetMessageWorker *> m_hmap_workers;
+        }; // class UniqueWorkerPolicy
+    }  // namespace net
+}  // namespace netty
 #endif //NET_CORE_NETSTACKWORKERPOLICY_H

@@ -5,12 +5,14 @@
 
 #include "connection-event-handler.h"
 
-namespace net {
-int PosixTcpConnectionEventHandler::HandleReadEvent() {
-    return 0;
-}
+namespace netty {
+    namespace net {
+        int PosixTcpConnectionEventHandler::HandleReadEvent() {
+            return 0;
+        }
 
-int PosixTcpConnectionEventHandler::HandleWriteEvent() {
-    return 0;
-}
-}
+        int PosixTcpConnectionEventHandler::HandleWriteEvent() {
+            return 0;
+        }
+    } // namespace net
+} // namespace netty

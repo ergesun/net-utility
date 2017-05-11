@@ -7,17 +7,23 @@
 #define NET_CORE_INET_SERVICE_H
 
 #include "common-def.h"
-#include "imessage.h"
+#include "message.h"
 
-namespace net {
-class ISocketService {
-public:
-    virtual ~ISocketService() {}
-    virtual bool Start(NonBlockingEventModel m) = 0;
-    virtual bool Stop() = 0;
-    virtual bool Connect(net_peer_info_t &npt) = 0;
-    virtual bool SendMessage(IMessage *m) = 0;
-};
-}
+namespace netty {
+    namespace net {
+        class ISocketService {
+        public:
+            virtual ~ISocketService() {}
+
+            virtual bool Start(NonBlockingEventModel m) = 0;
+
+            virtual bool Stop() = 0;
+
+            virtual bool Connect(net_peer_info_t &npt) = 0;
+
+            virtual bool SendMessage(Message *m) = 0;
+        }; // interface ISocketService
+    } // namespace net
+} // namespace netty
 
 #endif //NET_CORE_INET_SERVICE_H

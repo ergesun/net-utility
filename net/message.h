@@ -6,10 +6,12 @@
 #ifndef NET_CORE_IMESSAGE_H
 #define NET_CORE_IMESSAGE_H
 
-namespace net {
-class IMessage {
+namespace netty {
+    namespace net {
+        class Message {
 
-};
-}
+        }; // interface Message
+    } // namespace net
+} // namespace netty
 
 #endif //NET_CORE_IMESSAGE_H

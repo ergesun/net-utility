@@ -5,12 +5,14 @@
 
 #include "listen-event-handler.h"
 
-namespace net {
-int PosixTcpServerEventHandler::HandleReadEvent() {
-    return 0;
-}
+namespace netty {
+    namespace net {
+        int PosixTcpServerEventHandler::HandleReadEvent() {
+            return 0;
+        }
 
-int PosixTcpServerEventHandler::HandleWriteEvent() {
-    return 0;
-}
-}
+        int PosixTcpServerEventHandler::HandleWriteEvent() {
+            return 0;
+        }
+    } // namespace net
+} // namespace netty
