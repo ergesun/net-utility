@@ -4,10 +4,18 @@
 #include "../common/common-utils.h"
 #include "../net/common-def.h"
 
+#include "thread-pool-test-case.h"
+
 using namespace netty::common;
 using namespace netty::net;
 
+using namespace netty::test;
+
 int main() {
+    /**********************************test thread-pool***********************************/
+    ThreadPoolTest tpt;
+    tpt.Run();
+
     /*************************************test timer**************************************/
     Timer timer;
     timer.Start();
