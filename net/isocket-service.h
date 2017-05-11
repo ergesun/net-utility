@@ -13,7 +13,7 @@ namespace net {
 class ISocketService {
 public:
     virtual ~ISocketService() {}
-    virtual bool Start(SocketStackModel m) = 0;
+    virtual bool Start(NonBlockingEventModel m) = 0;
     virtual bool Stop() = 0;
     virtual bool Connect(net_peer_info_t &npt) = 0;
     virtual bool SendMessage(IMessage *m) = 0;

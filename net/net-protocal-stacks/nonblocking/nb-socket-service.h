@@ -26,7 +26,7 @@ public:
      * 开启服务。
      * @return 成功true,失败false.
      */
-    virtual bool Start(SocketStackModel m) override;
+    virtual bool Start(NonBlockingEventModel m) override;
     virtual bool Stop() override;
     virtual bool Connect(net_peer_info_t &npt) override;
     virtual bool SendMessage(IMessage *m) override;
