@@ -6,12 +6,5 @@
 #include "net-stack-worker.h"
 
 namespace net {
-int PosixTcpNetStackWorker::SendMessage(IMessage *m) {
-    return 0;
-}
-
-int PosixTcpNetStackWorker::GetFd() {
-
-}
 }
 

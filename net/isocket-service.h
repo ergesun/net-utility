@@ -7,13 +7,13 @@
 #define NET_CORE_INET_SERVICE_H
 
 #include "common-def.h"
-#include "net-protocal-stacks/inet-msg-worker.h"
+#include "imessage.h"
 
 namespace net {
 class ISocketService {
 public:
     virtual ~ISocketService() {}
-    virtual bool Start(NonBlockingModel m) = 0;
+    virtual bool Start(SocketStackModel m) = 0;
     virtual bool Stop() = 0;
     virtual bool Connect(net_peer_info_t &npt) = 0;
     virtual bool SendMessage(IMessage *m) = 0;

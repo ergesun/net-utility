@@ -11,6 +11,7 @@
 #include "../inet-msg-worker-policy.h"
 #include "../../abstract-socket-service.h"
 #include "event-drivers/ievent-driver.h"
+#include "../../imessage.h"
 
 namespace net {
 class NBSocketService : public ASocketService {
@@ -25,7 +26,7 @@ public:
      * 开启服务。
      * @return 成功true,失败false.
      */
-    virtual bool Start(NonBlockingModel m) override;
+    virtual bool Start(SocketStackModel m) override;
     virtual bool Stop() override;
     virtual bool Connect(net_peer_info_t &npt) override;
     virtual bool SendMessage(IMessage *m) override;

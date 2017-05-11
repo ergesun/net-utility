@@ -12,7 +12,7 @@
 #include "../common/hash-algorithms.h"
 
 namespace net {
-enum class NonBlockingModel {
+enum class SocketStackModel {
     DPDK,
     Posix
 };

@@ -7,8 +7,8 @@
 #include "event-drivers/epoll/epoll-event-driver.h"
 
 namespace net {
-bool NBSocketService::Start(NonBlockingModel m) {
-    if (NonBlockingModel::DPDK == m) {
+bool NBSocketService::Start(SocketStackModel m) {
+    if (SocketStackModel::DPDK == m) {
 #ifdef HAVE_DPDK
         // m_eventDriver = new DPDKDriver(cct);
 #endif
