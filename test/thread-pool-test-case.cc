@@ -1,6 +1,7 @@
-//
-// Created by sunchao31 on 17-5-11.
-//
+/**
+ * This work copyright Chao Sun(qq:296449610) and licensed under
+ * a Creative Commons Attribution 3.0 Unported License(https://creativecommons.org/licenses/by/3.0/).
+ */
 
 #include <iostream>
 
@@ -13,12 +14,16 @@ using namespace std;
 namespace netty {
     namespace test {
         void ThreadPoolTest::Run() {
+            static std::mutex s_mtx;
             common::ThreadPool tp;
             for (int i = 0; i < 100; ++i) {
-                tp.AddTask([i](){
+                tp.AddTask([i, &s_mtx](){
+                    std::unique_lock<std::mutex> l(s_mtx);
                     cout << "index = " << i << endl;
                 });
             }
+
+            tp.WaitAll();
         }
     }
 }

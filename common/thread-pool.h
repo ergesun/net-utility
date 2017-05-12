@@ -9,6 +9,7 @@
 #include <thread>
 #include <vector>
 #include <unordered_set>
+#include <atomic>
 
 #include "blocking-get-queue.h"
 #include "common-def.h"
@@ -19,90 +20,58 @@ namespace netty {
         /**
          * 当前仅支持FIFO调度的线程池。
          * TODO(sunchao): 1、添加调度策略 2、考虑task相关联性，关联task分配到不同的线程 3、cpu亲缘性绑定？再思考，感觉没必要。
+         *                4、添加指定的task的wait task、cancel task
          */
         class ThreadPool {
         public:
-            typedef std::function<void(void)> Task, *HeldTask, *TaskId;
+            typedef std::function<void(void)> Task;
 
             /**
              *
              * @param threads_cnt 线程个数。如果小于等于0则为cpu核数 * 2个。
              */
-            ThreadPool(int threads_cnt = 0) {
-                threads_cnt = threads_cnt > 0 ? threads_cnt : common::CPUS_CNT * 2;
-                m_vThreadps.resize(threads_cnt);
-                for (int i = 0; i < threads_cnt; ++i) {
-                    m_vThreadps.push_back(new std::thread(std::bind(&ThreadPool::proc, this)));
-                }
-            }
+            ThreadPool(int threads_cnt = 0);
 
-            ~ThreadPool() {
-                m_stopping = true;
-                // 添加一个空的task以防止bq中没有内容无法停止的情况发生。
-                Task empty_task;
-                AddTask(empty_task);
-                for (auto pt : m_vThreadps) {
-                    pt->join();
-                    delete pt;
-                }
-            }
+            /**
+             * 会join所有threads。
+             */
+            ~ThreadPool();
 
             /**
              * 添加一个任务到线程池中执行。
-             * 注意：此task是可以指定等待的(TODO(sunchao):加上取消接口)，此task用户不可以释放，要持有直到结束。
              * @param t 添加的task。
-             * @return task的id用来等待或cancel。
              */
-            inline TaskId AddHeldTask(HeldTask t) {
-                m_bgq_can_cancel_tasks.Push(std::make_pair(t, t));
-                return t;
-            }
-
             inline void AddTask(Task t) {
-                m_bgq_tasks.Push(t);
-            }
-
-            /**
-             * 等待指定的task完成。
-             * @param tid
-             */
-            inline void WaitTask(TaskId tid) {
-
+                m_bgqTasks.Push(t);
             }
 
             /**
              * 等待所有的task完成。
              */
-            inline void WaitAll() {
+            void WaitAll();
 
-            }
+            /**
+             * 等待所有都完成或者指定的时间到了。
+             * @param duration_since_epoch epoch开始到现在的duration。
+             */
+            void WaitAllUntilTimeAt(uctime_s duration_since_epoch);
 
-        private:
-            void proc() {
-                while (true) {
-                    auto task = m_bgq_can_cancel_tasks.Pop();
-                    // 此处无需担心m_stopping所判断的成员因为优化导致不能读取到内存数据的情况，因为有BlockingQueue::Pop屏障。
-                    if (m_stopping) {
-                        break;
-                    }
-
-                    if (task) {
-                        task();
-                    }
-                }
-            }
+            /**
+             * 等待所有都完成或者指定的时间到了。
+             * @param duration 从现在开始最多等待的持续时间。
+             */
+            void WaitAllUntilAfter(uctime_s duration);
 
         private:
-            typedef std::pair<HeldTask, TaskId> TaskCtx;
+            void proc();
 
-            bool m_stopping = false;
-            std::vector<std::thread*> m_vThreadps;
-            common::BlockingGetQueue<TaskCtx> m_bgq_can_cancel_tasks;
-            std::unordered_set<TaskId> m_hsTaskIds;
-
-            common::BlockingGetQueue<Task> m_bgq_tasks;
-            bool m_is_cancel_tasks_turn = false;
-            spin_lock_t m_sl_turn_lock = UNLOCKED;
+        private:
+            bool                           m_bStopping = false;
+            std::vector<std::thread*>      m_vThreadps;
+            common::BlockingGetQueue<Task> m_bgqTasks;
+            std::atomic<int>               m_iActiveWorkersCnt;
+            std::mutex                     m_mtxActiveWorkerCnt;
+            std::condition_variable        m_cvActiveWorkerCnt;
         }; // class ThreadPool
     }  // namespace common
 }  // namespace netty
