@@ -4,6 +4,8 @@
  */
 
 #include <iostream>
+#include <atomic>
+#include <unistd.h>
 
 #include "../common/timer.h"
 
@@ -17,13 +19,20 @@ namespace netty {
         void TimerTest::Run() {
             common::Timer timer;
             timer.Start();
-            common::Timer::TimerCallback cb = [](void *ctx) {
+            int test_cnt = 10;
+            std::atomic<int> backs_cnt{0};
+            common::Timer::TimerCallback cb = [&backs_cnt](void *ctx) {
                 std::cout << "timer callback!" << common::CommonUtils::get_current_time().sec << std::endl;
+                backs_cnt++;
             };
 
-            for (int i = 0; i < 10; ++i) {
+            for (int i = 0; i < test_cnt; ++i) {
                 common::Timer::Event ev(nullptr, &cb);
                 auto eventId = timer.SubscribeEventAfter(common::uctime_t(3 * (i + 1), 0), ev);
+            }
+
+            while (test_cnt != backs_cnt.load()) {
+                sleep(3);
             }
         }
     }

@@ -11,6 +11,10 @@
 namespace netty {
     namespace common {
         Timer::~Timer() {
+            if (!m_stop) {
+                Stop();
+            }
+
             m_pWorkThread->join();
             delete m_pWorkThread;
         }
