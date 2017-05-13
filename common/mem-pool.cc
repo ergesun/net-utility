@@ -25,28 +25,21 @@ namespace netty {
 
         }
 
-        MemPool::MemPool() {
-            m_cacheline_size = CACHELINE_SIZE;
-            m_small_obj_resident_cnts = SMALL_OBJECT_RESIDENT_CNT;
-            m_big_obj_resident_cnts = BIG_OBJECT_RESIDENT_CNT;
-            m_bult_page_threshold = BULK_PAGE_SIZE_THRESHOLD;
-            m_recycle_extra_page_period = EXTRA_OBJECT_CHECK_PERIOD;
+        MemPool::MemPool() :
+            MemPool(SMALL_OBJECT_RESIDENT_CNT, BIG_OBJECT_RESIDENT_CNT,
+                    EXTRA_OBJECT_CHECK_PERIOD, BULK_PAGE_SIZE_THRESHOLD) {}
 
-            m_recycle_check_cb = std::bind(&MemPool::check_recycle, this);
-            m_recycle_check_ev = Timer::Event(nullptr, &m_recycle_check_cb);
+        MemPool::MemPool(uint32_t sorc, uint32_t borc, uint32_t eocp) :
+            MemPool(sorc, borc, eocp, BULK_PAGE_SIZE_THRESHOLD) {}
 
-            m_recycle_check_timer = new Timer();
-            m_recycle_check_timer->Start();
-            m_recycle_check_timer->SubscribeEventAfter(uctime_t(m_recycle_extra_page_period, 0), m_recycle_check_ev);
-        }
+        MemPool::MemPool(uint32_t sorc, uint32_t borc, uint32_t eocp, uint32_t bpt) {
+            m_sys_cacheline_size = CACHELINE_SIZE;
+            m_sys_page_size = PAGE_SIZE;
 
-        MemPool::MemPool(uint32_t sorc, uint32_t borc, uint32_t eocp) {
-            m_cacheline_size = CACHELINE_SIZE;
             m_small_obj_resident_cnts = sorc;
             m_big_obj_resident_cnts = borc;
             m_recycle_extra_page_period = eocp;
-
-            m_bult_page_threshold = BULK_PAGE_SIZE_THRESHOLD;
+            m_bult_page_threshold = bpt;
 
             m_recycle_check_cb = std::bind(&MemPool::check_recycle, this);
             m_recycle_check_ev = Timer::Event(nullptr, &m_recycle_check_cb);
@@ -62,6 +55,10 @@ namespace netty {
 
         MemPool::MemObjectRef MemPool::Get(uint32_t size) {
             assert(size > 0);
+
+        }
+
+        void MemPool::Put(MemObjectRef mor) {
 
         }
 

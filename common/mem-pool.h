@@ -15,7 +15,6 @@
 
 #define BULK_PAGE_SIZE_THRESHOLD 134217728 // 128KiB
 
-// TODO(sunchao): 可通过配置文件配置
 #define SMALL_OBJECT_RESIDENT_CNT    4096
 #define BIG_OBJECT_RESIDENT_CNT      1024
 #define EXTRA_OBJECT_CHECK_PERIOD    300 // 5 * 60seconds
@@ -62,6 +61,7 @@ namespace netty {
             ~MemPool();
 
             MemObjectRef Get(uint32_t size);
+            void Put(MemObjectRef mor);
 
         private:
             void put(int32_t slot_size, uintptr_t slot_start_p, uintptr_t release_p);
@@ -89,7 +89,8 @@ namespace netty {
              */
             std::unordered_map<int32_t, std::unordered_set<uintptr_t>> m_big_obj_pages; // n * 4KiB pages
 
-            long m_cacheline_size;
+            long m_sys_cacheline_size;
+            long m_sys_page_size;
             uint32_t m_small_obj_resident_cnts;
             uint32_t m_big_obj_resident_cnts;
             uint32_t m_bult_page_threshold;
