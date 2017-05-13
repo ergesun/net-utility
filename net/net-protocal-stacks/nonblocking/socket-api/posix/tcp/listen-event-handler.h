@@ -6,12 +6,13 @@
 #ifndef NET_CORE_POSIXTCPCONNECTION_H
 #define NET_CORE_POSIXTCPCONNECTION_H
 
+#include "../../../../../../common/common-def.h"
 #include "../../../../../common-def.h"
 #include "ievent-handler.h"
 
 namespace netty {
     namespace net {
-        class PosixTcpServerEventHandler : public IEventHandler {
+        class GCC_INTERNAL PosixTcpServerEventHandler : public IEventHandler {
         public:
             virtual int HandleReadEvent() override;
 

@@ -11,8 +11,11 @@ namespace netty {
         /**
          * 本类负责对message的处理。具体的socket实现类要继承于此类。
          */
-        class ANetStackMessageWorker {
+        class GCC_INTERNAL ANetStackMessageWorker {
         public:
+            /**
+             *
+             */
             void SendMessage();
 
             void HandleMessage();

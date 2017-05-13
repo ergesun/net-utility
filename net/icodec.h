@@ -14,6 +14,8 @@ namespace netty {
         class ICodec {
         public:
             virtual ~ICodec() {}
+            virtual void Encode() = 0;
+            virtual void Decode() = 0;
         }; // interface ICodec
     } // namespace net
 } // namespace netty

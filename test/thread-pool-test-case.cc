@@ -17,7 +17,7 @@ namespace netty {
             static std::mutex s_mtx;
             common::ThreadPool tp;
             for (int i = 0; i < 100; ++i) {
-                tp.AddTask([i, &s_mtx](){
+                tp.AddTask([i](){
                     std::unique_lock<std::mutex> l(s_mtx);
                     cout << "index = " << i << endl;
                 });

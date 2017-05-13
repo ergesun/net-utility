@@ -8,6 +8,7 @@
 
 #include <time.h>
 #include <sys/sysinfo.h>
+#include <unistd.h>
 
 /**
  * 控制目标不导出，即仅库内部可见。
@@ -20,7 +21,9 @@
 #define atomic_zero(lock)              __sync_fetch_and_and(lock, 0)
 namespace netty {
     namespace common {
-        const int CPUS_CNT = get_nprocs();
+        const int  CPUS_CNT = get_nprocs();
+        const long CACHELINE_SIZE = sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
+
         typedef struct uctime_s {
             uctime_s() : sec(-1), nsec(-1) {}
 

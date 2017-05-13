@@ -56,6 +56,7 @@ namespace netty {
             assert(ev.callback);
             auto now = CommonUtils::get_current_time();
             now += duration;
+
             return SubscribeEventAt(now, ev);
         }
 
