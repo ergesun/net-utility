@@ -23,6 +23,7 @@ namespace netty {
     namespace common {
         const int  CPUS_CNT = get_nprocs();
         const long CACHELINE_SIZE = sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
+        const long PAGE_SIZE = sysconf(_SC_PAGESIZE);
 
         typedef struct uctime_s {
             uctime_s() : sec(-1), nsec(-1) {}

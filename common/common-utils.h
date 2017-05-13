@@ -12,9 +12,18 @@ namespace netty {
     namespace common {
         class CommonUtils {
         public:
-            static uctime_t get_current_time();
+            /**
+             * 获取当前系统时间(unix epoch到现在的秒+纳秒数)。
+             * @return
+             */
+            static uctime_t GetCurrentTime();
 
-            static int set_nonblocking(int fd);
+            /**
+             * 设置fd为非阻塞。
+             * @param fd
+             * @return
+             */
+            static int SetNonBlocking(int fd);
         }; // class CommonUtils
     }  // namespace common
 }  // namespace netty

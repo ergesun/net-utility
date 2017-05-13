@@ -39,7 +39,7 @@ namespace netty {
             if (!timeout) {
                 if (0 == connect(m_sd, (struct sockaddr *) &sa, sizeof(sa))) {
                     m_connected = true;
-                    common::CommonUtils::set_nonblocking(m_sd);
+                    common::CommonUtils::SetNonBlocking(m_sd);
 
                     return true;
                 }
@@ -50,7 +50,7 @@ namespace netty {
                 int valopt;
                 socklen_t lon;
 
-                common::CommonUtils::set_nonblocking(m_sd);
+                common::CommonUtils::SetNonBlocking(m_sd);
                 auto res = connect(m_sd, (struct sockaddr *) &sa, sizeof(sa));
                 if (res < 0) {
                     if (errno == EINPROGRESS) {

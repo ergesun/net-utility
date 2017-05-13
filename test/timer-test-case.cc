@@ -22,7 +22,7 @@ namespace netty {
             int test_cnt = 10;
             std::atomic<int> backs_cnt{0};
             common::Timer::TimerCallback cb = [&backs_cnt](void *ctx) {
-                std::cout << "timer callback!" << common::CommonUtils::get_current_time().sec << std::endl;
+                std::cout << "timer callback!" << common::CommonUtils::GetCurrentTime().sec << std::endl;
                 backs_cnt++;
             };
 

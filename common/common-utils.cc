@@ -12,14 +12,14 @@
 
 namespace netty {
     namespace common {
-        uctime_t CommonUtils::get_current_time() {
+        uctime_t CommonUtils::GetCurrentTime() {
             struct timespec ts;
             clock_gettime(CLOCK_REALTIME, &ts);
 
             return uctime_t(ts);
         }
 
-        int CommonUtils::set_nonblocking(int fd) {
+        int CommonUtils::SetNonBlocking(int fd) {
             int opts;
             int err;
             if ((opts = fcntl(fd, F_GETFL)) == -1) {

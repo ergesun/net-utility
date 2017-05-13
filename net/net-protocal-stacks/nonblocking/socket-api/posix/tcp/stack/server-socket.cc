@@ -12,7 +12,7 @@
 namespace netty {
     namespace net {
         inline bool PosixTcpServerSocket::Bind() {
-            common::CommonUtils::set_nonblocking(m_sd);
+            common::CommonUtils::SetNonBlocking(m_sd);
 
             struct sockaddr_in serv_addr;
             bzero(&serv_addr, sizeof(serv_addr));

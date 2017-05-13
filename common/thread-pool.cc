@@ -52,7 +52,7 @@ namespace netty {
         }
 
         void ThreadPool::WaitAllUntilAfter(uctime_s duration) {
-            auto now = common::CommonUtils::get_current_time();
+            auto now = common::CommonUtils::GetCurrentTime();
             now += duration;
 
             WaitAllUntilTimeAt(now);

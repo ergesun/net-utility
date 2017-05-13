@@ -54,7 +54,7 @@ namespace netty {
 
         Timer::EventId Timer::SubscribeEventAfter(uctime_t duration, Event &ev) {
             assert(ev.callback);
-            auto now = CommonUtils::get_current_time();
+            auto now = CommonUtils::GetCurrentTime();
             now += duration;
 
             return SubscribeEventAt(now, ev);
@@ -84,7 +84,7 @@ namespace netty {
                 SpinLock sl(&m_thread_safe_sl);
                 while (!m_mapSubscribedEvents.empty()) {
                     auto min = m_mapSubscribedEvents.begin();
-                    if (min->first > CommonUtils::get_current_time()) {
+                    if (min->first > CommonUtils::GetCurrentTime()) {
                         break;
                     }
 
