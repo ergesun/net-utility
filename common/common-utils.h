@@ -24,6 +24,14 @@ namespace netty {
              * @return
              */
             static int SetNonBlocking(int fd);
+
+            /**
+             * posix_memalign的封装
+             * @param align 对齐大小
+             * @param size 申请的内存大小
+             * @return
+             */
+            static void* PosixMemAlign(size_t align, size_t size);
         }; // class CommonUtils
     }  // namespace common
 }  // namespace netty

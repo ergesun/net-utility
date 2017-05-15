@@ -38,5 +38,14 @@ namespace netty {
 
             return 0;
         }
+
+        void* CommonUtils::PosixMemAlign(size_t align, size_t size) {
+            void *pln;
+            if (int ret = posix_memalign(&pln, align, size)) {
+                return nullptr;
+            }
+
+            return pln;
+        }
     } // namespace common
 } // namespace netty
