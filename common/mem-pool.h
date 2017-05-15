@@ -11,6 +11,7 @@
 #include <unordered_set>
 #include <memory>
 #include <list>
+#include <sstream>
 
 #include "timer.h"
 
@@ -60,6 +61,8 @@
  * 各对象超出设定常驻个数的检查的周期
  */
 #define EXTRA_OBJECT_CHECK_PERIOD             300                        // 5 * 60 seconds
+
+#define DEFAULT_EXPAND_OBJ_CNT_FACTOR         32
 
 namespace netty {
     namespace common {
@@ -114,6 +117,12 @@ namespace netty {
                 uintptr_t      m_slot_start_pv; /* slot start pointer value */
             };
 
+            struct SmallPage {
+                spin_lock_t                                         sl;
+                // <页的首地址， <small obj首地址>>
+                std::unordered_map<uintptr_t, std::list<uintptr_t>> small_objs;
+            };
+
             typedef std::shared_ptr<MemObject> MemObjectRef;
             friend class MemObject;
 
@@ -159,7 +168,8 @@ namespace netty {
         private:
             void put(int32_t slot_size, uintptr_t slot_start_p, uintptr_t release_p);
             void check_objs();
-            std::list<uintptr_t> split_mem_page(uint32_t slotSize, uintptr_t pagePv, uint32_t pageSize);
+            inline std::list<uintptr_t> split_mem_page(uint32_t slotSize, uintptr_t pagePv, uint32_t pageSize);
+            inline MemObject* get_mem_object(MemObjectType type, uint32_t slotSize, uintptr_t objPv, uintptr_t slotStartPv);
             /**
              * 本函数的目的是找到一个整数，这个数要满足是2的exponent次幂的倍数，并且是比in大的所有数中最小的数。
              * @param in
@@ -173,24 +183,54 @@ namespace netty {
                 return (in & mask) + multiple_base;
             }
 
+            inline uint32_t convert_small_obj_size_to_slot_idx(uint32_t size) {
+                return size / m_small_obj_slot_footstep_size;
+            }
+
+            inline uint32_t expand_small_page_size(uint32_t objSize, uint32_t expandObjCntFactor, uint32_t pageSize) {
+                uint32_t expandCalSize = objSize * expandObjCntFactor;
+                auto pageCnt = expandCalSize / pageSize;
+                if (expandCalSize % pageSize) {
+                    ++pageCnt;
+                }
+
+                return pageCnt * pageSize;
+            }
+
+            inline void alloc_page_objs(uint32_t size, uint32_t slotSize, std::unordered_set<uintptr_t> &pages,
+                                        std::unordered_map<uintptr_t, std::list<uintptr_t>> &freeObjs);
+
+            /**
+             *
+             * @param pages
+             * @param slot_page_pv 出参
+             * @param obj_pv 出参
+             */
+            inline void find_free_obj_from_slot_page(std::unordered_map<uintptr_t, std::list<uintptr_t>> &pages,
+                                                          uintptr_t &slot_page_pv, uintptr_t &obj_pv);
+
         private:
+            spin_lock_t m_tiny_obj_pages_lock = UNLOCKED;
             /**
              * <页的首地址>
              */
             std::unordered_set<uintptr_t> m_tiny_obj_pages; // 4KiB pages
-            spin_lock_t m_tiny_obj_pages_lock = UNLOCKED;
             /**
              * <页的首地址， <tiny objs>>
              */
             std::unordered_map<uintptr_t, std::list<uintptr_t>> m_free_tiny_objs; // tiny objects
+
+            spin_lock_t m_small_obj_pages_lock = UNLOCKED;
             /**
-             * <槽大小，<页的首地址>>
+             * <槽大小(index == slotSize / footstep)，<页的首地址>>
              */
             std::unordered_map<uint32_t, std::unordered_set<uintptr_t>> m_small_obj_pages; // 4KiB pages
             /**
-             * <槽大小，<页的首地址， <small obj首地址>>>
+             * <槽大小(index == slotSize / footstep)， SmallPage>
              */
-            std::unordered_map<uint32_t, std::unordered_map<uintptr_t, std::list<uintptr_t>>> m_free_small_objs; // small objects
+            std::unordered_map<uint32_t, SmallPage> m_free_small_objs; // small objects
+
+            spin_lock_t m_big_obj_pages_lock = UNLOCKED;
             /**
              * <槽大小，<大对象内存的首地址>>
              */
@@ -199,6 +239,8 @@ namespace netty {
              * <槽大小，<大对象内存的首地址>>
              */
             std::unordered_map<uint32_t, std::list<uintptr_t>> m_free_big_objs;
+
+            spin_lock_t m_bulk_obj_pages_lock = UNLOCKED;
             /**
              * <槽大小，<超大页内存的首地址>>
              */
@@ -214,14 +256,16 @@ namespace netty {
             size_t m_sys_page_size;
             uint32_t m_one_slot_tiny_obj_resident_cnts;
             uint32_t m_one_slot_small_obj_resident_cnts;
-            uint32_t m_small_obj_slot_footstep;
+            uint32_t m_small_obj_slot_footstep; // Exponent of 2
+            uint32_t m_small_obj_slot_footstep_size; // bytes
             uint32_t m_one_slot_big_obj_resident_cnts;
             uint32_t m_one_slot_bulk_obj_resident_cnts;
             uint32_t m_all_slots_bulk_obj_resident_cnts;
-            uint32_t m_tiny_page_threshold;
-            uint32_t m_big_page_threshold;
-            uint32_t m_bult_page_threshold;
+            uint32_t m_tiny_obj_threshold;
+            uint32_t m_big_obj_threshold;
+            uint32_t m_bult_obj_threshold;
             uint32_t m_available_reserve_bulk_obj_max_size;
+            uint32_t m_expand_obj_cnt_factor;
             uint32_t m_recycle_extra_page_period;
             Timer *m_recycle_check_timer;
             Timer::TimerCallback m_recycle_check_cb;
