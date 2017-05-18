@@ -71,8 +71,8 @@ namespace netty {
         /**
          * 将内存按大小分成4种类别来管理。
          * 1. 微小型： <= 16 bytes
-         * 2. 小型 ：  >= 16 bytes && <= page_size(一般4KiB)
-         * 3. 大型 ：  >= page_size && <= BULK_PAGE_SIZE_THRESHOLD (默认配置为32KiB)
+         * 2. 小型 ：  > 16 bytes && <= page_size(一般4KiB)
+         * 3. 大型 ：  > page_size && <= BULK_PAGE_SIZE_THRESHOLD (默认配置为32KiB)
          * 4. 超大型： > BULK_PAGE_SIZE_THRESHOLD
          *
          * TODO(sunchao): 自己实现一个高效的hash-table，应用连接法，但是连接的内容是multi map，一旦hash code冲突，则组织到multi map中。
@@ -277,6 +277,9 @@ namespace netty {
             uint32_t m_sys_cacheline_size;
             uint32_t m_sys_page_size;
             uint32_t m_small_obj_slot_footstep_size; // bytes
+            uint32_t m_small_obj_slot_footstep_exponent;
+            uint32_t m_big_obj_slot_footstep_exponent;
+            uint32_t m_bulk_obj_slot_footstep_exponent;
             uint32_t m_one_slot_tiny_obj_resident_cnts;
             uint32_t m_one_slot_small_obj_resident_cnts;
             uint32_t m_one_slot_big_obj_resident_cnts;

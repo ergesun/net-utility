@@ -53,6 +53,9 @@ namespace netty {
             m_one_slot_tiny_obj_resident_cnts = torc;
             m_one_slot_small_obj_resident_cnts = sorc;
             m_small_obj_slot_footstep_size = DEFAULT_SMALL_OBJECT_SLOT_FOOTSTEP;
+            m_small_obj_slot_footstep_exponent = (uint32_t)log2(m_small_obj_slot_footstep_size);
+            m_big_obj_slot_footstep_exponent = (uint32_t)log2(m_sys_page_size);
+            m_bulk_obj_slot_footstep_exponent = (uint32_t)log2(m_sys_page_size);
             m_one_slot_big_obj_resident_cnts = borc;
             m_recycle_extra_page_period = eocp;
             m_tiny_obj_threshold = tpt;
@@ -112,22 +115,24 @@ namespace netty {
                 }
             } else if (m_bulk_obj_threshold >= size) { // slot obj(big、small的模式一样) operations.
                 uint32_t slotFootstepSize = 0;
+                uint32_t slotFootstepExponent = 0;
                 std::unordered_map<uint32_t, SlotObjPage> *free_objs;
                 std::unordered_map<uint32_t, std::unordered_set<uintptr_t>> *pages;
                 MemObjectType type;
                 if (m_big_obj_threshold < size) { // big obj
                     slotFootstepSize = m_sys_page_size;
+                    slotFootstepExponent = m_big_obj_slot_footstep_exponent;
                     free_objs = &m_free_big_objs;
                     pages = &m_big_obj_pages;
                     type = MemObjectType::Big;
                 } else { // small obj
                     slotFootstepSize = m_small_obj_slot_footstep_size;
+                    slotFootstepExponent = m_small_obj_slot_footstep_exponent;
                     free_objs = &m_free_small_objs;
                     pages = &m_small_obj_pages;
                     type = MemObjectType::Small;
                 }
 
-                auto slotFootstepExponent = (uint32_t)log2(slotFootstepSize);
                 auto slotSize = roundup_to_the_next_highest_multiple_of_exponent2(size, slotFootstepExponent);
                 auto slotIdx = convert_slot_obj_size_to_slot_idx(slotSize, slotFootstepSize);
 
@@ -154,8 +159,7 @@ namespace netty {
                 }
             } else { // bulk obj operations.
                 SpinLock l(&m_bulk_obj_pages_lock);
-                auto bulkPageFootstep = (uint32_t)log2(m_sys_page_size);
-                uint32_t needPageSize = roundup_to_the_next_highest_multiple_of_exponent2(size, bulkPageFootstep);
+                uint32_t needPageSize = roundup_to_the_next_highest_multiple_of_exponent2(size, m_bulk_obj_slot_footstep_exponent);
                 uint32_t needSlotIdx = needPageSize / m_sys_page_size;
                 uintptr_t suitableObjPv, suitablePagePv;
                 uint32_t suitableObjSlotIdx;
@@ -211,6 +215,18 @@ namespace netty {
                     }
 
                     m_free_tiny_objs[slot_start_pv].push_back(obj_pv);
+                    auto onePageObjsCnt = m_sys_page_size / m_tiny_obj_threshold;
+                    if (++m_free_tiny_objs_cnt > m_one_slot_tiny_obj_resident_cnts + onePageObjsCnt) {
+                        // free的obj个数超出了预设的个数，需要找一个满闲page释放
+                        for (auto iter = m_free_tiny_objs.begin(); iter != m_free_tiny_objs.end();++iter) {
+                            if (onePageObjsCnt == iter->second.size()) {
+                                // 找到了满闲的page，移除之
+                                auto pagePv = iter->first;
+                                m_free_tiny_objs.erase(iter);
+                                m_tiny_obj_pages.erase(pagePv);
+                            }
+                        }
+                    }
                 }
                 case MemObjectType::Small:
                 case MemObjectType::Big:  {
