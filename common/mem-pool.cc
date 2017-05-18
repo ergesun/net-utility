@@ -290,7 +290,7 @@ namespace netty {
         }
 
         void MemPool::get_suitable_bulk_page(uint32_t needPageSize, uint32_t &suitableSlotIdx, uintptr_t &suitableObjPv,
-                                             uintptr_t &suitablePagePv, float moreThanFactor = 2.0) {
+                                             uintptr_t &suitablePagePv, float moreThanFactor) {
             suitableSlotIdx = 0;
             suitableObjPv = 0;
             suitablePagePv = 0;
