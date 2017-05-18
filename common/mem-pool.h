@@ -15,7 +15,7 @@
 
 #include "timer.h"
 
-// TODO(sunchao): 添加一个和时间相关的统计机制，动态的对常驻对象数量进行调整。
+// TODO(sunchao): 添加一个和时间相关的统计机制，动态的对常驻对象数量、扩张系数等进行调整。
 
 /**
  * 大对象的界定阈值
@@ -48,21 +48,23 @@
 /**
  * 每个超大对象槽保留的个数上限
  */
-#define ONE_SLOT_BULK_OBJECT_RESIDENT_CNT     common::CPUS_CNT
-/**
- * 所有超大对象槽保留的个数和的上限
- */
-#define ALL_SLOTS_BULK_OBJ_RESIDENT_CNT       common::CPUS_CNT
+#define ONE_SLOT_BULK_OBJECT_RESIDENT_CNT     (common::CPUS_CNT * 4)
 /**
  * 可留用保存的超大对象的大小上限
  */
-#define RESIDENT_BULK_OBJ_MAX_SIZE            1048576                    // 1 MiB
+#define RESIDENT_BULK_OBJ_MAX_SIZE            524288                     // 512 KiB
 /**
  * 各对象超出设定常驻个数的检查的周期
  */
 #define EXTRA_OBJECT_CHECK_PERIOD             300                        // 5 * 60 seconds
-
+/**
+ * small、big对象的扩展系数
+ */
 #define DEFAULT_EXPAND_OBJ_CNT_FACTOR         32
+/**
+ * bulk对象的扩展系数
+ */
+#define DEFAULT_EXPAND_BULK_OBJ_CNT_FACTOR    4
 
 namespace netty {
     namespace common {
@@ -92,11 +94,6 @@ namespace netty {
 
                 template <typename T>
                 inline T* Pointer() const;
-                inline uint32_t Size() const;
-                inline MemObjectType Type() const;
-                inline uint32_t SlotSize() const;
-                inline uintptr_t ObjectPointerValue() const;
-                inline uintptr_t SlotStartPointerValue() const;
 
             private:
                 friend class MemPool;
@@ -111,6 +108,11 @@ namespace netty {
                 MemObject(MemObjectType type, uint32_t slotSize, uintptr_t objPv, uintptr_t slotStartPv) :
                     m_type(type), m_slot_size(slotSize), m_obj_pv(objPv), m_slot_start_pv(slotStartPv) {}
 
+                inline uint32_t Size() const;
+                inline MemObjectType Type() const;
+                inline uint32_t SlotSize() const;
+                inline uintptr_t ObjectPointerValue() const;
+                inline uintptr_t SlotStartPointerValue() const;
                 inline void refresh(MemObjectType type, uint32_t slotSize, uintptr_t objPv, uintptr_t slotStartPv);
 
             private:
@@ -120,14 +122,16 @@ namespace netty {
                 uintptr_t      m_slot_start_pv; /* slot start pointer value */
             };
 
+            typedef std::shared_ptr<MemObject> MemObjectRef;
+            friend class MemObject;
+
+        private:
             struct SlotObjPage {
                 spin_lock_t                                         sl;
                 // <页的首地址， <slot obj首地址>>
                 std::unordered_map<uintptr_t, std::list<uintptr_t>> objs;
+                uint32_t                                            cnt;
             };
-
-            typedef std::shared_ptr<MemObject> MemObjectRef;
-            friend class MemObject;
 
         public:
             /**
@@ -169,7 +173,7 @@ namespace netty {
             // MemObjectRef GetTinyObject(uint32_t size);
 
         private:
-            void put(MemObjectType type, int32_t slot_size, uintptr_t obj_pv, uintptr_t slot_start_pv);
+            void put(MemObjectType type, uint32_t slot_size, uintptr_t obj_pv, uintptr_t slot_start_pv);
             void check_objs();
             inline std::list<uintptr_t> split_mem_page(uint32_t slotSize, uintptr_t pagePv, uint32_t pageSize);
             inline MemObject* get_mem_object(MemObjectType type, uint32_t slotSize, uintptr_t objPv, uintptr_t slotStartPv);
@@ -179,15 +183,15 @@ namespace netty {
              * @param exponent
              * @return
              */
-            inline uint32_t RoundupToTheNextHighestMultipleOfExponent2(uint32_t in, uint32_t exponent) {
+            inline uint32_t roundup_to_the_next_highest_multiple_of_exponent2(uint32_t in, uint32_t exponent) {
                 uint32_t multiple_base = (uint32_t)2 << (exponent - 1);
                 uint32_t mask = (0xFFFFFFFF >> exponent) << exponent;
 
                 return (in & mask) + multiple_base;
             }
 
-            inline uint32_t convert_slot_obj_size_to_slot_idx(uint32_t size) {
-                return size / m_small_obj_slot_footstep_size;
+            inline uint32_t convert_slot_obj_size_to_slot_idx(uint32_t size, uint32_t footstep) {
+                return size / footstep;
             }
 
             inline uint32_t gen_expand_slot_page_size(uint32_t objSize, uint32_t expandObjCntFactor, uint32_t pageSize) {
@@ -200,7 +204,7 @@ namespace netty {
                 return pageCnt * pageSize;
             }
 
-            inline void alloc_page_objs(uint32_t size, uint32_t slotSize, std::unordered_set<uintptr_t> &pages,
+            inline bool alloc_page_objs(uint32_t size, uint32_t slotSize, std::unordered_set<uintptr_t> &pages,
                                         std::unordered_map<uintptr_t, std::list<uintptr_t>> &freeObjs);
 
             /**
@@ -212,9 +216,11 @@ namespace netty {
             inline void get_free_obj_from_slot_page(std::unordered_map<uintptr_t, std::list<uintptr_t>> &pages,
                                                     uintptr_t &slot_page_pv, uintptr_t &obj_pv);
 
-            inline void get_suitable_bulk_page(uint32_t size, uintptr_t &pagePv, uint32_t &pageSize, float moreThanFactor = 2.0);
+            inline void get_suitable_bulk_page(uint32_t needPageSize, uint32_t &suitableSlotIdx, uintptr_t &suitableObjPv,
+                                               uintptr_t &suitablePagePv, float moreThanFactor = 2.0);
 
         private: // 有了槽位的思想，便对齐了。
+            /****************************tiny objects********************************************/
             spin_lock_t m_tiny_obj_pages_lock = UNLOCKED;
             /**
              * <页的首地址>
@@ -224,51 +230,63 @@ namespace netty {
              * <页的首地址， <tiny objs>>
              */
             std::unordered_map<uintptr_t, std::list<uintptr_t>> m_free_tiny_objs; // tiny objects
+            uint32_t                                            m_free_tiny_objs_cnt;
 
+            /****************************small objects********************************************/
             /**
              * <槽大小(index == slotSize / footstep)，<页的首地址>>
              */
             std::unordered_map<uint32_t, std::unordered_set<uintptr_t>> m_small_obj_pages; // 4KiB pages
             /**
-             * <槽大小(index == slotSize / footstep)， SmallPage>
+             * <槽大小(index == slotSize / footstep)， SlotObjPage>
              */
             std::unordered_map<uint32_t, SlotObjPage> m_free_small_objs; // small objects
 
+            /****************************big objects********************************************/
             /**
              * <槽大小(n-->index)，<大对象内存的首地址>>
              */
             std::unordered_map<uint32_t, std::unordered_set<uintptr_t>> m_big_obj_pages; // [n] * 4KiB pages
             /**
-             * <槽大小(n-->index)，<大对象内存的首地址>>
+             * <槽大小(n-->index)，SlotObjPage>
              */
             std::unordered_map<uint32_t , SlotObjPage> m_free_big_objs;
 
+            /****************************bulk objects********************************************/
             spin_lock_t m_bulk_obj_pages_lock = UNLOCKED;
             /**
-             * <槽大小(n-->index)，<超大页内存的首地址>>
+             * <槽大小(n KiB)，超大对象内存的首地址>
              */
             std::unordered_map<uint32_t, std::unordered_set<uintptr_t>> m_bulk_obj_pages; // default more than 32KiB
             /**
-             * <槽大小(n-->index)，<超大页内存的首地址>>
+             * <槽大小(n KiB)，<超大页内存的首地址>>
+             * 由于bulk对象是完全匹配分配法，所以有必要建立一个hash表来存储，
+             * 因为用户极可能再次申请相同大小的buf，可以先做一次完全匹配。匹配上了直接返回。
              */
-            std::map<uint32_t, std::list<uintptr_t>> m_free_bulk_objs;
+            std::unordered_map<uint32_t, SlotObjPage> m_free_hash_bulk_objs;
+            /**
+             * <槽大小(n KiB)，SlotObjPage>
+             * // TODO(sunchao): 一共也没几个元素，先图方便这么实现了。最好改成二分匹配等方式。
+             */
+            std::map<uint32_t, SlotObjPage*> m_free_bulk_objs;
 
+            /****************************free MemObjects********************************************/
             // TODO(sunchao): 加个回收机制？
             std::list<MemObject*> m_free_mem_objs;
 
             uint32_t m_sys_cacheline_size;
             uint32_t m_sys_page_size;
+            uint32_t m_small_obj_slot_footstep_size; // bytes
             uint32_t m_one_slot_tiny_obj_resident_cnts;
             uint32_t m_one_slot_small_obj_resident_cnts;
-            uint32_t m_small_obj_slot_footstep_size; // bytes
             uint32_t m_one_slot_big_obj_resident_cnts;
             uint32_t m_one_slot_bulk_obj_resident_cnts;
-            uint32_t m_all_slots_bulk_obj_resident_cnts;
             uint32_t m_tiny_obj_threshold;
             uint32_t m_big_obj_threshold;
             uint32_t m_bulk_obj_threshold;
             uint32_t m_available_reserve_bulk_obj_max_size;
             uint32_t m_expand_obj_cnt_factor;
+            uint32_t m_expand_bulk_obj_cnt_factor;
             uint32_t m_recycle_extra_page_period;
             Timer *m_recycle_check_timer;
             Timer::TimerCallback m_recycle_check_cb;
