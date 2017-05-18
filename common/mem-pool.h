@@ -110,7 +110,7 @@ namespace netty {
 
                 inline uint32_t Size() const;
                 inline MemObjectType Type() const;
-                inline uint32_t SlotSize() const;
+                inline uint32_t SlotIdx() const;
                 inline uintptr_t ObjectPointerValue() const;
                 inline uintptr_t SlotStartPointerValue() const;
                 inline void refresh(MemObjectType type, uint32_t slotSize, uintptr_t objPv, uintptr_t slotStartPv);
@@ -173,6 +173,13 @@ namespace netty {
             // MemObjectRef GetTinyObject(uint32_t size);
 
         private:
+            /**
+             * 回收对象。回收的时候无需检验，因为调用它的Put函数的入参MemObject是只读的。
+             * @param type
+             * @param slot_size
+             * @param obj_pv
+             * @param slot_start_pv
+             */
             void put(MemObjectType type, uint32_t slot_size, uintptr_t obj_pv, uintptr_t slot_start_pv);
             void check_objs();
             inline std::list<uintptr_t> split_mem_page(uint32_t slotSize, uintptr_t pagePv, uint32_t pageSize);

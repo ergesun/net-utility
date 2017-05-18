@@ -25,7 +25,7 @@ namespace netty {
             return m_type;
         }
 
-        uint32_t MemPool::MemObject::SlotSize() const {
+        uint32_t MemPool::MemObject::SlotIdx() const {
             return m_slot_size;
         }
 
@@ -185,7 +185,7 @@ namespace netty {
                         --(m_free_hash_bulk_objs[suitableObjSlotIdx].cnt);
                     }
 
-                    memObject = get_mem_object(MemObjectType::Bulk, suitableObjSlotIdx, suitableObjPv, suitablePagePv);
+                    memObject = get_mem_object(MemObjectType::Bulk, suitableObjSlotIdx * m_sys_page_size, suitableObjPv, suitablePagePv);
                 }
             }
 
@@ -196,7 +196,7 @@ namespace netty {
         void MemPool::Put(MemObjectRef mor) {
             auto memObject = mor.get();
             mor.reset();
-            put(memObject->Type(), memObject->SlotSize(),
+            put(memObject->Type(), memObject->SlotIdx(),
                 memObject->ObjectPointerValue(), memObject->SlotStartPointerValue());
             m_free_mem_objs.push_back(memObject);
         }
@@ -205,10 +205,6 @@ namespace netty {
             switch (type) {
                 case MemObjectType::Tiny: {
                     SpinLock l(&m_tiny_obj_pages_lock);
-                    if (m_tiny_obj_pages.end() == m_tiny_obj_pages.find(slot_start_pv)) {
-                        throw std::runtime_error("no such object in mem pool.");
-                    }
-
                     auto objIter = m_free_tiny_objs.find(slot_start_pv);
                     if (objIter == m_free_tiny_objs.end()) {
                         m_free_tiny_objs[slot_start_pv] = std::list<uintptr_t>();
@@ -230,6 +226,13 @@ namespace netty {
                 }
                 case MemObjectType::Small:
                 case MemObjectType::Big:  {
+                    std::unordered_map<uint32_t, std::unordered_set<uintptr_t>>::iterator slotIter;
+                    if (MemObjectType::Small == type) {
+
+                    } else {
+
+                    }
+
 
                 }
                 case MemObjectType::Bulk: {
