@@ -169,6 +169,11 @@ namespace netty {
             // TODO(sunchao): 添加复杂高性能接口，最起码会减少很多if-else判断。 eg.
             // MemObjectRef GetTinyObject(uint32_t size);
 
+            /**
+             * 仅用于调试信息打印，实际使用不要调用此函数。
+             */
+            std::string DumpDebugInfo();
+
         private:
             /**
              * 回收对象。回收的时候无需检验，因为调用它的Put函数的入参MemObject是只读的。
@@ -238,7 +243,7 @@ namespace netty {
             inline void get_free_obj_from_slot_page(std::unordered_map<uintptr_t, std::list<uintptr_t>> &pages,
                                                     uintptr_t &slot_page_pv, uintptr_t &obj_pv);
 
-            inline void get_suitable_bulk_page(uint32_t needPageSize, uint32_t &suitableSlotIdx, uintptr_t &suitableObjPv,
+            inline void get_suitable_bulk_page(uint32_t needSlotIdx, uint32_t &suitableSlotIdx, uintptr_t &suitableObjPv,
                                                uintptr_t &suitablePagePv, float moreThanFactor = 2.0);
 
         private: // 有了槽位的思想，便对齐了。

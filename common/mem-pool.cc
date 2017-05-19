@@ -155,7 +155,7 @@ namespace netty {
                 uint32_t needSlotIdx = convert_slot_obj_size_to_slot_idx(needPageSize, m_sys_page_size);
                 uintptr_t suitableObjPv, suitablePagePv;
                 uint32_t suitableObjSlotIdx;
-                get_suitable_bulk_page(needPageSize, suitableObjSlotIdx, suitableObjPv, suitablePagePv);
+                get_suitable_bulk_page(needSlotIdx, suitableObjSlotIdx, suitableObjPv, suitablePagePv);
                 if (!suitableObjPv) {
                     auto expandPageSize = gen_expand_slot_page_size(needPageSize, m_expand_bulk_obj_cnt_factor, m_sys_page_size);
                     m_bulk_obj_pages[needSlotIdx] = std::unordered_set<uintptr_t>();
@@ -168,7 +168,7 @@ namespace netty {
                         m_free_bulk_objs.erase(needSlotIdx);
                     }
 
-                    get_suitable_bulk_page(needPageSize, suitableObjSlotIdx, suitableObjPv, suitablePagePv);
+                    get_suitable_bulk_page(needSlotIdx, suitableObjSlotIdx, suitableObjPv, suitablePagePv);
                 }
 
                 if (suitableObjPv) {
@@ -213,7 +213,7 @@ namespace netty {
 
                     m_free_tiny_objs[objPagePv].push_back(objPv);
                     auto onePageObjsCnt = m_sys_page_size / m_tiny_obj_threshold;
-                    if (++m_free_tiny_objs_cnt > m_one_slot_tiny_obj_resident_cnts + onePageObjsCnt) {
+                    if (++m_free_tiny_objs_cnt >= m_one_slot_tiny_obj_resident_cnts + onePageObjsCnt) {
                         // free的obj个数超出了预设的个数，需要找一个满闲page释放
                         for (auto iter = m_free_tiny_objs.begin(); iter != m_free_tiny_objs.end(); ++iter) {
                             if (onePageObjsCnt == iter->second.size()) {
@@ -226,6 +226,7 @@ namespace netty {
                             }
                         }
                     }
+                    break;
                 }
                 case MemObjectType::Small: {
                     auto slotIdx = convert_small_slot_obj_size_to_slot_idx(slotSize);
@@ -239,7 +240,7 @@ namespace netty {
                     slotIter->second.objs[objPagePv].push_back(objPv);
                     auto onePageSize = gen_expand_slot_page_size(slotSize, m_expand_obj_cnt_factor, m_sys_page_size);
                     auto onePageObjsCnt = onePageSize / slotSize;
-                    if (++(slotIter->second.cnt) > m_one_slot_small_obj_resident_cnts + onePageObjsCnt) {
+                    if (++(slotIter->second.cnt) >= m_one_slot_small_obj_resident_cnts + onePageObjsCnt) {
                         // free的obj个数超出了预设的个数，需要找一个满闲page释放
                         for (auto iter = slotIter->second.objs.begin(); iter != slotIter->second.objs.end(); ++iter) {
                             // 找到了满闲的page，移除之
@@ -252,6 +253,7 @@ namespace netty {
                             }
                         }
                     }
+                    break;
                 }
                 case MemObjectType::Big: {
                     auto slotIdx = convert_big_slot_obj_size_to_slot_idx(slotSize);
@@ -265,7 +267,7 @@ namespace netty {
                     slotIter->second.objs[objPagePv].push_back(objPv);
                     auto onePageSize = gen_expand_slot_page_size(slotSize, m_expand_obj_cnt_factor, m_sys_page_size);
                     auto onePageObjsCnt = onePageSize / slotSize;
-                    if (++(slotIter->second.cnt) > m_one_slot_big_obj_resident_cnts + onePageObjsCnt) {
+                    if (++(slotIter->second.cnt) >= m_one_slot_big_obj_resident_cnts + onePageObjsCnt) {
                         for (auto iter = slotIter->second.objs.begin(); iter != slotIter->second.objs.end(); ++iter) {
                             if (onePageObjsCnt == iter->second.size()) {
                                 free(reinterpret_cast<char*>(objPagePv));
@@ -276,6 +278,7 @@ namespace netty {
                             }
                         }
                     }
+                    break;
                 }
                 case MemObjectType::Bulk: {
                     SpinLock l(&m_bulk_obj_pages_lock);
@@ -291,7 +294,7 @@ namespace netty {
                     m_free_hash_bulk_objs[slotIdx].objs[objPagePv].push_back(objPv);
                     auto onePageSize = gen_expand_slot_page_size(slotSize, m_expand_bulk_obj_cnt_factor, m_sys_page_size);
                     auto onePageObjsCnt = onePageSize / slotSize;
-                    if (++(m_free_hash_bulk_objs[slotIdx].cnt) > m_one_slot_bulk_obj_resident_cnts + onePageObjsCnt) {
+                    if (++(m_free_hash_bulk_objs[slotIdx].cnt) >= m_one_slot_bulk_obj_resident_cnts + onePageObjsCnt) {
                         for (auto iter = m_free_hash_bulk_objs[slotIdx].objs.begin(); iter != m_free_hash_bulk_objs[slotIdx].objs.end(); ++iter) {
                             if (onePageObjsCnt == iter->second.size()) {
                                 free(reinterpret_cast<char*>(objPagePv));
@@ -306,6 +309,7 @@ namespace netty {
                             }
                         }
                     }
+                    break;
                 }
             }
         }
@@ -314,7 +318,7 @@ namespace netty {
             std::list<uintptr_t> res;
             uint32_t cnt = pageSize / slotSize;
             for (int i = 0; i < cnt; ++i) {
-                res.push_back(pagePv + slotSize);
+                res.push_back(pagePv + slotSize * i);
             }
 
             return res;
@@ -373,12 +377,12 @@ namespace netty {
             }
         }
 
-        void MemPool::get_suitable_bulk_page(uint32_t needPageSize, uint32_t &suitableSlotIdx, uintptr_t &suitableObjPv,
+        void MemPool::get_suitable_bulk_page(uint32_t needSlotIdx, uint32_t &suitableSlotIdx, uintptr_t &suitableObjPv,
                                              uintptr_t &suitablePagePv, float moreThanFactor) {
             suitableSlotIdx = 0;
             suitableObjPv = 0;
             suitablePagePv = 0;
-            auto okHashIter = m_free_hash_bulk_objs.find(needPageSize);
+            auto okHashIter = m_free_hash_bulk_objs.find(needSlotIdx);
             // 如果直接找到了完全匹配的，直接返回 O(1)。
             if (okHashIter != m_free_hash_bulk_objs.end()) {
                 auto okObjIter = okHashIter->second.objs.begin();
@@ -387,11 +391,14 @@ namespace netty {
                 suitableObjPv = *okObjPvIter;
                 suitablePagePv = okObjIter->first;
 
-                // 从free列表移除
-                okHashIter->second.objs.erase(okObjIter);
-                if (okHashIter->second.objs.empty()) {
-                    m_free_hash_bulk_objs.erase(needPageSize);
-                    m_free_bulk_objs.erase(needPageSize);
+                okObjIter->second.erase(okObjPvIter);
+                if (okObjIter->second.empty()) {
+                    // 从free列表移除
+                    okHashIter->second.objs.erase(okObjIter);
+                    if (okHashIter->second.objs.empty()) {
+                        m_free_hash_bulk_objs.erase(needSlotIdx);
+                        m_free_bulk_objs.erase(needSlotIdx);
+                    }
                 }
 
                 return;
@@ -405,18 +412,18 @@ namespace netty {
                 return;
             }
 
-            uint32_t maxPageSize = (uint32_t)(needPageSize * moreThanFactor);
+            uint32_t maxPageSize = (uint32_t)(needSlotIdx * moreThanFactor);
 
             auto rbegin = m_free_bulk_objs.rbegin();
             // 如果最大的(最后一个)都比要求的小，直接返回。
-            if (rbegin->first < needPageSize) {
+            if (rbegin->first < needSlotIdx) {
                 return;
             }
 
 
             std::map<uint32_t, SlotObjPage*>::iterator *suitableIter = nullptr;
             auto slotBegin = m_free_bulk_objs.begin();
-            if (slotBegin->first > needPageSize) {
+            if (slotBegin->first > needSlotIdx) {
                 // 如果最小的(第一个)都比要求的大的范围不满足，直接返回。
                 if (slotBegin->first > maxPageSize) {
                     return;
@@ -431,7 +438,7 @@ namespace netty {
                 std::map<uint32_t, SlotObjPage*>::reverse_iterator *suitableRIter = nullptr;
                 for (; rbegin != m_free_bulk_objs.rend(); ++rbegin) {
                     // 找到了合适的
-                    if (rbegin->first > needPageSize && rbegin->first <= maxPageSize) {
+                    if (rbegin->first > needSlotIdx && rbegin->first <= maxPageSize) {
                         suitableSlotIdx = rbegin->first;
                         suitableRIter = &rbegin;
                         break;
@@ -466,6 +473,95 @@ namespace netty {
                     }
                 }
             }
+        }
+
+        std::string MemPool::DumpDebugInfo() {
+#define ALIGN2    "  "
+#define ALIGN4    "    "
+#define ALIGN6    "      "
+#define ALIGN8    "        "
+#define SEPERATOR "-------------------------------------------------------------------"
+
+            std::stringstream ss;
+            /****************tiny**********************/
+            ss << "[Tiny]\n"
+               << SEPERATOR << "\n"
+               << ALIGN2 << "All pages:\n"
+               << ALIGN4 << "count: " << m_tiny_obj_pages.size() << ";\n"
+               << ALIGN4 << "pages: ";
+            std::stringstream tinyPagesSS;
+            for (auto iter = m_tiny_obj_pages.begin(); iter != m_tiny_obj_pages.end(); ++iter) {
+                tinyPagesSS << *iter << ",";
+            }
+
+            auto tinyPagesStr = tinyPagesSS.str();
+            ss << tinyPagesStr.substr(0, tinyPagesStr.length() - 1) << "\n";
+
+            ss << ALIGN2 << "Free Objs:\n"
+               << ALIGN4 << "count: " << m_free_tiny_objs_cnt << ";\n"
+               << ALIGN4 << "objects: \n" << ALIGN6;
+            std::stringstream tinyTotalObjsSS;
+            for (auto iter = m_free_tiny_objs.begin(); iter != m_free_tiny_objs.end(); ++iter) {
+                std::stringstream tinyPageObjsSS;
+                tinyPageObjsSS << "page = " << iter->first << "'s objs: {";
+                for (auto iter2 = iter->second.begin(); iter2 != iter->second.end(); ++iter2) {
+                    tinyPageObjsSS << *iter2 << ",";
+                }
+
+                std::string tinyPageObjsStr = tinyPageObjsSS.str();
+                tinyTotalObjsSS << tinyPageObjsStr.substr(0, tinyPageObjsStr.length() - 1) << "}\n" << ALIGN6;
+            }
+
+            ss << tinyTotalObjsSS.str() << "\n";
+            /****************small**********************/
+            ss << "[Small]\n"
+               << SEPERATOR << "\n"
+               << ALIGN2 << "All slots pages:\n"
+               << ALIGN4 << "slots total count: " << m_small_obj_pages.size() << ";\n"
+               << ALIGN4 << "slots:\n" << ALIGN6;
+            std::stringstream smallTotalPagesSS;
+            for (auto iter = m_small_obj_pages.begin(); iter != m_small_obj_pages.end(); ++iter) {
+                std::stringstream smallPageSS;
+                smallPageSS << "slot = " << iter->first << "'s pages:{ count = " << iter->second.size() << ", pages = ";
+                for (auto iter2 = iter->second.begin(); iter2 != iter->second.end(); ++iter2) {
+                    smallPageSS << *iter2 << ",";
+                }
+
+                std::string smallPageStr = smallPageSS.str();
+                smallTotalPagesSS << smallPageStr.substr(0, smallPageStr.length() - 1) << "}\n" << ALIGN6;
+            }
+
+            ss << smallTotalPagesSS.str() << "\n";
+
+            ss << ALIGN2 << "Free Objs:\n"
+               << ALIGN4 << "slots total count: " << m_free_small_objs.size() << ";\n"
+               << ALIGN4 << "slots:\n" << ALIGN6;
+            std::stringstream smallTotalObjsSS;
+            for (auto iter = m_free_small_objs.begin(); iter != m_free_small_objs.end(); ++iter) {
+                std::stringstream smallSlotObjsSS;
+                smallSlotObjsSS << "slot = " << iter->first << "'s pages:{ count = " << iter->second.objs.size() << "\n" << ALIGN8;
+                for (auto iter2 = iter->second.objs.begin(); iter2 != iter->second.objs.end(); ++iter2) {
+                    std::stringstream smallPageObjsSS;
+                    smallPageObjsSS << "page = " << iter2->first << "'s objs: { count = " << iter2->second.size() << ", ";
+                    for (auto iter3 = iter2->second.begin(); iter3 != iter2->second.end(); ++iter3) {
+                        smallPageObjsSS << *iter3 << ",";
+                    }
+                    std::string smallPageObjsStr = smallPageObjsSS.str();
+                    smallSlotObjsSS << smallPageObjsStr.substr(0, smallPageObjsStr.length() - 1) << "},\n" << ALIGN8;
+                }
+
+                std::string smallSlotObjsStr = smallSlotObjsSS.str();
+                smallTotalObjsSS << smallSlotObjsStr.substr(0, smallSlotObjsStr.length() - 1) << "},\n" << ALIGN6;
+            }
+
+            ss << smallTotalObjsSS.str() << "\n";
+
+            return ss.str();
+
+#undef ALIGN2
+#undef ALIGN4
+#undef ALIGN6
+#undef ALIGN8
         }
     }  // namespace common
 }  // namespace netty
