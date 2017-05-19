@@ -556,6 +556,92 @@ namespace netty {
 
             ss << smallTotalObjsSS.str() << "\n";
 
+            /****************big**********************/
+            ss << "[Big]\n"
+               << SEPERATOR << "\n"
+               << ALIGN2 << "All slots pages:\n"
+               << ALIGN4 << "slots total count: " << m_big_obj_pages.size() << ";\n"
+               << ALIGN4 << "slots:\n" << ALIGN6;
+            std::stringstream bigTotalPagesSS;
+            for (auto iter = m_big_obj_pages.begin(); iter != m_big_obj_pages.end(); ++iter) {
+                std::stringstream bigPageSS;
+                bigPageSS << "slot = " << iter->first << "'s pages:{ count = " << iter->second.size() << ", pages = ";
+                for (auto iter2 = iter->second.begin(); iter2 != iter->second.end(); ++iter2) {
+                    bigPageSS << *iter2 << ",";
+                }
+
+                std::string bigPageStr = bigPageSS.str();
+                bigTotalPagesSS << bigPageStr.substr(0, bigPageStr.length() - 1) << "}\n" << ALIGN6;
+            }
+
+            ss << bigTotalPagesSS.str() << "\n";
+
+            ss << ALIGN2 << "Free Objs:\n"
+               << ALIGN4 << "slots total count: " << m_free_big_objs.size() << ";\n"
+               << ALIGN4 << "slots:\n" << ALIGN6;
+            std::stringstream bigTotalObjsSS;
+            for (auto iter = m_free_big_objs.begin(); iter != m_free_big_objs.end(); ++iter) {
+                std::stringstream bigSlotObjsSS;
+                bigSlotObjsSS << "slot = " << iter->first << "'s pages:{ count = " << iter->second.objs.size() << "\n" << ALIGN8;
+                for (auto iter2 = iter->second.objs.begin(); iter2 != iter->second.objs.end(); ++iter2) {
+                    std::stringstream bigPageObjsSS;
+                    bigPageObjsSS << "page = " << iter2->first << "'s objs: { count = " << iter2->second.size() << ", ";
+                    for (auto iter3 = iter2->second.begin(); iter3 != iter2->second.end(); ++iter3) {
+                        bigPageObjsSS << *iter3 << ",";
+                    }
+                    std::string bigPageObjsStr = bigPageObjsSS.str();
+                    bigSlotObjsSS << bigPageObjsStr.substr(0, bigPageObjsStr.length() - 1) << "},\n" << ALIGN8;
+                }
+
+                std::string bigSlotObjsStr = bigSlotObjsSS.str();
+                bigTotalObjsSS << bigSlotObjsStr.substr(0, bigSlotObjsStr.length() - 1) << "},\n" << ALIGN6;
+            }
+
+            ss << bigTotalObjsSS.str() << "\n";
+
+            /****************bulk**********************/
+            ss << "[Bulk]\n"
+               << SEPERATOR << "\n"
+               << ALIGN2 << "All slots pages:\n"
+               << ALIGN4 << "slots total count: " << m_bulk_obj_pages.size() << ";\n"
+               << ALIGN4 << "slots:\n" << ALIGN6;
+            std::stringstream bulkTotalPagesSS;
+            for (auto iter = m_bulk_obj_pages.begin(); iter != m_bulk_obj_pages.end(); ++iter) {
+                std::stringstream bulkPageSS;
+                bulkPageSS << "slot = " << iter->first << "'s pages:{ count = " << iter->second.size() << ", pages = ";
+                for (auto iter2 = iter->second.begin(); iter2 != iter->second.end(); ++iter2) {
+                    bulkPageSS << *iter2 << ",";
+                }
+
+                std::string bulkPageStr = bulkPageSS.str();
+                bulkTotalPagesSS << bulkPageStr.substr(0, bulkPageStr.length() - 1) << "}\n" << ALIGN6;
+            }
+
+            ss << bulkTotalPagesSS.str() << "\n";
+
+            ss << ALIGN2 << "Free Objs:\n"
+               << ALIGN4 << "slots total count: " << m_free_bulk_objs.size() << ";\n"
+               << ALIGN4 << "slots:\n" << ALIGN6;
+            std::stringstream bulkTotalObjsSS;
+            for (auto iter = m_free_bulk_objs.begin(); iter != m_free_bulk_objs.end(); ++iter) {
+                std::stringstream bulkSlotObjsSS;
+                bulkSlotObjsSS << "slot = " << iter->first << "'s pages:{ count = " << iter->second->objs.size() << "\n" << ALIGN8;
+                for (auto iter2 = iter->second->objs.begin(); iter2 != iter->second->objs.end(); ++iter2) {
+                    std::stringstream bulkPageObjsSS;
+                    bulkPageObjsSS << "page = " << iter2->first << "'s objs: { count = " << iter2->second.size() << ", ";
+                    for (auto iter3 = iter2->second.begin(); iter3 != iter2->second.end(); ++iter3) {
+                        bulkPageObjsSS << *iter3 << ",";
+                    }
+                    std::string bulkPageObjsStr = bulkPageObjsSS.str();
+                    bulkSlotObjsSS << bulkPageObjsStr.substr(0, bulkPageObjsStr.length() - 1) << "},\n" << ALIGN8;
+                }
+
+                std::string bulkSlotObjsStr = bulkSlotObjsSS.str();
+                bulkTotalObjsSS << bulkSlotObjsStr.substr(0, bulkSlotObjsStr.length() - 1) << "},\n" << ALIGN6;
+            }
+
+            ss << bulkTotalObjsSS.str() << "\n";
+
             return ss.str();
 
 #undef ALIGN2
