@@ -11,12 +11,6 @@
 
 namespace netty {
     namespace common {
-        template <typename T>
-        T* MemPool::MemObject::Pointer() const
-        {
-            return reinterpret_cast<T*>(m_obj_pv);
-        }
-
         uint32_t MemPool::MemObject::Size() const {
             return m_slot_size;
         }
@@ -87,7 +81,7 @@ namespace netty {
 
         }
 
-        MemPool::MemObjectRef MemPool::Get(uint32_t size) {
+        MemPool::MemObject* MemPool::Get(uint32_t size) {
             assert(size > 0);
             MemObject *memObject = nullptr;
             if (m_tiny_obj_threshold >= size) { // tiny obj operations.
@@ -188,12 +182,14 @@ namespace netty {
             }
 
             // 组装到MemObjectRef中
-            return MemObjectRef(memObject);
+            return memObject;
         }
 
-        void MemPool::Put(MemObjectRef mor) {
-            auto memObject = mor.get();
-            mor.reset();
+        void MemPool::Put(MemObject *memObject) {
+            if (!memObject) {
+                return;
+            }
+
             put(memObject->Type(), memObject->SlotIdx(),
                 memObject->ObjectPointerValue(), memObject->ObjectPagePointerValue());
             m_free_mem_objs.push_back(memObject);

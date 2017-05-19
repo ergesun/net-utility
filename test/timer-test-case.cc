@@ -9,8 +9,8 @@
 
 #include "../common/timer.h"
 
-#include "timer-test-case.h"
 #include "../common/common-utils.h"
+#include "timer-test-case.h"
 
 using namespace std;
 

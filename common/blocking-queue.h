@@ -56,7 +56,7 @@ namespace netty {
              */
             void Push(T &item) {
                 std::unique_lock<std::mutex> l(m_mutex);
-                while (m_queue.size() >= m_iQueueMaxSize) {
+                while (m_iQueueMaxSize != 0 && m_queue.size() >= m_iQueueMaxSize) {
                     m_cond.wait(l);
                 }
 
@@ -71,7 +71,7 @@ namespace netty {
              */
             void Push(T&& item) {
                 std::unique_lock<std::mutex> l(m_mutex);
-                while (m_queue.size() >= m_iQueueMaxSize) {
+                while (m_iQueueMaxSize != 0 && m_queue.size() >= m_iQueueMaxSize) {
                     m_cond.wait(l);
                 }
 

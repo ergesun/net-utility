@@ -89,7 +89,10 @@ namespace netty {
                 ~MemObject() = default;
 
                 template <typename T>
-                inline T* Pointer() const;
+                T* Pointer() const {
+                    return reinterpret_cast<T*>(m_obj_pv);
+                }
+                uint32_t Size() const;
 
             private:
                 friend class MemPool;
@@ -104,7 +107,6 @@ namespace netty {
                 MemObject(MemObjectType type, uint32_t slotSize, uintptr_t objPv, uintptr_t slotStartPv) :
                     m_type(type), m_slot_size(slotSize), m_obj_pv(objPv), m_obj_page_pv(slotStartPv) {}
 
-                inline uint32_t Size() const;
                 inline MemObjectType Type() const;
                 inline uint32_t SlotIdx() const;
                 inline uintptr_t ObjectPointerValue() const;
@@ -118,7 +120,6 @@ namespace netty {
                 uintptr_t      m_obj_page_pv; /* slot start pointer value */
             };
 
-            typedef std::shared_ptr<MemObject> MemObjectRef;
             friend class MemObject;
 
         private:
@@ -161,8 +162,8 @@ namespace netty {
              * @param size
              * @return 失败的话MemObjectRef.get()为nullptr
              */
-            MemObjectRef Get(uint32_t size);
-            void Put(MemObjectRef mor);
+            MemObject* Get(uint32_t size);
+            void Put(MemObject *memObject);
 
             /**************复杂相对高性能接口***********************/
             // TODO(sunchao): 添加复杂高性能接口，最起码会减少很多if-else判断。 eg.
@@ -181,16 +182,22 @@ namespace netty {
             inline std::list<uintptr_t> split_mem_page(uint32_t slotSize, uintptr_t pagePv, uint32_t pageSize);
             inline MemObject* get_mem_object(MemObjectType type, uint32_t slotSize, uintptr_t objPv, uintptr_t slotStartPv);
             /**
-             * 本函数的目的是找到一个整数，这个数要满足是2的exponent次幂的倍数，并且是比in大的所有数中最小的数。
+             * 本函数的目的是找到一个整数，这个数要满足是2的exponent次幂的倍数，并且是大于等于in的所有数中最小的数。
              * @param in
              * @param exponent
              * @return
              */
             inline uint32_t roundup_to_the_next_highest_multiple_of_exponent2(uint32_t in, uint32_t exponent) {
-                uint32_t multiple_base = (uint32_t)2 << (exponent - 1);
-                uint32_t mask = (0xFFFFFFFF >> exponent) << exponent;
+                uint32_t low_true = ((in << (32 - exponent)) ^ 0);
+                if (!low_true) {
+                    return in;
+                } else {
+                    uint32_t multiple_base = (uint32_t)2 << (exponent - 1);
+                    uint32_t mask = (0xFFFFFFFF >> exponent) << exponent;
 
-                return (in & mask) + multiple_base;
+                    return (in & mask) + multiple_base;
+                }
+
             }
 
             inline uint32_t convert_small_slot_obj_size_to_slot_idx(uint32_t size) {
