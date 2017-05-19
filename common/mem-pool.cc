@@ -33,19 +33,19 @@ namespace netty {
             return m_obj_pv;
         }
 
-        uintptr_t MemPool::MemObject::SlotStartPointerValue() const {
-            return m_slot_start_pv;
+        uintptr_t MemPool::MemObject::ObjectPagePointerValue() const {
+            return m_obj_page_pv;
         }
 
         MemPool::MemPool() :
             MemPool(TINY_OBJECT_RESIDENT_CNT, ONE_SLOT_SMALL_OBJECT_RESIDENT_CNT, ONE_SLOT_BIG_OBJECT_RESIDENT_CNT,
-                    EXTRA_OBJECT_CHECK_PERIOD, TINY_OBJECT_SIZE_THRESHOLD, (uint32_t)(BIG_PAGE_SIZE_THRESHOLD), BULK_PAGE_SIZE_THRESHOLD) {}
+                    TINY_OBJECT_SIZE_THRESHOLD, (uint32_t)(BIG_PAGE_SIZE_THRESHOLD), BULK_PAGE_SIZE_THRESHOLD) {}
 
-        MemPool::MemPool(uint32_t torc, uint32_t sorc, uint32_t borc, uint32_t eocp) :
-            MemPool(torc, sorc, borc, eocp, TINY_OBJECT_SIZE_THRESHOLD, (uint32_t)(BIG_PAGE_SIZE_THRESHOLD), BULK_PAGE_SIZE_THRESHOLD) {}
+        MemPool::MemPool(uint32_t torc, uint32_t sorc, uint32_t borc) :
+            MemPool(torc, sorc, borc, TINY_OBJECT_SIZE_THRESHOLD, (uint32_t)(BIG_PAGE_SIZE_THRESHOLD), BULK_PAGE_SIZE_THRESHOLD) {}
 
         MemPool::MemPool(uint32_t torc, uint32_t sorc, uint32_t borc,
-                         uint32_t eocp, uint32_t tpt, uint32_t bipt, uint32_t bupt) {
+                         uint32_t tpt, uint32_t bipt, uint32_t bupt) {
             m_sys_cacheline_size = (uint32_t)(common::CACHELINE_SIZE);
             m_sys_page_size = (uint32_t)(common::PAGE_SIZE);
             m_available_reserve_bulk_obj_max_size = RESIDENT_BULK_OBJ_MAX_SIZE;
@@ -57,14 +57,17 @@ namespace netty {
             m_big_obj_slot_footstep_exponent = (uint32_t)log2(m_sys_page_size);
             m_bulk_obj_slot_footstep_exponent = (uint32_t)log2(m_sys_page_size);
             m_one_slot_big_obj_resident_cnts = borc;
-            m_recycle_extra_page_period = eocp;
+            m_one_slot_bulk_obj_resident_cnts = (uint32_t)(ONE_SLOT_BULK_OBJECT_RESIDENT_CNT);
             m_tiny_obj_threshold = tpt;
             m_big_obj_threshold = bipt;
             m_bulk_obj_threshold = bupt;
             m_expand_obj_cnt_factor = DEFAULT_EXPAND_OBJ_CNT_FACTOR;
+            m_expand_bulk_obj_cnt_factor = DEFAULT_EXPAND_BULK_OBJ_CNT_FACTOR;
 
             // 分配小对象的槽
             auto smallSlotCnt = m_big_obj_threshold / m_small_obj_slot_footstep_size;
+            m_free_small_objs.reserve(smallSlotCnt);
+            m_small_obj_pages.reserve(smallSlotCnt);
             for (int i = 1; i <= smallSlotCnt; ++i) {
                 m_free_small_objs[i] = SlotObjPage();
                 m_small_obj_pages[i] = std::unordered_set<uintptr_t>();
@@ -72,17 +75,12 @@ namespace netty {
 
             // 分配大对象的槽
             auto bigSlotCnt = m_bulk_obj_threshold / m_sys_page_size;
+            m_free_big_objs.reserve(bigSlotCnt);
+            m_big_obj_pages.reserve(bigSlotCnt);
             for (int i = 1; i <= bigSlotCnt; ++i) {
                 m_free_big_objs[i] = SlotObjPage();
                 m_big_obj_pages[i] = std::unordered_set<uintptr_t>();
             }
-
-            m_recycle_check_cb = std::bind(&MemPool::check_objs, this);
-            m_recycle_check_ev = Timer::Event(nullptr, &m_recycle_check_cb);
-
-            m_recycle_check_timer = new Timer();
-            m_recycle_check_timer->Start();
-            m_recycle_check_timer->SubscribeEventAfter(uctime_t(m_recycle_extra_page_period, 0), m_recycle_check_ev);
         }
 
         MemPool::~MemPool() {
@@ -160,7 +158,7 @@ namespace netty {
             } else { // bulk obj operations.
                 SpinLock l(&m_bulk_obj_pages_lock);
                 uint32_t needPageSize = roundup_to_the_next_highest_multiple_of_exponent2(size, m_bulk_obj_slot_footstep_exponent);
-                uint32_t needSlotIdx = needPageSize / m_sys_page_size;
+                uint32_t needSlotIdx = convert_slot_obj_size_to_slot_idx(needPageSize, m_sys_page_size);
                 uintptr_t suitableObjPv, suitablePagePv;
                 uint32_t suitableObjSlotIdx;
                 get_suitable_bulk_page(needPageSize, suitableObjSlotIdx, suitableObjPv, suitablePagePv);
@@ -197,52 +195,123 @@ namespace netty {
             auto memObject = mor.get();
             mor.reset();
             put(memObject->Type(), memObject->SlotIdx(),
-                memObject->ObjectPointerValue(), memObject->SlotStartPointerValue());
+                memObject->ObjectPointerValue(), memObject->ObjectPagePointerValue());
             m_free_mem_objs.push_back(memObject);
         }
 
-        void MemPool::put(MemObjectType type, uint32_t slot_size, uintptr_t obj_pv, uintptr_t slot_start_pv) {
+        /**
+         * 懒得抽成函数，复制粘贴挺好，清晰明了。以后万一不同level的对象有不同策略也不用拆了。
+         * @param type
+         * @param slotSize
+         * @param objPv
+         * @param objPagePv
+         */
+        void MemPool::put(MemObjectType type, uint32_t slotSize, uintptr_t objPv, uintptr_t objPagePv) {
             switch (type) {
                 case MemObjectType::Tiny: {
                     SpinLock l(&m_tiny_obj_pages_lock);
-                    auto objIter = m_free_tiny_objs.find(slot_start_pv);
+                    auto objIter = m_free_tiny_objs.find(objPagePv);
                     if (objIter == m_free_tiny_objs.end()) {
-                        m_free_tiny_objs[slot_start_pv] = std::list<uintptr_t>();
+                        m_free_tiny_objs[objPagePv] = std::list<uintptr_t>();
                     }
 
-                    m_free_tiny_objs[slot_start_pv].push_back(obj_pv);
+                    m_free_tiny_objs[objPagePv].push_back(objPv);
                     auto onePageObjsCnt = m_sys_page_size / m_tiny_obj_threshold;
                     if (++m_free_tiny_objs_cnt > m_one_slot_tiny_obj_resident_cnts + onePageObjsCnt) {
                         // free的obj个数超出了预设的个数，需要找一个满闲page释放
-                        for (auto iter = m_free_tiny_objs.begin(); iter != m_free_tiny_objs.end();++iter) {
+                        for (auto iter = m_free_tiny_objs.begin(); iter != m_free_tiny_objs.end(); ++iter) {
                             if (onePageObjsCnt == iter->second.size()) {
                                 // 找到了满闲的page，移除之
-                                auto pagePv = iter->first;
+                                free(reinterpret_cast<char*>(objPagePv));
+                                m_tiny_obj_pages.erase(objPagePv);
                                 m_free_tiny_objs.erase(iter);
-                                m_tiny_obj_pages.erase(pagePv);
+                                m_free_tiny_objs_cnt -= onePageObjsCnt;
+                                break;
                             }
                         }
                     }
                 }
-                case MemObjectType::Small:
-                case MemObjectType::Big:  {
-                    std::unordered_map<uint32_t, std::unordered_set<uintptr_t>>::iterator slotIter;
-                    if (MemObjectType::Small == type) {
-
-                    } else {
-
+                case MemObjectType::Small: {
+                    auto slotIdx = convert_small_slot_obj_size_to_slot_idx(slotSize);
+                    auto slotIter = m_free_small_objs.find(slotIdx);
+                    SpinLock l(&slotIter->second.sl);
+                    auto pagePvIter = slotIter->second.objs.find(objPagePv);
+                    if (slotIter->second.objs.end() == pagePvIter) {
+                        slotIter->second.objs[objPagePv] = std::list<uintptr_t>();
                     }
 
+                    slotIter->second.objs[objPagePv].push_back(objPv);
+                    auto onePageSize = gen_expand_slot_page_size(slotSize, m_expand_obj_cnt_factor, m_sys_page_size);
+                    auto onePageObjsCnt = onePageSize / slotSize;
+                    if (++(slotIter->second.cnt) > m_one_slot_small_obj_resident_cnts + onePageObjsCnt) {
+                        // free的obj个数超出了预设的个数，需要找一个满闲page释放
+                        for (auto iter = slotIter->second.objs.begin(); iter != slotIter->second.objs.end(); ++iter) {
+                            // 找到了满闲的page，移除之
+                            if (onePageObjsCnt == iter->second.size()) {
+                                free(reinterpret_cast<char*>(objPagePv));
+                                m_small_obj_pages[slotIdx].erase(objPagePv);
+                                slotIter->second.objs.erase(iter);
+                                slotIter->second.cnt -= onePageObjsCnt;
+                                break;
+                            }
+                        }
+                    }
+                }
+                case MemObjectType::Big: {
+                    auto slotIdx = convert_big_slot_obj_size_to_slot_idx(slotSize);
+                    auto slotIter = m_free_big_objs.find(slotIdx);
+                    SpinLock l(&slotIter->second.sl);
+                    auto pagePvIter = slotIter->second.objs.find(objPagePv);
+                    if (slotIter->second.objs.end() == pagePvIter) {
+                        slotIter->second.objs[objPagePv] = std::list<uintptr_t>();
+                    }
 
+                    slotIter->second.objs[objPagePv].push_back(objPv);
+                    auto onePageSize = gen_expand_slot_page_size(slotSize, m_expand_obj_cnt_factor, m_sys_page_size);
+                    auto onePageObjsCnt = onePageSize / slotSize;
+                    if (++(slotIter->second.cnt) > m_one_slot_big_obj_resident_cnts + onePageObjsCnt) {
+                        for (auto iter = slotIter->second.objs.begin(); iter != slotIter->second.objs.end(); ++iter) {
+                            if (onePageObjsCnt == iter->second.size()) {
+                                free(reinterpret_cast<char*>(objPagePv));
+                                m_big_obj_pages[slotIdx].erase(objPagePv);
+                                slotIter->second.objs.erase(iter);
+                                slotIter->second.cnt -= onePageObjsCnt;
+                                break;
+                            }
+                        }
+                    }
                 }
                 case MemObjectType::Bulk: {
+                    SpinLock l(&m_bulk_obj_pages_lock);
+                    auto slotIdx = convert_bulk_slot_obj_size_to_slot_idx(slotSize);
+                    auto slotIter = m_free_hash_bulk_objs.find(slotIdx);
+                    if (m_free_hash_bulk_objs.end() == slotIter) {
+                        m_free_hash_bulk_objs[slotIdx] = SlotObjPage();
+                        m_free_hash_bulk_objs[slotIdx].objs[objPagePv] = std::list<uintptr_t>();
+                        m_free_hash_bulk_objs[slotIdx].cnt = 0;
+                        m_free_bulk_objs[slotIdx] = &(m_free_hash_bulk_objs[slotIdx]);
+                    }
 
+                    m_free_hash_bulk_objs[slotIdx].objs[objPagePv].push_back(objPv);
+                    auto onePageSize = gen_expand_slot_page_size(slotSize, m_expand_bulk_obj_cnt_factor, m_sys_page_size);
+                    auto onePageObjsCnt = onePageSize / slotSize;
+                    if (++(m_free_hash_bulk_objs[slotIdx].cnt) > m_one_slot_bulk_obj_resident_cnts + onePageObjsCnt) {
+                        for (auto iter = m_free_hash_bulk_objs[slotIdx].objs.begin(); iter != m_free_hash_bulk_objs[slotIdx].objs.end(); ++iter) {
+                            if (onePageObjsCnt == iter->second.size()) {
+                                free(reinterpret_cast<char*>(objPagePv));
+                                m_bulk_obj_pages[slotIdx].erase(objPagePv);
+                                m_free_hash_bulk_objs[slotIdx].objs.erase(iter);
+                                m_free_hash_bulk_objs[slotIdx].cnt -= onePageObjsCnt;
+                                if (0 == m_free_hash_bulk_objs[slotIdx].cnt) {
+                                    m_free_hash_bulk_objs.erase(slotIdx);
+                                    m_free_bulk_objs.erase(slotIdx);
+                                }
+                                break;
+                            }
+                        }
+                    }
                 }
             }
-        }
-
-        void MemPool::check_objs() {
-            m_recycle_check_timer->SubscribeEventAfter(uctime_t(m_recycle_extra_page_period, 0), m_recycle_check_ev);
         }
 
         std::list<uintptr_t> MemPool::split_mem_page(uint32_t slotSize, uintptr_t pagePv, uint32_t pageSize) {
@@ -274,7 +343,7 @@ namespace netty {
             m_type = type;
             m_slot_size = slotSize;
             m_obj_pv = objPv;
-            m_slot_start_pv = slotStartPv;
+            m_obj_page_pv = slotStartPv;
         }
 
         bool MemPool::alloc_page_objs(uint32_t size, uint32_t slotSize, std::unordered_set<uintptr_t> &pages,

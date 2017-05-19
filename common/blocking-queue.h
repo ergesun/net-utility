@@ -13,11 +13,16 @@
 namespace netty {
     namespace common {
         /**
-         * 一个会阻塞获取动作的队列。api应用了move语义。
+         * 一个会阻塞队列。api应用了move语义。
          */
         template <typename T>
-        class BlockingGetQueue {
+        class BlockingQueue {
         public:
+            /**
+             *
+             * @param queueMaxSize 保有的队列元素的最大个数，0为无限制。
+             */
+            BlockingQueue(uint32_t queueMaxSize = 0) : m_iQueueMaxSize(queueMaxSize) {}
             T Pop() {
                 std::unique_lock<std::mutex> l(m_mutex);
                 while (m_queue.empty()) {
@@ -25,6 +30,10 @@ namespace netty {
                 }
                 auto item = std::move(m_queue.front());
                 m_queue.pop();
+                if (0 != m_iQueueMaxSize) {
+                    l.unlock();
+                    m_cond.notify_one();
+                }
                 return item;
             }
 
@@ -35,6 +44,10 @@ namespace netty {
                 }
                 item = std::move(m_queue.front());
                 m_queue.pop();
+                if (0 != m_iQueueMaxSize) {
+                    l.unlock();
+                    m_cond.notify_one();
+                }
             }
 
             /**
@@ -43,6 +56,10 @@ namespace netty {
              */
             void Push(T &item) {
                 std::unique_lock<std::mutex> l(m_mutex);
+                while (m_queue.size() >= m_iQueueMaxSize) {
+                    m_cond.wait(l);
+                }
+
                 m_queue.push(item);
                 l.unlock();
                 m_cond.notify_one();
@@ -54,6 +71,10 @@ namespace netty {
              */
             void Push(T&& item) {
                 std::unique_lock<std::mutex> l(m_mutex);
+                while (m_queue.size() >= m_iQueueMaxSize) {
+                    m_cond.wait(l);
+                }
+
                 m_queue.push(std::move(item));
                 l.unlock();
                 m_cond.notify_one();
@@ -70,10 +91,11 @@ namespace netty {
             }
 
         private:
+            uint32_t m_iQueueMaxSize = 0;
             std::queue<T> m_queue;
             std::mutex m_mutex;
             std::condition_variable m_cond;
-        }; /* class BlockingGetQueue */
+        }; /* class BlockingQueue */
     } // namespace common
 } // namespace netty
 

@@ -54,10 +54,6 @@
  */
 #define RESIDENT_BULK_OBJ_MAX_SIZE            524288                     // 512 KiB
 /**
- * 各对象超出设定常驻个数的检查的周期
- */
-#define EXTRA_OBJECT_CHECK_PERIOD             300                        // 5 * 60 seconds
-/**
  * small、big对象的扩展系数
  */
 #define DEFAULT_EXPAND_OBJ_CNT_FACTOR         32
@@ -106,20 +102,20 @@ namespace netty {
                  * @param slot_start_p
                  */
                 MemObject(MemObjectType type, uint32_t slotSize, uintptr_t objPv, uintptr_t slotStartPv) :
-                    m_type(type), m_slot_size(slotSize), m_obj_pv(objPv), m_slot_start_pv(slotStartPv) {}
+                    m_type(type), m_slot_size(slotSize), m_obj_pv(objPv), m_obj_page_pv(slotStartPv) {}
 
                 inline uint32_t Size() const;
                 inline MemObjectType Type() const;
                 inline uint32_t SlotIdx() const;
                 inline uintptr_t ObjectPointerValue() const;
-                inline uintptr_t SlotStartPointerValue() const;
+                inline uintptr_t ObjectPagePointerValue() const;
                 inline void refresh(MemObjectType type, uint32_t slotSize, uintptr_t objPv, uintptr_t slotStartPv);
 
             private:
                 MemObjectType  m_type;
                 uint32_t       m_slot_size; /* 空间大小(可能比申请的大) */
                 uintptr_t      m_obj_pv; /* object pointer value */
-                uintptr_t      m_slot_start_pv; /* slot start pointer value */
+                uintptr_t      m_obj_page_pv; /* slot start pointer value */
             };
 
             typedef std::shared_ptr<MemObject> MemObjectRef;
@@ -145,7 +141,7 @@ namespace netty {
              * @param borc 每个槽位常驻的大对象的个数
              * @param eocp 检查回收超额对象的定时器的周期，单位秒
              */
-            MemPool(uint32_t torc, uint32_t sorc, uint32_t  borc, uint32_t eocp);
+            MemPool(uint32_t torc, uint32_t sorc, uint32_t  borc);
             /**
              *
              * @param torc 每个槽位常驻的微小对象的个数
@@ -156,7 +152,7 @@ namespace netty {
              * @param bipt 大对象的界定阈值
              * @param bupt 巨大对象的界定阈值
              */
-            MemPool(uint32_t torc,uint32_t sorc, uint32_t borc, uint32_t eocp, uint32_t tpt, uint32_t bipt, uint32_t bupt);
+            MemPool(uint32_t torc,uint32_t sorc, uint32_t borc, uint32_t tpt, uint32_t bipt, uint32_t bupt);
             ~MemPool();
 
             /**************通用简单接口***********************/
@@ -176,11 +172,11 @@ namespace netty {
             /**
              * 回收对象。回收的时候无需检验，因为调用它的Put函数的入参MemObject是只读的。
              * @param type
-             * @param slot_size
-             * @param obj_pv
-             * @param slot_start_pv
+             * @param slotSize
+             * @param objPv
+             * @param objPagePv
              */
-            void put(MemObjectType type, uint32_t slot_size, uintptr_t obj_pv, uintptr_t slot_start_pv);
+            void put(MemObjectType type, uint32_t slotSize, uintptr_t objPv, uintptr_t objPagePv);
             void check_objs();
             inline std::list<uintptr_t> split_mem_page(uint32_t slotSize, uintptr_t pagePv, uint32_t pageSize);
             inline MemObject* get_mem_object(MemObjectType type, uint32_t slotSize, uintptr_t objPv, uintptr_t slotStartPv);
@@ -195,6 +191,18 @@ namespace netty {
                 uint32_t mask = (0xFFFFFFFF >> exponent) << exponent;
 
                 return (in & mask) + multiple_base;
+            }
+
+            inline uint32_t convert_small_slot_obj_size_to_slot_idx(uint32_t size) {
+                return size / m_small_obj_slot_footstep_size;
+            }
+
+            inline uint32_t convert_big_slot_obj_size_to_slot_idx(uint32_t size) {
+                return size / m_sys_page_size;
+            }
+
+            inline uint32_t convert_bulk_slot_obj_size_to_slot_idx(uint32_t size) {
+                return size / m_sys_page_size;
             }
 
             inline uint32_t convert_slot_obj_size_to_slot_idx(uint32_t size, uint32_t footstep) {
@@ -251,22 +259,22 @@ namespace netty {
 
             /****************************big objects********************************************/
             /**
-             * <槽大小(n-->index)，<大对象内存的首地址>>
+             * <槽大小(index == slotSize / page size)，<大对象内存的首地址>>
              */
             std::unordered_map<uint32_t, std::unordered_set<uintptr_t>> m_big_obj_pages; // [n] * 4KiB pages
             /**
-             * <槽大小(n-->index)，SlotObjPage>
+             * <槽大小(index == slotSize / page size)，SlotObjPage>
              */
             std::unordered_map<uint32_t , SlotObjPage> m_free_big_objs;
 
             /****************************bulk objects********************************************/
             spin_lock_t m_bulk_obj_pages_lock = UNLOCKED;
             /**
-             * <槽大小(n KiB)，超大对象内存的首地址>
+             * <槽大小(index == slotSize / page size)，超大对象内存的首地址>
              */
             std::unordered_map<uint32_t, std::unordered_set<uintptr_t>> m_bulk_obj_pages; // default more than 32KiB
             /**
-             * <槽大小(n KiB)，<超大页内存的首地址>>
+             * <槽大小(index == slotSize / page size)，<超大页内存的首地址>>
              * 由于bulk对象是完全匹配分配法，所以有必要建立一个hash表来存储，
              * 因为用户极可能再次申请相同大小的buf，可以先做一次完全匹配。匹配上了直接返回。
              */
@@ -297,10 +305,6 @@ namespace netty {
             uint32_t m_available_reserve_bulk_obj_max_size;
             uint32_t m_expand_obj_cnt_factor;
             uint32_t m_expand_bulk_obj_cnt_factor;
-            uint32_t m_recycle_extra_page_period;
-            Timer *m_recycle_check_timer;
-            Timer::TimerCallback m_recycle_check_cb;
-            Timer::Event m_recycle_check_ev;
         };
     }  // namespace common
 }  // namespace netty

@@ -11,7 +11,7 @@
 #include <unordered_set>
 #include <atomic>
 
-#include "blocking-get-queue.h"
+#include "blocking-queue.h"
 #include "common-def.h"
 #include "spin-lock.h"
 
@@ -42,7 +42,7 @@ namespace netty {
              * @param t 添加的task。
              */
             inline void AddTask(Task t) {
-                m_bgqTasks.Push(t);
+                m_bqTasks.Push(t);
             }
 
             /**
@@ -68,7 +68,7 @@ namespace netty {
         private:
             bool                           m_bStopping = false;
             std::vector<std::thread*>      m_vThreadps;
-            common::BlockingGetQueue<Task> m_bgqTasks;
+            common::BlockingQueue<Task>    m_bqTasks;
             std::atomic<int>               m_iActiveWorkersCnt;
             std::mutex                     m_mtxActiveWorkerCnt;
             std::condition_variable        m_cvActiveWorkerCnt;

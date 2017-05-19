@@ -35,7 +35,7 @@ namespace netty {
 
         void ThreadPool::WaitAll() {
             std::unique_lock<std::mutex> l(m_mtxActiveWorkerCnt);
-            while (!m_bgqTasks.Empty() || 0 != m_iActiveWorkersCnt.load()) {
+            while (!m_bqTasks.Empty() || 0 != m_iActiveWorkersCnt.load()) {
                 m_cvActiveWorkerCnt.wait(l);
             }
         }
@@ -45,7 +45,7 @@ namespace netty {
             using namespace std::chrono;
             time_point<system_clock, nanoseconds> tp(nanoseconds(duration_since_epoch.get_total_nsecs()));
             bool first = true;
-            while (first && (!m_bgqTasks.Empty() && 0 != m_iActiveWorkersCnt.load())) {
+            while (first && (!m_bqTasks.Empty() && 0 != m_iActiveWorkersCnt.load())) {
                 m_cvActiveWorkerCnt.wait_until(l, tp);
                 first = false;
             }
@@ -60,7 +60,7 @@ namespace netty {
 
         void ThreadPool::proc() {
             while (true) {
-                auto task = m_bgqTasks.Pop();
+                auto task = m_bqTasks.Pop();
                 // 此处无需担心m_stopping所判断的成员因为优化导致不能读取到内存数据的情况，
                 // 因为BlockingGetQueue::Pop内部有内存屏障作用。
                 if (m_bStopping) {
