@@ -57,7 +57,7 @@ namespace netty {
 
             /*******************big objs**********************/
             memObjects.clear();
-            for (int i = 0; i < 100000; ++i) {
+            for (int i = 0; i < 1000; ++i) {
                 auto needSize = (4097 + i) % (32 * 4096 + 1);
                 needSize = needSize ? needSize : 4097;
                 auto memObject = mp.Get(needSize);
@@ -74,24 +74,23 @@ namespace netty {
             }
             cout << mp.DumpDebugInfo() << endl;
 
-//            /*******************bulk objs**********************/
-//            memObjects.clear();
-//            for (int i = 0; i < 100000; ++i) {
-//                auto needSize = (4097 + i) % (32 * 4096 + 1);
-//                needSize = needSize ? needSize : 4097;
-//                auto memObject = mp.Get(needSize);
-//                memObjects.push_back(memObject);
-//                auto buf = memObject->Pointer<char>();
-//                auto size = memObject->Size();
-//                const char *str = "hello world!";
-//                memcpy(buf, str, strlen(str) + 1);
-//                cout << "buf = " << buf << ", needSize = " << needSize <<  ", get size = " << size << endl;
-//            }
-//
-//            for (auto p : memObjects) {
-//                mp.Put(p);
-//            }
-//            cout << mp.DumpDebugInfo() << endl;
+            /*******************bulk objs**********************/
+            memObjects.clear();
+            for (int i = 0; i < 5; ++i) {
+                auto needSize = 1024 * 1024 + i * 1024 * 1024;
+                auto memObject = mp.Get(needSize);
+                memObjects.push_back(memObject);
+                auto buf = memObject->Pointer<char>();
+                auto size = memObject->Size();
+                const char *str = "hello world!";
+                memcpy(buf, str, strlen(str) + 1);
+                cout << "buf = " << buf << ", needSize = " << needSize <<  ", get size = " << size << endl;
+            }
+
+            for (auto p : memObjects) {
+                mp.Put(p);
+            }
+            cout << mp.DumpDebugInfo() << endl;
         }
     }
 }

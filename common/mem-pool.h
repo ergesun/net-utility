@@ -183,7 +183,6 @@ namespace netty {
              * @param objPagePv
              */
             void put(MemObjectType type, uint32_t slotSize, uintptr_t objPv, uintptr_t objPagePv);
-            void check_objs();
             inline std::list<uintptr_t> split_mem_page(uint32_t slotSize, uintptr_t pagePv, uint32_t pageSize);
             inline MemObject* get_mem_object(MemObjectType type, uint32_t slotSize, uintptr_t objPv, uintptr_t slotStartPv);
             /**
