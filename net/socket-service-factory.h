@@ -18,7 +18,7 @@ namespace netty {
              * @param cp  worker的管理策略。
              */
             static ISocketService *
-            CreateService(std::shared_ptr<net_local_info_t> nlt, INetStackWorkerPolicy *cp = nullptr);
+            CreateService(std::shared_ptr<net_local_info_t> nlt, INetStackWorkerManager *cp = nullptr);
         }; // class SocketServiceFactory
     } // namespace net
 } // namespace netty

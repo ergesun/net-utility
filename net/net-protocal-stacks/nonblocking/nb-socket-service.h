@@ -8,7 +8,7 @@
 
 #include <memory>
 
-#include "../inet-msg-worker-policy.h"
+#include "../inet-msg-worker-manager.h"
 #include "../../abstract-socket-service.h"
 #include "event-drivers/ievent-driver.h"
 #include "../../message.h"
@@ -22,7 +22,7 @@ namespace netty {
              * @param nlt 如果为空，则是为仅仅一个服务于client的服务，否则为server信息，会开启server的服务。
              * @param cp  worker的管理策略。
              */
-            NBSocketService(std::shared_ptr<net_local_info_t> nlt, INetStackWorkerPolicy *cp) : ASocketService(nlt),
+            NBSocketService(std::shared_ptr<net_local_info_t> nlt, INetStackWorkerManager *cp) : ASocketService(nlt),
                                                                                                 m_workerPolicy(cp) {}
 
             /**
@@ -38,9 +38,10 @@ namespace netty {
             virtual bool SendMessage(Message *m) override;
 
         private:
-            INetStackWorkerPolicy *m_workerPolicy = nullptr;
+            INetStackWorkerManager *m_workerPolicy = nullptr;
             // TODO(sunchao): 扩展为多driver均衡处理。
             IEventDriver *m_eventDriver = nullptr;
+
         }; // class NBSocketService
     }  // namespace net
 } // namespace netty

@@ -3,20 +3,20 @@
  * a Creative Commons Attribution 3.0 Unported License(https://creativecommons.org/licenses/by/3.0/).
  */
 
-#include "unique-worker-policy.h"
+#include "unique-worker-manager.h"
 
 namespace netty {
     namespace net {
 
-        INetMessageWorker *UniqueWorkerPolicy::GetWorker(net_peer_info_t &npt) {
+        INetMessageWorker *UniqueWorkerManager::GetWorker(net_peer_info_t &npt) {
             return nullptr;
         }
 
-        void UniqueWorkerPolicy::PutWorker(INetMessageWorker *worker) {
+        void UniqueWorkerManager::PutWorker(INetMessageWorker *worker) {
 
         }
 
-        INetMessageWorker *UniqueWorkerPolicy::lookup_conn(net_peer_info_t &npt) {
+        INetMessageWorker *UniqueWorkerManager::lookup_conn(net_peer_info_t &npt) {
             auto p = m_hmap_workers.find(npt);
             if (m_hmap_workers.end() != p) {
                 return p->second;

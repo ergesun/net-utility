@@ -8,16 +8,16 @@
 
 #include <unordered_map>
 
-#include "../inet-msg-worker-policy.h"
+#include "../inet-msg-worker-manager.h"
 
 namespace netty {
     namespace net {
         /**
-         * 两个节点间复用同一连接的策略。
+         * 两个节点间复用同一连接的管理器。
          */
-        class GCC_INTERNAL UniqueWorkerPolicy : public INetStackWorkerPolicy {
+        class GCC_INTERNAL UniqueWorkerManager : public INetStackWorkerManager {
         public:
-            ~UniqueWorkerPolicy() {}
+            ~UniqueWorkerManager() {}
 
             /**
              * 获取一个worker。
@@ -37,7 +37,7 @@ namespace netty {
 
         private:
             std::unordered_map<net_peer_info_t, INetMessageWorker *> m_hmap_workers;
-        }; // class UniqueWorkerPolicy
+        }; // class UniqueWorkerManager
     }  // namespace net
 }  // namespace netty
 #endif //NET_CORE_NETSTACKWORKERPOLICY_H

@@ -13,17 +13,17 @@ namespace netty {
     namespace net {
         class INetMessageWorker;
 
-/**
- * worker管理策略。
- */
-        class GCC_INTERNAL INetStackWorkerPolicy {
+        /**
+         * worker管理器。
+         */
+        class GCC_INTERNAL INetStackWorkerManager {
         public:
-            virtual ~INetStackWorkerPolicy() = default;
+            virtual ~INetStackWorkerManager() = default;
 
             virtual INetMessageWorker *GetWorker(net_peer_info_t &npt) = 0;
 
             virtual void PutWorker(INetMessageWorker *conn) = 0;
-        }; // interface INetStackWorkerPolicy
+        }; // interface INetStackWorkerManager
     }  // namespace net
 } // namespace netty
 

@@ -12,7 +12,7 @@
 namespace netty {
     namespace net {
         /**
-         * 本类负责具体的socket函数处理。
+         * Posix tcp的消息处理类。事件管理器有事件了会调用。
          */
         class GCC_INTERNAL PosixTcpNetStackWorker : public ANetStackMessageWorker {
         public:

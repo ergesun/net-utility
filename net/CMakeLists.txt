@@ -19,8 +19,8 @@ add_library(net SHARED
         ${NPS_NB_ED_EP_SRCS}
         common-def.h
         idispatcher.h
-        net-protocal-stacks/nonblocking/socket-api/posix/tcp/ievent-handler.h
-        net-protocal-stacks/inet-msg-worker-policy.h
+        net-protocal-stacks/nonblocking/ievent-handler.h
+        net-protocal-stacks/inet-msg-worker-manager.h
         net-protocal-stacks/nonblocking/event-drivers/ievent-driver.h
         message.h
         isocket-service.h

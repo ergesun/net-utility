@@ -8,6 +8,9 @@
 
 namespace netty {
     namespace net {
+        /**
+         * 事件处理器。epoll的ptr管理，有事件了回调。
+         */
         class IEventHandler {
         public:
             virtual ~IEventHandler() {}

@@ -10,6 +10,7 @@ namespace netty {
     namespace net {
         /**
          * 本类负责对message的处理。具体的socket实现类要继承于此类。
+         * 事件管理器有事件了会调用读写。
          */
         class GCC_INTERNAL ANetStackMessageWorker {
         public:
