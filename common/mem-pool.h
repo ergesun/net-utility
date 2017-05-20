@@ -24,7 +24,7 @@
 /**
  * 超大对象的界定阈值
  */
-#define BULK_PAGE_SIZE_THRESHOLD              32768                      // 32 KiB
+#define BULK_PAGE_SIZE_THRESHOLD              131072                     // 32 KiB
 /**
  * 微小对象的界定阈值
  */
@@ -52,7 +52,7 @@
 /**
  * 可留用保存的超大对象的大小上限
  */
-#define RESIDENT_BULK_OBJ_MAX_SIZE            524288                     // 512 KiB
+#define RESIDENT_BULK_OBJ_MAX_SIZE            1048576                    // 512 KiB
 /**
  * small、big对象的扩展系数
  */
@@ -301,7 +301,6 @@ namespace netty {
             // TODO(sunchao): 加个回收机制？
             std::list<MemObject*> m_free_mem_objs;
 
-            uint32_t m_sys_cacheline_size;
             uint32_t m_sys_page_size;
             uint32_t m_small_obj_slot_footstep_size; // bytes
             uint32_t m_small_obj_slot_footstep_exponent;
