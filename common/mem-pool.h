@@ -65,6 +65,7 @@
 namespace netty {
     namespace common {
         /**
+         * Thread-safe.
          * 将内存按大小分成4种类别来管理。
          * 1. 微小型： <= 16 bytes
          * 2. 小型 ：  > 16 bytes && <= page_size(一般4KiB)
@@ -93,6 +94,7 @@ namespace netty {
                     return reinterpret_cast<T*>(m_obj_pv);
                 }
                 uint32_t Size() const;
+                void Put();
 
             private:
                 friend class MemPool;
@@ -100,24 +102,25 @@ namespace netty {
                 /**
                  *
                  * @param type
-                 * @param slot_size
-                 * @param obj_p
-                 * @param slot_start_p
+                 * @param slotSize
+                 * @param objPv
+                 * @param objPagePv
                  */
-                MemObject(MemObjectType type, uint32_t slotSize, uintptr_t objPv, uintptr_t slotStartPv) :
-                    m_type(type), m_slot_size(slotSize), m_obj_pv(objPv), m_obj_page_pv(slotStartPv) {}
+                MemObject(MemObjectType type, uint32_t slotSize, uintptr_t objPv, uintptr_t objPagePv, MemPool *mp) :
+                    m_type(type), m_slot_size(slotSize), m_obj_pv(objPv), m_obj_page_pv(objPagePv), m_ownnerPool(mp) {}
 
                 inline MemObjectType Type() const;
                 inline uint32_t SlotIdx() const;
                 inline uintptr_t ObjectPointerValue() const;
                 inline uintptr_t ObjectPagePointerValue() const;
-                inline void refresh(MemObjectType type, uint32_t slotSize, uintptr_t objPv, uintptr_t slotStartPv);
+                inline void refresh(MemObjectType type, uint32_t slotSize, uintptr_t objPv, uintptr_t objPagePv);
 
             private:
                 MemObjectType  m_type;
                 uint32_t       m_slot_size; /* 空间大小(可能比申请的大) */
                 uintptr_t      m_obj_pv; /* object pointer value */
                 uintptr_t      m_obj_page_pv; /* slot start pointer value */
+                MemPool       *m_ownnerPool;
             };
 
             friend class MemObject;

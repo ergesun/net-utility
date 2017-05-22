@@ -14,6 +14,7 @@ namespace netty {
         class ICodec {
         public:
             virtual ~ICodec() {}
+            virtual uint32_t CalculateEncodeBufferSize() = 0;
             virtual void Encode() = 0;
             virtual void Decode() = 0;
         }; // interface ICodec

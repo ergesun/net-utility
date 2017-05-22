@@ -6,6 +6,10 @@
 #ifndef NET_CORE_NETSTACKMESSAGEWORKER_H
 #define NET_CORE_NETSTACKMESSAGEWORKER_H
 
+#include "../../../../common/common-def.h"
+#include "../../../../common/blocking-queue.h"
+#include "../../../message.h"
+
 namespace netty {
     namespace net {
         /**
@@ -16,8 +20,14 @@ namespace netty {
         public:
             /**
              *
+             * @param maxCacheMessageCnt 消息缓冲队列的最大消息个数。0为无限制。
              */
-            void SendMessage();
+            ANetStackMessageWorker(uint32_t maxCacheMessageCnt = 0);
+            ~ANetStackMessageWorker();
+            /**
+             *
+             */
+            bool SendMessage(Message *m);
 
             void HandleMessage();
 
@@ -33,6 +43,10 @@ namespace netty {
              * @return
              */
             virtual bool Write() = 0;
+
+        private:
+            common::BlockingQueue<Message*> m_bqMessages;
+
         };
     } // namespace net
 } // namespace netty

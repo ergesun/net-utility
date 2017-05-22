@@ -21,9 +21,10 @@ namespace netty {
              *
              * @param nlt 如果为空，则是为仅仅一个服务于client的服务，否则为server信息，会开启server的服务。
              * @param cp  worker的管理策略。
+             * @param memPool 内存池。
              */
-            NBSocketService(std::shared_ptr<net_local_info_t> nlt, INetStackWorkerManager *cp) : ASocketService(nlt),
-                                                                                                m_workerPolicy(cp) {}
+            NBSocketService(std::shared_ptr<net_local_info_t> nlt, INetStackWorkerManager *cp, common::MemPool *memPool) :
+                ASocketService(nlt), m_workerPolicy(cp), m_memPool(memPool) {}
 
             /**
              * 开启服务。
@@ -41,7 +42,7 @@ namespace netty {
             INetStackWorkerManager *m_workerPolicy = nullptr;
             // TODO(sunchao): 扩展为多driver均衡处理。
             IEventDriver *m_eventDriver = nullptr;
-
+            common::MemPool *m_memPool = nullptr;
         }; // class NBSocketService
     }  // namespace net
 } // namespace netty

@@ -23,6 +23,23 @@ namespace netty {
              * @param queueMaxSize 保有的队列元素的最大个数，0为无限制。
              */
             BlockingQueue(uint32_t queueMaxSize = 0) : m_iQueueMaxSize(queueMaxSize) {}
+
+            bool TryPop(T& item) {
+                std::unique_lock<std::mutex> l(m_mutex);
+                if (m_queue.empty()) {
+                    return false;
+                }
+
+                item = std::move(m_queue.front());
+                m_queue.pop();
+                if (0 != m_iQueueMaxSize) {
+                    l.unlock();
+                    m_cond.notify_one();
+                }
+
+                return true;
+            }
+
             T Pop() {
                 std::unique_lock<std::mutex> l(m_mutex);
                 while (m_queue.empty()) {
@@ -48,6 +65,41 @@ namespace netty {
                     l.unlock();
                     m_cond.notify_one();
                 }
+            }
+
+            /**
+             * 不需要你保证对象不被释放，但对象内部的元素不可以被释放，否则元素内容将无效。
+             * @param item
+             * @return 成功返回true
+             */
+            bool TryPush(T &item) {
+                std::unique_lock<std::mutex> l(m_mutex);
+                if (m_iQueueMaxSize != 0 && m_queue.size() >= m_iQueueMaxSize) {
+                    return false;
+                }
+
+                m_queue.push(item);
+                l.unlock();
+                m_cond.notify_one();
+                return true;
+            }
+
+            /**
+             * 不需要你保证对象不被释放，但对象内部的元素不可以被释放，否则元素内容将无效。
+             * @param item
+             * @return 成功返回true
+             */
+            bool TryPush(T&& item) {
+                std::unique_lock<std::mutex> l(m_mutex);
+                if (m_iQueueMaxSize != 0 && m_queue.size() >= m_iQueueMaxSize) {
+                    return false;
+                }
+
+                m_queue.push(std::move(item));
+                l.unlock();
+                m_cond.notify_one();
+
+                return true;
             }
 
             /**
@@ -88,6 +140,13 @@ namespace netty {
             uint64_t Size() {
                 std::unique_lock<std::mutex> l(m_mutex);
                 return m_queue.size();
+            }
+
+            void Clear() {
+                std::unique_lock<std::mutex> l(m_mutex);
+                while (!m_queue.empty()) {
+                    m_queue.pop();
+                }
             }
 
         private:

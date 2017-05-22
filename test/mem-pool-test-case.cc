@@ -88,7 +88,7 @@ namespace netty {
             }
 
             for (auto p : memObjects) {
-                mp.Put(p);
+                p->Put();
             }
             cout << mp.DumpDebugInfo() << endl;
         }

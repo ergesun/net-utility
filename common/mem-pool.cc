@@ -15,6 +15,10 @@ namespace netty {
             return m_slot_size;
         }
 
+        void MemPool::MemObject::Put() {
+            m_ownnerPool->Put(this);
+        }
+
         MemPool::MemObjectType MemPool::MemObject::Type() const {
             return m_type;
         }
@@ -376,17 +380,17 @@ namespace netty {
                 memObject->refresh(type, slotSize, objPv, slotStartPv);
                 m_free_mem_objs.erase(mo_begin);
             } else {
-                memObject = new MemObject(type, slotSize, objPv, slotStartPv);
+                memObject = new MemObject(type, slotSize, objPv, slotStartPv, this);
             }
 
             return memObject;
         }
 
-        void MemPool::MemObject::refresh(MemObjectType type, uint32_t slotSize, uintptr_t objPv, uintptr_t slotStartPv) {
+        void MemPool::MemObject::refresh(MemObjectType type, uint32_t slotSize, uintptr_t objPv, uintptr_t objPagePv) {
             m_type = type;
             m_slot_size = slotSize;
             m_obj_pv = objPv;
-            m_obj_page_pv = slotStartPv;
+            m_obj_page_pv = objPagePv;
         }
 
         bool MemPool::alloc_page_objs(uint32_t size, uint32_t slotSize, std::unordered_set<uintptr_t> &pages,

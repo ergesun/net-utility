@@ -10,12 +10,14 @@
 #include <time.h>
 
 #include "icodec.h"
+#include "../common/mem-pool.h"
 
 #define MESSAGE_MAGIC_NO 0xdeadbeefbeefdead
 
 namespace netty {
     namespace net {
-        struct Message {
+        class Message : public ICodec {
+        public:
             struct Id {
                 __time_t ts; /* 时间戳 */
                 uint64_t id; /* 消息的唯一标识 */
@@ -31,8 +33,23 @@ namespace netty {
                 Header(Id  i, uint32_t l) : id(i), len(l) {}
             };
 
-            Header header;
+        public:
+            static Message* CreateMessage(common::MemPool *mp, common::uctime_t deadline);
 
+            /**
+             * 序列化之后的消息的bytes长度。
+             * @return
+             */
+            virtual uint32_t GetDataLength() = 0;
+
+        private:
+            Message(common::MemPool *mp, Header header, common::uctime_t deadline);
+            ~Message();
+
+        private:
+            Header m_header;
+            common::uctime_t m_deadline;
+            common::MemPool *m_memPool;
         }; // interface Message
     } // namespace net
 } // namespace netty
