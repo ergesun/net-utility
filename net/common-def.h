@@ -13,8 +13,15 @@
 
 namespace netty {
     namespace net {
+        enum class NettyCode {
+            OK           = 0,
+            ErrLocal,
+            Timeout,
+            ErrRemote
+        };
+
         enum class NonBlockingEventModel {
-            DPDK,
+            DPDK   = 0,
             Posix
         };
 

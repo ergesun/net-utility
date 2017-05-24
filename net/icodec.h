@@ -12,15 +12,18 @@ namespace netty {
     namespace common {
         class Buffer;
     }
+
     namespace net {
+        class Message;
+
         /**
          * 编解码器接口。
          */
         class ICodec {
         public:
             virtual ~ICodec() {}
-            virtual common::Buffer* Encode() = 0;
-            virtual void Decode() = 0;
+            virtual void Encode() = 0;
+            virtual void Decode(common::Buffer *buffer) = 0;
         }; // interface ICodec
     } // namespace net
 } // namespace netty

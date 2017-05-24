@@ -34,7 +34,19 @@ namespace netty {
             Buffer(Buffer&) = delete;
             Buffer& operator=(Buffer&) = delete;
 
-            inline void Refresh(uchar *pos, uchar *last, uchar *start, v *e, MemPoolObject *mpo);
+            inline void Put() {
+                if (MpObject) {
+                    MpObject->Put();
+                    Refresh(nullptr, nullptr, nullptr, nullptr, nullptr);
+                }
+            }
+            inline void Refresh(uchar *pos, uchar *last, uchar *start, uchar *end, MemPoolObject *mpo) {
+                Pos = pos;
+                Last = last;
+                Start = start;
+                End = end;
+                MpObject = mpo;
+            }
 
             uchar *Pos              = nullptr;
             uchar *Last             = nullptr;
