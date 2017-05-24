@@ -24,7 +24,7 @@ namespace netty {
                 needSize = needSize ? needSize : 1;
                 auto memObject = mp.Get(needSize);
                 memObjects.push_back(memObject);
-                auto buf = memObject->Pointer<char>();
+                auto buf = memObject->Pointer();
                 auto size = memObject->Size();
                 const char *str = "hello world!";
                 memcpy(buf, str, strlen(str) + 1);
@@ -43,7 +43,7 @@ namespace netty {
                 needSize = needSize ? needSize : 32;
                 auto memObject = mp.Get(needSize);
                 memObjects.push_back(memObject);
-                auto buf = memObject->Pointer<char>();
+                auto buf = memObject->Pointer();
                 auto size = memObject->Size();
                 const char *str = "hello world!";
                 memcpy(buf, str, strlen(str) + 1);
@@ -62,7 +62,7 @@ namespace netty {
                 needSize = needSize ? needSize : 4097;
                 auto memObject = mp.Get(needSize);
                 memObjects.push_back(memObject);
-                auto buf = memObject->Pointer<char>();
+                auto buf = memObject->Pointer();
                 auto size = memObject->Size();
                 const char *str = "hello world!";
                 memcpy(buf, str, strlen(str) + 1);
@@ -80,7 +80,7 @@ namespace netty {
                 auto needSize = 1024 * 1024 + i * 1024 * 1024;
                 auto memObject = mp.Get(needSize);
                 memObjects.push_back(memObject);
-                auto buf = memObject->Pointer<char>();
+                auto buf = memObject->Pointer();
                 auto size = memObject->Size();
                 const char *str = "hello world!";
                 memcpy(buf, str, strlen(str) + 1);

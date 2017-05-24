@@ -15,10 +15,12 @@ namespace netty {
             /**
              *
              * @param nlt 如果为空，则是为仅仅一个服务于client的服务，否则为server信息，会开启server的服务。
+             * @param memPool 内存池对象
              * @param cp  worker的管理策略。
              */
-            static ISocketService *
-            CreateService(std::shared_ptr<net_local_info_t> nlt, INetStackWorkerManager *cp = nullptr);
+            static ISocketService* CreateService(std::shared_ptr<net_local_info_t> nlt,
+                                                 common::MemPool *memPool,
+                                                 INetStackWorkerManager *cp = nullptr);
         }; // class SocketServiceFactory
     } // namespace net
 } // namespace netty

@@ -8,20 +8,19 @@
 namespace netty {
     namespace net {
         ANetStackMessageWorker::ANetStackMessageWorker(uint32_t maxCacheMessageCnt) {
-            m_bqMessages = common::BlockingQueue<Message*>(maxCacheMessageCnt);
+            m_bqMessages = new common::BlockingQueue<Message*>(maxCacheMessageCnt);
         }
 
         ANetStackMessageWorker::~ANetStackMessageWorker() {
-            m_bqMessages.Clear();
+            m_bqMessages->Clear();
+            delete m_bqMessages;
         }
 
         bool ANetStackMessageWorker::SendMessage(Message *m) {
-            auto ret = m_bqMessages.TryPush(m);
+            auto ret = m_bqMessages->TryPush(m);
             if (!ret) {
                 return ret;
             }
-
-
         }
     } // namespace net
 } // namespace netty

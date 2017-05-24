@@ -45,7 +45,7 @@ namespace netty {
             virtual bool Write() = 0;
 
         private:
-            common::BlockingQueue<Message*> m_bqMessages;
+            common::BlockingQueue<Message*> *m_bqMessages;
 
         };
     } // namespace net

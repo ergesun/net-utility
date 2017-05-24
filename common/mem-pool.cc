@@ -11,6 +11,10 @@
 
 namespace netty {
     namespace common {
+        char* MemPool::MemObject::Pointer() const {
+            return reinterpret_cast<char*>(m_obj_pv);
+        }
+
         uint32_t MemPool::MemObject::Size() const {
             return m_slot_size;
         }

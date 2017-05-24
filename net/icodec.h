@@ -6,7 +6,12 @@
 #ifndef NET_CORE_ICODEC_H
 #define NET_CORE_ICODEC_H
 
+#include "../common/mem-pool.h"
+
 namespace netty {
+    namespace common {
+        class Buffer;
+    }
     namespace net {
         /**
          * 编解码器接口。
@@ -14,8 +19,7 @@ namespace netty {
         class ICodec {
         public:
             virtual ~ICodec() {}
-            virtual uint32_t CalculateEncodeBufferSize() = 0;
-            virtual void Encode() = 0;
+            virtual common::Buffer* Encode() = 0;
             virtual void Decode() = 0;
         }; // interface ICodec
     } // namespace net

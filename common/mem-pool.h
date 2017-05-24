@@ -89,10 +89,7 @@ namespace netty {
                 MemObject(const MemObject&) = default;
                 ~MemObject() = default;
 
-                template <typename T>
-                T* Pointer() const {
-                    return reinterpret_cast<T*>(m_obj_pv);
-                }
+                char* Pointer() const;
                 uint32_t Size() const;
                 void Put();
 
@@ -319,6 +316,8 @@ namespace netty {
             uint32_t m_expand_obj_cnt_factor;
             uint32_t m_expand_bulk_obj_cnt_factor;
         };
+
+        typedef MemPool::MemObject MemPoolObject;
     }  // namespace common
 }  // namespace netty
 

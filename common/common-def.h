@@ -9,16 +9,27 @@
 #include <time.h>
 #include <sys/sysinfo.h>
 #include <unistd.h>
+#include <cstring>
 
 /**
  * 控制目标不导出，即仅库内部可见。
  */
 #define GCC_INTERNAL __attribute__ ((visibility("hidden")))
 
+#define LIKELY(x)                      __builtin_expect(!!(x), 1)
+#define UNLIKELY(x)                    __builtin_expect(!!(x), 0)
+
 #define soft_yield_cpu()               __asm__ ("pause")
 #define hard_yield_cpu()               sched_yield()
 #define atomic_cas(lock, old, set)     __sync_bool_compare_and_swap(lock, old, set)
 #define atomic_zero(lock)              __sync_fetch_and_and(lock, 0)
+
+#define DELETE_PTR(p) if (p) {delete (p); (p) = nullptr;}
+#define DELETE_ARR_PTR(p) if (p) {delete [](p); (p) = nullptr;}
+#define FREE_PTR(p) if (p) {free (p); (p) = NULL;}
+
+typedef unsigned char uchar;
+
 namespace netty {
     namespace common {
         const int  CPUS_CNT = get_nprocs();
