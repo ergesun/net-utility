@@ -10,6 +10,12 @@
 
 #include "common-def.h"
 
+#if BYTE_ORDER == BIG_ENDIAN
+#define ByteOrderUtils common::BigEndianCodecUtils
+#elif BYTE_ORDER == LITTLE_ENDIAN
+#define ByteOrderUtils common::LittleEndianCodecUtils
+#endif
+
 namespace netty {
     namespace common {
         class LittleEndianCodecUtils {
@@ -23,7 +29,21 @@ namespace netty {
             static uint16_t ReadUInt16(uchar *buf);
             static uint32_t ReadUInt32(uchar *buf);
             static uint64_t ReadUInt64(uchar *buf);
-        }; // class CommonUtils
+        }; // class LittleEndianCodecUtils
+
+        class BigEndianCodecUtils {
+        public:
+            // encode
+            static void WriteUInt16(uchar *buf, uint16_t n);
+            static void WriteUInt32(uchar *buf, uint32_t n);
+            static void WriteUInt64(uchar *buf, uint64_t n);
+
+            // decode
+            static uint16_t ReadUInt16(uchar *buf);
+            static uint32_t ReadUInt32(uchar *buf);
+            static uint64_t ReadUInt64(uchar *buf);
+        }; // class LittleEndianCodecUtils
+
     }  // namespace common
 }  // namespace netty
 

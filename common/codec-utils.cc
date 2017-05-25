@@ -83,5 +83,44 @@ namespace netty {
 
             return n;
         }
+
+#define NTOC(b, n, i) b[i] = ((uchar*)(&n))[i]
+
+        void BigEndianCodecUtils::WriteUInt16(uchar *buf, uint16_t n) {
+            NTOC(buf, n, 0);
+            NTOC(buf, n, 1);
+        }
+
+        void BigEndianCodecUtils::WriteUInt32(uchar *buf, uint32_t n) {
+            NTOC(buf, n, 0);
+            NTOC(buf, n, 1);
+            NTOC(buf, n, 2);
+            NTOC(buf, n, 3);
+        }
+
+        void BigEndianCodecUtils::WriteUInt64(uchar *buf, uint64_t n) {
+            NTOC(buf, n, 0);
+            NTOC(buf, n, 1);
+            NTOC(buf, n, 2);
+            NTOC(buf, n, 3);
+            NTOC(buf, n, 4);
+            NTOC(buf, n, 5);
+            NTOC(buf, n, 6);
+            NTOC(buf, n, 7);
+        }
+
+#undef NTOC
+
+        uint16_t BigEndianCodecUtils::ReadUInt16(uchar *buf) {
+            return *((uint16_t*)(buf));
+        }
+
+        uint32_t BigEndianCodecUtils::ReadUInt32(uchar *buf) {
+            return *((uint32_t*)(buf));
+        }
+
+        uint64_t BigEndianCodecUtils::ReadUInt64(uchar *buf) {
+            return *((uint64_t*)(buf));
+        }
     }
 }

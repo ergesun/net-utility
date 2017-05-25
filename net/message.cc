@@ -11,12 +11,6 @@
 
 #include "message.h"
 
-#if BYTE_ORDER == BIG_ENDIAN
-#define ByteOrderUtils common::BigEndianCodecUtils
-#elif BYTE_ORDER == LITTLE_ENDIAN
-#define ByteOrderUtils common::LittleEndianCodecUtils
-#endif
-
 namespace netty {
     namespace net {
         common::spin_lock_t Message::m_sIdLock = UNLOCKED;
@@ -55,6 +49,8 @@ namespace netty {
             b->Pos += sizeof(uint64_t);
             ByteOrderUtils::WriteUInt32(b->Pos, h.id.seq);
             b->Pos += sizeof(h.id.seq);
+            ByteOrderUtils::WriteUInt32(b->Pos, h.len);
+            b->Pos += sizeof(h.len);
         }
 
         void Message::decode_header(common::Buffer *b, Header &h) {
