@@ -23,11 +23,7 @@ namespace netty {
             Buffer(uchar *pos, uchar *last, uchar *start, uchar *end, MemPoolObject *mpo) :
                 Pos(pos), Last(last), Start(start), End(end), MpObject(mpo) {}
             ~Buffer() {
-                Pos   = nullptr;
-                Last  = nullptr;
-                Start = nullptr;
-                End   = nullptr;
-                MpObject->Put();
+                Put();
             }
 
             Buffer(Buffer&&) = delete;
@@ -40,12 +36,17 @@ namespace netty {
                     Refresh(nullptr, nullptr, nullptr, nullptr, nullptr);
                 }
             }
+
             inline void Refresh(uchar *pos, uchar *last, uchar *start, uchar *end, MemPoolObject *mpo) {
                 Pos = pos;
                 Last = last;
                 Start = start;
                 End = end;
                 MpObject = mpo;
+            }
+
+            inline int32_t AvailableLength() {
+                return (int32_t)((int64_t)(uintptr_t)Last - (int64_t)(uintptr_t)Pos) + 1;
             }
 
             uchar *Pos              = nullptr;

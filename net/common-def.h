@@ -13,7 +13,7 @@
 
 namespace netty {
     namespace net {
-        enum class NettyCode {
+        enum class NettyMsgCode {
             OK           = 0,
             ErrLocal,
             Timeout,

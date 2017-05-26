@@ -14,17 +14,14 @@ namespace netty {
     }
 
     namespace net {
-        class Message;
-
         /**
-         * 编解码器接口。
+         * 编码器接口。
          */
-        class ICodec {
+        class IEncoder {
         public:
-            virtual ~ICodec() {}
-            virtual void Encode() = 0;
-            virtual void Decode(common::Buffer *buffer) = 0;
-        }; // interface ICodec
+            virtual ~IEncoder() {}
+            virtual common::Buffer* Encode() = 0;
+        }; // interface IEncoder
     } // namespace net
 } // namespace netty
 

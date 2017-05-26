@@ -25,6 +25,6 @@ add_library(net SHARED
         message.h
         isocket-service.h
         abstract-socket-service.h
-        icodec.h
+        iencoder.h
         )
 
