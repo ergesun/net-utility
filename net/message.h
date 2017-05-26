@@ -15,6 +15,7 @@
 #include "common-def.h"
 
 #define MESSAGE_MAGIC_NO 0xdeadbeef
+#define MAX_MSG_PAYLOAD_SIZE  0x4000000    // 64MiB
 
 namespace netty {
     namespace common {
@@ -23,6 +24,7 @@ namespace netty {
 
     namespace net {
         /**
+         * 注意：payload上限为64MiB。
          * Derive Message的内存空间你可以选择通过内存池mp分配(这样做性能友好)，然后通过placement new来构建你的Message具体类对象。
          * 你需要留下Message的Id，它用来唯一标识一个message，你可能需要用它来分发Message。
          */

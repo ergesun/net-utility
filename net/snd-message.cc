@@ -13,6 +13,10 @@ namespace netty {
         common::Buffer* SndMessage::Encode() {
             auto headerBufferSize = sizeof(Header);
             auto deriveBufferSize = GetDerivePayloadLength();
+            if (deriveBufferSize > MAX_MSG_PAYLOAD_SIZE) {
+                throw std::runtime_error("message payload cannot more than 64MiB");
+            }
+
             auto totalBufferSize = headerBufferSize + deriveBufferSize;
 
             m_header.magic = MESSAGE_MAGIC_NO;
