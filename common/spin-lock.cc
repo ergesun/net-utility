@@ -14,24 +14,20 @@ namespace netty {
     namespace common {
         SpinLock::SpinLock(spin_lock_t *const sl) : m_psl(sl) {
             assert(sl);
-            *sl = UNLOCKED;
             Lock();
         }
 
         SpinLock::SpinLock(spin_lock_t *const sl, bool) : m_psl(sl) {
             assert(sl);
-            *sl = UNLOCKED;
         }
 
         SpinLock::SpinLock(spin_lock_t *const sl, uint8_t spin) : m_psl(sl), m_iSpin(1 << spin) {
             assert(sl);
-            *sl = UNLOCKED;
             Lock();
         }
 
         SpinLock::SpinLock(spin_lock_t *const sl, uint8_t spin, bool) : m_psl(sl), m_iSpin(1 << spin) {
             assert(sl);
-            *sl = UNLOCKED;
         }
 
         SpinLock::~SpinLock() {

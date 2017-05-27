@@ -71,7 +71,7 @@ namespace netty {
         private:
             spin_lock_t *const m_psl;
             int m_iSpin = 1 << 11;
-            bool m_bOwnLock = false;
+            volatile bool m_bOwnLock = false;
         }; // class SpinLock
     }  // namespace common
 }  // namespace netty
