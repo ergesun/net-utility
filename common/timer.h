@@ -17,14 +17,22 @@
 namespace netty {
     namespace common {
         /**
-         * 一个拥有一个检测、触发线程的操作安全的定时器。
-         * 使用此定时器回调函数一定要是瞬时的。
-         * TODO(sunchao)：添加一个线程池、一个到期任务队列用来执行到期的作业？还是觉得这项任务交给用户比较合适。
-         */
+     * 一个拥有一个检测、触发线程的操作安全的定时器。
+     * 使用此定时器回调函数一定要是瞬时的。
+     * TODO(sunchao)：添加一个线程池、一个到期任务队列用来执行到期的作业？还是觉得这项任务交给用户比较合适。
+     */
         class Timer {
         public:
             typedef std::function<void(void *)> TimerCallback, *TimerCallbackPointer;
-            typedef TimerCallbackPointer EventId;
+            struct EventId {
+                EventId(uctime_t w, TimerCallbackPointer h) : when(w), how(h) {}
+                uctime_t             when;
+                TimerCallbackPointer how;
+
+                bool operator<(const EventId &another) const {
+                    return (this->when < another.when) || (this->how < another.how);
+                }
+            };
 
             struct Event {
                 /**

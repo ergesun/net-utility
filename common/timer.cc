@@ -40,16 +40,25 @@ namespace netty {
 
         Timer::EventId Timer::SubscribeEventAt(uctime_t when, Event &ev) {
             assert(ev.callback);
+            auto evId = EventId(when, ev.callback);
             SpinLock l(&m_thread_safe_sl);
+            // 如果已存在，直接返回。同一时间点的同一回调只能订阅一次。
+            auto findPos = m_mapSubscribedEvents.find(when);
+            for (; findPos != m_mapSubscribedEvents.end(); ++findPos) {
+                if (findPos->second.callback == ev.callback) {
+                    return evId;
+                }
+            }
+
             TimerEvents::value_type te_pair(when, ev);
             auto insert_pos = m_mapSubscribedEvents.insert(te_pair);
-            EventsTable::value_type et_pair(ev.callback, insert_pos);
+            EventsTable::value_type et_pair(evId, insert_pos);
             m_mapEventsEntry.insert(et_pair);
             if (insert_pos == m_mapSubscribedEvents.begin()) {
                 m_cv.notify_one();
             }
 
-            return ev.callback;
+            return EventId(when, ev.callback);
         }
 
         Timer::EventId Timer::SubscribeEventAfter(uctime_t duration, Event &ev) {
@@ -61,13 +70,16 @@ namespace netty {
         }
 
         bool Timer::UnsubscribeEvent(EventId eventId) {
-            assert(eventId);
+            assert(eventId.how);
             SpinLock l(&m_thread_safe_sl);
             auto ev = m_mapEventsEntry.find(eventId);
             if (m_mapEventsEntry.end() != ev) {
                 m_mapSubscribedEvents.erase(ev->second);
                 m_mapEventsEntry.erase(ev);
+                return true;
             }
+
+            return false;
         }
 
         void Timer::UnsubscribeAllEvent() {
@@ -89,7 +101,8 @@ namespace netty {
                     }
 
                     (*(min->second.callback))(min->second.ctx);
-                    m_mapEventsEntry.erase(min->second.callback);
+                    EventId evId(min->first, min->second.callback);
+                    m_mapEventsEntry.erase(evId);
                     m_mapSubscribedEvents.erase(min);
                 }
 
