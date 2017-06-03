@@ -4,7 +4,7 @@
  */
 
 #include "nb-socket-service.h"
-#include "event-drivers/epoll/epoll-event-driver.h"
+#include "socket/event-drivers/epoll/epoll-event-driver.h"
 
 namespace netty {
     namespace net {

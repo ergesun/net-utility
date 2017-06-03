@@ -7,5 +7,12 @@
 
 namespace netty {
     namespace net {
+        bool PosixTcpNetStackWorker::Recv() {
+
+        }
+
+        bool PosixTcpNetStackWorker::Send() {
+
+        }
     } // namespace net
 } // namespace netty

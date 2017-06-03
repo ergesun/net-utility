@@ -6,9 +6,9 @@
 #ifndef NET_CORE_POSIX_TCP_CONNECTION_EVENT_HANDLER_H
 #define NET_CORE_POSIX_TCP_CONNECTION_EVENT_HANDLER_H
 
-#include "../../../../../../common/common-def.h"
+#include "../../../../../../../common/common-def.h"
 
-#include "../../../ievent-handler.h"
+#include "../../../../ievent-handler.h"
 
 namespace netty {
     namespace net {

@@ -75,7 +75,7 @@ namespace netty {
         Message::Callback* Message::LookupCallback(Id id) {
             common::SpinLock l(&s_cbLock);
             auto cbIter = s_callbacks.find(id);
-            if (cbIter != s_callbacks.end()) {
+            if (LIKELY(cbIter != s_callbacks.end())) {
                 return &cbIter->second;
             }
 

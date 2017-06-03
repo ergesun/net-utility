@@ -9,14 +9,15 @@
 #include <stdexcept>
 #include <sys/socket.h>
 
-#include "../../../../../../common-def.h"
+#include "../../../../../../../common-def.h"
+#include "../../../socket-descriptor.h"
 
 namespace netty {
     namespace net {
         /**
          * 当前只考虑了ipv4.
          */
-        class PosixTcpConnectionSocket {
+        class PosixTcpConnectionSocket : public SocketDescriptor {
         public:
             PosixTcpConnectionSocket(net_addr_s nas) {
                 m_local_addr = nas;
@@ -79,7 +80,6 @@ namespace netty {
             }
 
         protected:
-            int m_sd = -1;
             net_addr_s m_local_addr;
 
         private:

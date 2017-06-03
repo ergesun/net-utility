@@ -3,13 +3,13 @@
  * a Creative Commons Attribution 3.0 Unported License(https://creativecommons.org/licenses/by/3.0/).
  */
 
-#ifndef NET_CORE_NETSTACKMESSAGEWORKER_H
-#define NET_CORE_NETSTACKMESSAGEWORKER_H
+#ifndef NET_CORE_SOCKETAPI_NETSTACKMESSAGEWORKER_H
+#define NET_CORE_SOCKETAPI_NETSTACKMESSAGEWORKER_H
 
-#include "../../../../common/common-def.h"
-#include "../../../../common/blocking-queue.h"
-#include "../../../snd-message.h"
-#include "../../../rcv-message.h"
+#include "../../../../../common/common-def.h"
+#include "../../../../../common/blocking-queue.h"
+#include "../../../../snd-message.h"
+#include "../../../../rcv-message.h"
 
 namespace netty {
     namespace net {
@@ -44,7 +44,7 @@ namespace netty {
              * 发送缓冲队列里面的数据。
              * @return
              */
-            virtual bool Write() = 0;
+            virtual bool Send() = 0;
 
         private:
             common::BlockingQueue<SndMessage*> *m_bqMessages;
@@ -53,4 +53,4 @@ namespace netty {
     } // namespace net
 } // namespace netty
 
-#endif //NET_CORE_NETSTACKMESSAGEWORKER_H
+#endif //NET_CORE_SOCKETAPI_NETSTACKMESSAGEWORKER_H

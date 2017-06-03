@@ -25,13 +25,15 @@ namespace netty {
             return 0;
         }
 
-        int EpollEventDriver::add_event(int fd, int cur_mask, int mask) {
+        int EpollEventDriver::add_event(SocketEventHandler *socketEventHandler, int cur_mask, int mask) {
+            assert(socketEventHandler);
+            auto fd = socketEventHandler->GetSocketDescriptor().GetSfd();
             int op = (cur_mask == EVENT_NONE) ? EPOLL_CTL_ADD : EPOLL_CTL_MOD;
 
             // 放置到epoll中
             struct epoll_event ee;
             // 设置epoll事件。
-            ee.data.fd = fd;
+            ee.data.ptr = socketEventHandler;
             ee.events = EPOLLHUP | EPOLLERR | EPOLLET;
 
             mask |= cur_mask;
@@ -51,10 +53,12 @@ namespace netty {
             return 0;
         }
 
-        int EpollEventDriver::del_event(int fd, int cur_mask, int del_mask) {
+        int EpollEventDriver::del_event(SocketEventHandler *socketEventHandler, int cur_mask, int del_mask) {
+            assert(socketEventHandler);
+            auto fd = socketEventHandler->GetSocketDescriptor().GetSfd();
             struct epoll_event ee;
 
-            ee.data.fd = fd;
+            ee.data.ptr = socketEventHandler;
             ee.events = EPOLLHUP | EPOLLERR | EPOLLET;
 
             int mask = cur_mask & (~del_mask);
@@ -75,7 +79,7 @@ namespace netty {
             } else {
                 /* Note, Kernel < 2.6.9 requires a non null event pointer even for
                  * EPOLL_CTL_DEL. */
-                if (epoll_ctl(m_epfd, EPOLL_CTL_DEL, fd, &ee) < 0) {
+                if (epoll_ctl(m_epfd, EPOLL_CTL_DEL,fd, &ee) < 0) {
                     auto err = errno;
                     std::cerr << __func__ << " epoll_ctl: delete fd=" << fd
                               << " failed." << strerror(err) << std::endl;
@@ -106,7 +110,7 @@ namespace netty {
                         mask |= EVENT_READ | EVENT_WRITE;
                     }
 
-                    events[i].fd = m_events[i].data.fd;
+                    events[i].eh = reinterpret_cast<SocketEventHandler*>(m_events[i].data.ptr);
                     events[i].mask = mask;
                 }
             }

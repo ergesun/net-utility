@@ -49,10 +49,13 @@ namespace netty {
                 Id& operator=(const Id &) = default;
             };
 
+            /**
+             * 消息头。
+             */
             struct Header {
                 uint32_t  magic; /* 校验的魔法数 */
-                Id        id;    /* 消息头 */
-                uint32_t  len;   /* 消息数据部的长度 */
+                Id        id;    /* 序列号 */
+                uint32_t  len;   /* 数据部的长度 */
 
                 Header() : magic(0), len(0) {}
                 Header(Id i, uint32_t l) : id(i), len(l) {}

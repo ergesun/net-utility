@@ -6,7 +6,7 @@
 #ifndef NET_CORE_POSIX_TCP_NET_STACK_WORKER_H
 #define NET_CORE_POSIX_TCP_NET_STACK_WORKER_H
 
-#include "../../../../../../common/common-def.h"
+#include "../../../../../../../common/common-def.h"
 #include "../../net-stack-msg-worker.h"
 
 namespace netty {
@@ -27,7 +27,7 @@ namespace netty {
              * 发送缓冲队列里面的数据。
              * @return
              */
-            bool Write();
+            bool Send();
 
         private:
 
