@@ -10,9 +10,12 @@
 
 namespace netty {
     namespace net {
+        /**
+         * TODO(sunchao)：考虑也做成回收利用？
+         */
         class RcvMessage : public Message {
         public:
-            RcvMessage(common::MemPool *mp, Header h, common::Buffer *buffer, NettyMsgCode rc) : Message(mp) {
+            RcvMessage(common::MemPool *mp, Message::Header h, common::Buffer *buffer, NettyMsgCode rc) : Message(mp) {
                 m_header = h;
                 m_pBuffer = buffer;
                 m_rc = rc;

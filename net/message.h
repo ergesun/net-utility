@@ -13,7 +13,6 @@
 #include "../common/mem-pool.h"
 #include "../common/spin-lock.h"
 #include "common-def.h"
-#include "rcv-message.h"
 
 #define MESSAGE_MAGIC_NO 0xdeadbeef
 #define MAX_MSG_PAYLOAD_SIZE  0x4000000    // 64MiB
@@ -24,6 +23,8 @@ namespace netty {
     }
 
     namespace net {
+        class RcvMessage;
+
         /**
          * 注意：payload上限为64MiB。
          * Derive Message的内存空间你可以选择通过内存池mp分配(这样做性能友好)，然后通过placement new来构建你的Message具体类对象。
@@ -32,7 +33,10 @@ namespace netty {
         class Message {
         public:
             typedef void* CallbackCtx;
-            typedef std::function<void(NettyMsgCode, RcvMessage*, void*)> CallbackHandler;
+            /**
+             * user需要负责RcvMessage的释放。
+             */
+            typedef std::function<void(RcvMessage*, void*)> CallbackHandler;
             typedef std::pair<CallbackHandler, CallbackCtx> Callback;
 
             struct Id {
@@ -104,7 +108,24 @@ namespace netty {
             static common::spin_lock_t s_cbLock;
             static std::unordered_map<Id, Callback> s_callbacks;
         }; // interface Message
+
+        inline bool operator<(const Message::Id &a, const Message::Id &b) {
+            return (a.ts < b.ts) || (a.ts == b.ts && a.seq < b.seq);
+        }
+
+        inline bool operator==(const Message::Id &a, const Message::Id &b) {
+            return a.ts == b.ts && a.seq == b.seq;
+        }
     } // namespace net
 } // namespace netty
+
+namespace std {
+    template<>
+    struct hash<netty::net::Message::Id> {
+        size_t operator()(const netty::net::Message::Id &id) const {
+            return (size_t)id.seq;
+        }
+    };
+}
 
 #endif //NET_CORE_IMESSAGE_H

@@ -26,9 +26,9 @@ namespace netty {
         void ANetStackMessageWorker::HandleMessage(RcvMessage *m) {
             auto pCb = RcvMessage::LookupCallback(m->GetId());
             if (pCb) {
-                (*pCb)(m);
+                pCb->first(m, pCb->second);
             } else {
-
+                delete m;
             }
         }
     } // namespace net

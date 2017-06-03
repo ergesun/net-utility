@@ -17,12 +17,15 @@ namespace netty {
              * @param mp
              * @param deadline 排队等待的截止时间，超过这个时间就出队回调发送错误。
              * @param cb 回复消息回调函数
+             * @param cbCtx 回调时带回的ctx
+             * @param canBeRelease Message可不可以被框架释放。
              */
-            SndMessage(common::MemPool *mp, common::uctime_t deadline, CallbackHandler cb, void *cbCtx) :
+            SndMessage(common::MemPool *mp, common::uctime_t deadline, CallbackHandler cb, void *cbCtx, bool canBeRelease = true) :
                 Message(mp) {
                 m_deadline = deadline;
                 m_cb = cb;
                 m_pCallbackCtx = cbCtx;
+                m_bCanBeReleased = canBeRelease;
             }
 
         public:
@@ -64,6 +67,7 @@ namespace netty {
             CallbackHandler     m_cb;
             common::uctime_t    m_deadline;
             void               *m_pCallbackCtx;
+            bool                m_bCanBeReleased;
         };
     } // namespace net
 } // namespace netty
