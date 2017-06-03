@@ -103,12 +103,12 @@ namespace netty {
             common::MemPool    *m_pMemPool;
 
         private:
-            static common::spin_lock_t s_idLock;
-            static Id s_lastId;
-            static common::spin_lock_t s_freeBufferLock;
+            static common::spin_lock_t              s_idLock;
+            static Id                               s_lastId;
+            static common::spin_lock_t              s_freeBufferLock;
             // TODO(sunchao): 做一个个数限制？
-            static std::list<common::Buffer*> s_freeBuffers;
-            static common::spin_lock_t s_cbLock;
+            static std::list<common::Buffer*>       s_freeBuffers;
+            static common::spin_lock_t              s_cbLock;
             static std::unordered_map<Id, Callback> s_callbacks;
         }; // interface Message
 

@@ -13,6 +13,10 @@ namespace netty {
             SocketDescriptor() {}
             SocketDescriptor(int sd) : m_sd(sd) {}
 
+            /**
+             * 获取内部的文件描述符。
+             * @return
+             */
             inline int GetSfd() {
                 return m_sd;
             }

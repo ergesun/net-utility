@@ -26,6 +26,8 @@ namespace netty {
             NBSocketService(std::shared_ptr<net_local_info_t> nlt, INetStackWorkerManager *cp, common::MemPool *memPool) :
                 ASocketService(nlt), m_workerPolicy(cp), m_memPool(memPool) {}
 
+            ~NBSocketService();
+
             /**
              * 开启服务。
              * @return 成功true,失败false.
@@ -41,8 +43,10 @@ namespace netty {
         private:
             INetStackWorkerManager *m_workerPolicy = nullptr;
             // TODO(sunchao): 扩展为多driver均衡处理。
-            IEventDriver *m_eventDriver = nullptr;
-            common::MemPool *m_memPool = nullptr;
+            IEventDriver           *m_eventDriver = nullptr;
+            // 无需本类释放。
+            common::MemPool        *m_memPool = nullptr;
+            SocketEventHandler     *m_srvEventHandler = nullptr;
         }; // class NBSocketService
     }  // namespace net
 } // namespace netty

@@ -19,8 +19,10 @@ namespace netty {
          */
         class PosixTcpConnectionSocket : public SocketDescriptor {
         public:
-            PosixTcpConnectionSocket(net_addr_s nas) {
-                m_local_addr = nas;
+            PosixTcpConnectionSocket() = default;
+            PosixTcpConnectionSocket(net_addr_t peerAddr, int sfd) {
+                m_peer_addr = peerAddr;
+                m_sd = sfd;
             }
 
             virtual ~PosixTcpConnectionSocket() {}
@@ -71,20 +73,14 @@ namespace netty {
 
             int Close();
 
-            /**
-             * 获取内部的文件描述符。
-             * @return
-             */
-            inline int GetSfd() {
-                return m_sd;
-            }
-
         protected:
-            net_addr_s m_local_addr;
+            net_addr_t m_peer_addr;
 
         private:
             volatile bool m_connected = false;
         };
+
+        typedef PosixTcpConnectionSocket PosixTcpClientSocket;
     } // namespace net
 } // namespace netty
 #endif //NET_CORE_POSIX_TCPCONNECTIONSOCKET_H

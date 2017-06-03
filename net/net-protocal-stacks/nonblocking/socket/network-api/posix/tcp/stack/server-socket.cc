@@ -30,7 +30,7 @@ namespace netty {
             return 0 == listen(m_sd, m_max_listen_conns);
         }
 
-        bool PosixTcpServerSocket::SetPortReuse() throw(std::runtime_error) {
+        bool PosixTcpServerSocket::SetPortReuse() {
             return 0 == setsockopt(m_sd, SOL_SOCKET, SO_REUSEPORT, &m_local_addr.port, sizeof(int));
         }
 

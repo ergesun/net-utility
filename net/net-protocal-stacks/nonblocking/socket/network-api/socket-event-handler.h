@@ -8,19 +8,29 @@
 
 #include "../../ievent-handler.h"
 #include "socket-descriptor.h"
+#include "../../../../../common/common-def.h"
 
 namespace netty {
     namespace net {
         class SocketEventHandler : public IEventHandler {
         public:
             SocketEventHandler() = default;
+            SocketEventHandler(SocketDescriptor *socketDesc) : m_socketDesc(socketDesc) {}
+            ~SocketEventHandler() {
+                DELETE_PTR(m_socketDesc);
+            }
 
-            inline SocketDescriptor GetSocketDescriptor() {
+            inline SocketDescriptor* GetSocketDescriptor() {
                 return m_socketDesc;
             }
 
+        protected:
+            inline void SetSocketDescriptor(SocketDescriptor *psd) {
+                m_socketDesc = psd;
+            }
+
         private:
-            SocketDescriptor m_socketDesc;
+            SocketDescriptor *m_socketDesc;
         };
     }
 }

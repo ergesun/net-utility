@@ -27,7 +27,7 @@ namespace netty {
 
         int EpollEventDriver::add_event(SocketEventHandler *socketEventHandler, int cur_mask, int mask) {
             assert(socketEventHandler);
-            auto fd = socketEventHandler->GetSocketDescriptor().GetSfd();
+            auto fd = socketEventHandler->GetSocketDescriptor()->GetSfd();
             int op = (cur_mask == EVENT_NONE) ? EPOLL_CTL_ADD : EPOLL_CTL_MOD;
 
             // 放置到epoll中
@@ -55,7 +55,7 @@ namespace netty {
 
         int EpollEventDriver::del_event(SocketEventHandler *socketEventHandler, int cur_mask, int del_mask) {
             assert(socketEventHandler);
-            auto fd = socketEventHandler->GetSocketDescriptor().GetSfd();
+            auto fd = socketEventHandler->GetSocketDescriptor()->GetSfd();
             struct epoll_event ee;
 
             ee.data.ptr = socketEventHandler;

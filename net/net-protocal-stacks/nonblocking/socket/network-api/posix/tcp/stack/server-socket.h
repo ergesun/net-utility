@@ -14,18 +14,16 @@ namespace netty {
     namespace net {
         class PosixTcpServerSocket : public PosixTcpConnectionSocket {
         public:
-            PosixTcpServerSocket(net_addr_s &nas, int max_conns) : PosixTcpConnectionSocket(nas),
-                                                                   m_max_listen_conns(max_conns) {}
+            PosixTcpServerSocket(net_addr_t &localAddr, int maxConns) : PosixTcpConnectionSocket(),
+                                                                         m_local_addr(localAddr),
+                                                                         m_max_listen_conns(maxConns) {}
 
             /* basic interfaces */
-            inline bool Bind();
-
-            inline bool Listen();
-
-            inline int Accept4(__SOCKADDR_ARG __addr, socklen_t *__addr_len, int __flags = SOCK_NONBLOCK);
-
+            bool Bind();
+            bool Listen();
+            int Accept4(__SOCKADDR_ARG __addr, socklen_t *__addr_len, int __flags = SOCK_NONBLOCK);
             /* sock opts interfaces */
-            inline bool SetPortReuse() throw(std::runtime_error);
+            bool SetPortReuse();
 
         private:
             inline bool Connect() {
@@ -33,7 +31,8 @@ namespace netty {
             }
 
         private:
-            int m_max_listen_conns;
+            int        m_max_listen_conns;
+            net_addr_t m_local_addr;
         };
     } // namespace net
 } // namespace netty

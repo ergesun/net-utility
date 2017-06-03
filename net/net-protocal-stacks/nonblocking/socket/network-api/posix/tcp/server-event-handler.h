@@ -8,15 +8,24 @@
 
 #include "../../../../../../../common/common-def.h"
 #include "../../../../../../common-def.h"
-#include "../../../../ievent-handler.h"
+#include "../../socket-event-handler.h"
+#include "stack/server-socket.h"
 
 namespace netty {
     namespace net {
-        class GCC_INTERNAL PosixTcpServerEventHandler : public IEventHandler {
+        class GCC_INTERNAL PosixTcpServerEventHandler : public SocketEventHandler {
         public:
-            virtual int HandleReadEvent() override;
+            PosixTcpServerEventHandler(PosixTcpServerSocket* srvSocket) : SocketEventHandler(srvSocket),
+                                                                          m_pSrvSocket(srvSocket) {}
 
+            virtual int HandleReadEvent() override;
             virtual int HandleWriteEvent() override;
+
+        private:
+            /**
+             * 传入到了父类中，父类会释放掉，所以自己没必要释放了。
+             */
+            PosixTcpServerSocket *m_pSrvSocket;
         };
     } // namespace net
 } // namespace netty

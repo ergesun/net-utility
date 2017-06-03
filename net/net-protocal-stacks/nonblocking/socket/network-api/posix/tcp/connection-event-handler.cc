@@ -7,6 +7,15 @@
 
 namespace netty {
     namespace net {
+        PosixTcpConnectionEventHandler::PosixTcpConnectionEventHandler(net_addr_t &peerAddr, int sfd) {
+            m_pClientSocket = new PosixTcpClientSocket(peerAddr, sfd);
+            SetSocketDescriptor(m_pClientSocket);
+        }
+
+        PosixTcpConnectionEventHandler::~PosixTcpConnectionEventHandler() {
+            DELETE_PTR(m_pClientSocket);
+        }
+
         int PosixTcpConnectionEventHandler::HandleReadEvent() {
             return 0;
         }

@@ -18,7 +18,6 @@ add_library(net SHARED
         ${NPS_NB_SA_POSIX_TCP_SK_SRCS}
         ${NPS_NB_ED_EP_SRCS}
         common-def.h
-        idispatcher.h
         net-protocal-stacks/nonblocking/ievent-handler.h
         net-protocal-stacks/inet-msg-worker-manager.h
         net-protocal-stacks/nonblocking/socket/event-drivers/ievent-driver.h

@@ -34,8 +34,8 @@ namespace netty {
             struct sockaddr_in sa;
             bzero(&sa, sizeof(sa));
             sa.sin_family = AF_INET;
-            sa.sin_port = htons(m_local_addr.port);
-            inet_pton(AF_INET, m_local_addr.addr.c_str(), &sa.sin_addr);
+            sa.sin_port = htons(m_peer_addr.port);
+            inet_pton(AF_INET, m_peer_addr.addr.c_str(), &sa.sin_addr);
             if (!timeout) {
                 if (0 == connect(m_sd, (struct sockaddr *) &sa, sizeof(sa))) {
                     m_connected = true;
