@@ -13,6 +13,7 @@
 #include "../common/mem-pool.h"
 #include "../common/spin-lock.h"
 #include "common-def.h"
+#include "rcv-message.h"
 
 #define MESSAGE_MAGIC_NO 0xdeadbeef
 #define MAX_MSG_PAYLOAD_SIZE  0x4000000    // 64MiB
@@ -30,6 +31,10 @@ namespace netty {
          */
         class Message {
         public:
+            typedef void* CallbackCtx;
+            typedef std::function<void(NettyMsgCode, RcvMessage*, void*)> CallbackHandler;
+            typedef std::pair<CallbackHandler, CallbackCtx> Callback;
+
             struct Id {
                 __time_t ts;  /* 时间戳，为了就是id回环了之后防重。 */
                 uint32_t seq; /* 消息的唯一标识 */
@@ -73,6 +78,10 @@ namespace netty {
                 return sizeof(Header);
             }
 
+            static Callback* LookupCallback(Id id);
+            static void AddCallback(Id id, Callback);
+            static void RemoveCallback(Id id);
+
         protected:
             static Id get_new_id();
             static common::Buffer* get_new_buffer();
@@ -81,15 +90,19 @@ namespace netty {
             static common::Buffer* get_new_buffer(common::MemPoolObject *mpo, uint32_t totalBufferSize);
             static common::Buffer* put_buffer(common::Buffer *buffer);
 
+        protected:
+
             Header              m_header;
             common::MemPool    *m_pMemPool;
 
         private:
-            static common::spin_lock_t m_sIdLock;
-            static Id m_sLastId;
-            static common::spin_lock_t m_sFreeBufferLock;
+            static common::spin_lock_t s_idLock;
+            static Id s_lastId;
+            static common::spin_lock_t s_freeBufferLock;
             // TODO(sunchao): 做一个个数限制？
-            static std::list<common::Buffer*> m_sFreeBuffers;
+            static std::list<common::Buffer*> s_freeBuffers;
+            static common::spin_lock_t s_cbLock;
+            static std::unordered_map<Id, Callback> s_callbacks;
         }; // interface Message
     } // namespace net
 } // namespace netty

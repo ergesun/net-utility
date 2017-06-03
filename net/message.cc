@@ -12,10 +12,12 @@
 
 namespace netty {
     namespace net {
-        common::spin_lock_t Message::m_sIdLock = UNLOCKED;
-        Message::Id Message::m_sLastId = Id(0, 0);
-        common::spin_lock_t Message::m_sFreeBufferLock = UNLOCKED;
-        std::list<common::Buffer*> Message::m_sFreeBuffers = std::list<common::Buffer*>();
+        common::spin_lock_t Message::s_idLock = UNLOCKED;
+        Message::Id Message::s_lastId = Id(0, 0);
+        common::spin_lock_t Message::s_freeBufferLock = UNLOCKED;
+        std::list<common::Buffer*> Message::s_freeBuffers = std::list<common::Buffer*>();
+        common::spin_lock_t Message::s_cbLock = UNLOCKED;
+        std::unordered_map<Message::Id, Message::Callback> Message::s_callbacks = std::unordered_map<Message::Id, Message::Callback>();
 
         Message::Message(common::MemPool *mp) :
             m_pMemPool(mp) {
@@ -23,29 +25,29 @@ namespace netty {
         }
 
         Message::Id Message::get_new_id() {
-            common::SpinLock l(&m_sIdLock);
-            ++m_sLastId.seq;
-            if (UNLIKELY(m_sLastId.seq == UINT32_MAX)) {
-                m_sLastId.seq = 1;
-                m_sLastId.ts = common::CommonUtils::GetCurrentTime().sec;
+            common::SpinLock l(&s_idLock);
+            ++s_lastId.seq;
+            if (UNLIKELY(s_lastId.seq == UINT32_MAX)) {
+                s_lastId.seq = 1;
+                s_lastId.ts = common::CommonUtils::GetCurrentTime().sec;
             }
 
-            if (UNLIKELY(m_sLastId.ts == 0)) {
+            if (UNLIKELY(s_lastId.ts == 0)) {
                 // 0说明没有初始化过，那就
-                m_sLastId.ts = common::CommonUtils::GetCurrentTime().sec;
+                s_lastId.ts = common::CommonUtils::GetCurrentTime().sec;
             }
 
-            return Id(m_sLastId.ts, m_sLastId.seq);
+            return Id(s_lastId.ts, s_lastId.seq);
         }
 
         common::Buffer* Message::get_new_buffer() {
-            common::SpinLock l(&m_sFreeBufferLock);
-            if (m_sFreeBuffers.empty()) {
+            common::SpinLock l(&s_freeBufferLock);
+            if (s_freeBuffers.empty()) {
                 return new common::Buffer();
             } else {
-                auto begin = m_sFreeBuffers.begin();
+                auto begin = s_freeBuffers.begin();
                 auto buf = *begin;
-                m_sFreeBuffers.erase(begin);
+                s_freeBuffers.erase(begin);
 
                 return buf;
             }
@@ -65,9 +67,29 @@ namespace netty {
         }
 
         common::Buffer* Message::put_buffer(common::Buffer *buffer) {
-            common::SpinLock l(&m_sFreeBufferLock);
+            common::SpinLock l(&s_freeBufferLock);
             buffer->Put();
-            m_sFreeBuffers.push_back(buffer);
+            s_freeBuffers.push_back(buffer);
+        }
+
+        Message::Callback* Message::LookupCallback(Id id) {
+            common::SpinLock l(&s_cbLock);
+            auto cbIter = s_callbacks.find(id);
+            if (cbIter != s_callbacks.end()) {
+                return &cbIter->second;
+            }
+
+            return nullptr;
+        }
+
+        void Message::AddCallback(Id id, Callback cb) {
+            common::SpinLock l(&s_cbLock);
+            s_callbacks[id] = cb;
+        }
+
+        void Message::RemoveCallback(Id id) {
+            common::SpinLock l(&s_cbLock);
+            s_callbacks.erase(id);
         }
     } // namespace net
 } // namespace netty

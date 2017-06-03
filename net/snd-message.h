@@ -12,19 +12,17 @@ namespace netty {
     namespace net {
         class SndMessage : public Message, public IEncoder {
         public:
-            typedef std::function<void(NettyMsgCode, Message*, void*)> CallbackHandler;
-
-        public:
             /**
              *
              * @param mp
              * @param deadline 排队等待的截止时间，超过这个时间就出队回调发送错误。
              * @param cb 回复消息回调函数
              */
-            SndMessage(common::MemPool *mp, common::uctime_t deadline, CallbackHandler cb) :
+            SndMessage(common::MemPool *mp, common::uctime_t deadline, CallbackHandler cb, void *cbCtx) :
                 Message(mp) {
                 m_deadline = deadline;
                 m_cb = cb;
+                m_pCallbackCtx = cbCtx;
             }
 
         public:
@@ -48,6 +46,7 @@ namespace netty {
         protected:
             /**
              * 获取派生类的消息encode之后待发送字节的长度。
+             * 负载的最大长度为MAX_MSG_PAYLOAD_SIZE。
              * @return
              */
             virtual uint32_t GetDerivePayloadLength() = 0;
@@ -64,6 +63,7 @@ namespace netty {
         private:
             CallbackHandler     m_cb;
             common::uctime_t    m_deadline;
+            void               *m_pCallbackCtx;
         };
     } // namespace net
 } // namespace netty

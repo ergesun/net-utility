@@ -16,8 +16,8 @@ namespace netty {
         enum class NettyMsgCode {
             OK           = 0,
             ErrLocal,
-            Timeout,
-            ErrRemote
+            ErrTimeout,
+            ErrPeer
         };
 
         enum class NonBlockingEventModel {

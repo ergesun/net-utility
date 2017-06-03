@@ -12,8 +12,15 @@ namespace netty {
     namespace net {
         class RcvMessage : public Message {
         public:
-            RcvMessage(common::MemPool *mp, Header h) : Message(mp) {
+            RcvMessage(common::MemPool *mp, Header h, common::Buffer *buffer, NettyMsgCode rc) : Message(mp) {
                 m_header = h;
+                m_pBuffer = buffer;
+                m_rc = rc;
+            }
+
+            ~RcvMessage() {
+                Message::put_buffer(m_pBuffer);
+                m_pBuffer = nullptr;
             }
 
             /**
@@ -22,7 +29,7 @@ namespace netty {
              * @param header 解析的header
              * @return 解析成功失败
              */
-            bool DecodeMsgHeader(common::Buffer *buffer, Header *header);
+            static bool DecodeMsgHeader(common::Buffer *buffer, Header *header);
 
             inline common::Buffer* GetBuffer() {
                 return m_pBuffer;
@@ -38,7 +45,7 @@ namespace netty {
 
         private:
             common::Buffer     *m_pBuffer;
-            NettyMsgCode           m_rc;
+            NettyMsgCode        m_rc;
         };
     } // namespace net
 } // namespace netty

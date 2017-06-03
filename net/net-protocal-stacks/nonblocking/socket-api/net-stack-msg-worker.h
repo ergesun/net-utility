@@ -8,7 +8,8 @@
 
 #include "../../../../common/common-def.h"
 #include "../../../../common/blocking-queue.h"
-#include "../../../message.h"
+#include "../../../snd-message.h"
+#include "../../../rcv-message.h"
 
 namespace netty {
     namespace net {
@@ -24,12 +25,13 @@ namespace netty {
              */
             ANetStackMessageWorker(uint32_t maxCacheMessageCnt = 0);
             ~ANetStackMessageWorker();
+
             /**
              *
              */
-            bool SendMessage(Message *m);
+            bool SendMessage(SndMessage *m);
 
-            void HandleMessage();
+            void HandleMessage(RcvMessage *m);
 
             /**
              * 错误: 返回false(无论是[socket错误或对端关闭]还是[codec校验错误])
@@ -45,7 +47,7 @@ namespace netty {
             virtual bool Write() = 0;
 
         private:
-            common::BlockingQueue<Message*> *m_bqMessages;
+            common::BlockingQueue<SndMessage*> *m_bqMessages;
 
         };
     } // namespace net
