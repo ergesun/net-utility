@@ -20,7 +20,7 @@ namespace netty {
         }
 
         void Timer::Start() {
-            SpinLock sl(&m_thread_safe_sl);
+            SpinLock l(&m_thread_safe_sl);
             if (!m_stop) {
                 return;
             }
@@ -32,16 +32,16 @@ namespace netty {
         }
 
         void Timer::Stop() {
-            SpinLock sl(&m_thread_safe_sl);
-            m_stop = true;
             UnsubscribeAllEvent();
+            SpinLock l(&m_thread_safe_sl);
+            m_stop = true;
             m_cv.notify_one();
         }
 
         Timer::EventId Timer::SubscribeEventAt(uctime_t when, Event &ev) {
             assert(ev.callback);
             auto evId = EventId(when, ev.callback);
-            SpinLock sl(&m_thread_safe_sl);
+            SpinLock l(&m_thread_safe_sl);
             // 如果已存在，直接返回。同一时间点的同一回调只能订阅一次。
             auto findPos = m_mapSubscribedEvents.find(when);
             for (; findPos != m_mapSubscribedEvents.end(); ++findPos) {
@@ -71,7 +71,7 @@ namespace netty {
 
         bool Timer::UnsubscribeEvent(EventId eventId) {
             assert(eventId.how);
-            SpinLock sl(&m_thread_safe_sl);
+            SpinLock l(&m_thread_safe_sl);
             auto ev = m_mapEventsEntry.find(eventId);
             if (m_mapEventsEntry.end() != ev) {
                 m_mapSubscribedEvents.erase(ev->second);
@@ -83,11 +83,9 @@ namespace netty {
         }
 
         void Timer::UnsubscribeAllEvent() {
-            SpinLock sl(&m_thread_safe_sl);
-            for (auto ev_entry : m_mapEventsEntry) {
-                m_mapSubscribedEvents.erase(ev_entry.second);
-                m_mapEventsEntry.erase(ev_entry.first);
-            }
+            SpinLock l(&m_thread_safe_sl);
+            m_mapEventsEntry.clear();
+            m_mapSubscribedEvents.clear();
         }
 
         void Timer::process() {
@@ -111,9 +109,9 @@ namespace netty {
                     m_cv.wait(ml);
                 } else {
                     auto min = m_mapSubscribedEvents.begin();
+                    sl.Unlock();
                     using namespace std::chrono;
                     time_point<system_clock, nanoseconds> tp(nanoseconds(min->first.get_total_nsecs()));
-                    sl.Unlock();
                     m_cv.wait_until(ml, tp);
                 }
             }
