@@ -17,8 +17,8 @@ namespace netty {
             PosixTcpConnectionEventHandler(net_addr_t &peerAddr, int sfd);
             ~PosixTcpConnectionEventHandler();
 
-            virtual int HandleReadEvent() override;
-            virtual int HandleWriteEvent() override;
+            int HandleReadEvent() override;
+            int HandleWriteEvent() override;
 
         private:
             PosixTcpClientSocket *m_pClientSocket = nullptr;

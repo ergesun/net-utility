@@ -36,12 +36,7 @@ namespace netty {
             m_eventDriver->init(256);
             if (m_nlt.get()) {
                 if (SocketProtocal::Tcp == m_nlt->sp) {
-                    // TODO(sunchao): backlog改成可配置？
-                    auto srvSocket = new PosixTcpServerSocket(m_nlt->nat, 1024);
-                    srvSocket->Socket();
-                    srvSocket->Bind();
-                    srvSocket->Listen();
-                    m_srvEventHandler = new PosixTcpServerEventHandler(srvSocket);
+                    m_srvEventHandler = new PosixTcpServerEventHandler(m_nlt->nat, m_eventDriver);
                     m_eventDriver->add_event(m_srvEventHandler, EVENT_NONE, EVENT_READ);
                 } else {
                     throw std::runtime_error("Not support now!");

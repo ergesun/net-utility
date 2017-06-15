@@ -10,22 +10,25 @@
 #include "../../../../../../common-def.h"
 #include "../../socket-event-handler.h"
 #include "stack/server-socket.h"
+#include "../../../event-drivers/ievent-driver.h"
 
 namespace netty {
     namespace net {
         class GCC_INTERNAL PosixTcpServerEventHandler : public SocketEventHandler {
         public:
-            PosixTcpServerEventHandler(PosixTcpServerSocket* srvSocket) : SocketEventHandler(srvSocket),
-                                                                          m_pSrvSocket(srvSocket) {}
+            PosixTcpServerEventHandler(net_addr_t &nat, IEventDriver *ed);
+            ~PosixTcpServerEventHandler();
 
-            virtual int HandleReadEvent() override;
-            virtual int HandleWriteEvent() override;
+            int HandleReadEvent() override;
+            int HandleWriteEvent() override;
 
         private:
-            /**
-             * 传入到了父类中，父类会释放掉，所以自己没必要释放了。
-             */
             PosixTcpServerSocket *m_pSrvSocket;
+
+            /**
+             * 此为弱引用关系，关联关系，外部创建者会释放，本类无需释放。
+             */
+            IEventDriver         *m_pEventDriver;
         };
     } // namespace net
 } // namespace netty

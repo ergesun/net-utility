@@ -7,7 +7,6 @@
 #include <fcntl.h>
 #include <iostream>
 
-#include "timer.h"
 #include "common-utils.h"
 
 namespace netty {

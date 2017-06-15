@@ -16,9 +16,6 @@ namespace netty {
         public:
             SocketEventHandler() = default;
             SocketEventHandler(SocketDescriptor *socketDesc) : m_socketDesc(socketDesc) {}
-            ~SocketEventHandler() {
-                DELETE_PTR(m_socketDesc);
-            }
 
             inline SocketDescriptor* GetSocketDescriptor() {
                 return m_socketDesc;
