@@ -9,6 +9,7 @@
 #include "../../../../../../../common/common-def.h"
 #include "../../socket-event-handler.h"
 #include "stack/connection-socket.h"
+#include "net-stack-worker.h"
 
 namespace netty {
     namespace net {
@@ -17,11 +18,12 @@ namespace netty {
             PosixTcpConnectionEventHandler(net_addr_t &peerAddr, int sfd);
             ~PosixTcpConnectionEventHandler();
 
-            int HandleReadEvent() override;
-            int HandleWriteEvent() override;
+            bool HandleReadEvent() override;
+            bool HandleWriteEvent() override;
 
         private:
-            PosixTcpClientSocket *m_pClientSocket = nullptr;
+            PosixTcpClientSocket   *m_pClientSocket = nullptr;
+            PosixTcpNetStackWorker *m_pNetStackWorker = nullptr;
         };
     } // namespace net
 } // namespace netty

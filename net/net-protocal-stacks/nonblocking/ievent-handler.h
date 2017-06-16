@@ -15,9 +15,9 @@ namespace netty {
         public:
             virtual ~IEventHandler() {}
 
-            virtual int HandleReadEvent() = 0;
+            virtual bool HandleReadEvent() = 0;
 
-            virtual int HandleWriteEvent() = 0;
+            virtual bool HandleWriteEvent() = 0;
         }; // interface IEventHandler
     }  // namespace net
 } // namespace netty

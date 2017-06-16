@@ -10,18 +10,21 @@ namespace netty {
         PosixTcpConnectionEventHandler::PosixTcpConnectionEventHandler(net_addr_t &peerAddr, int sfd) {
             m_pClientSocket = new PosixTcpClientSocket(peerAddr, sfd);
             SetSocketDescriptor(m_pClientSocket);
+            m_pNetStackWorker = new PosixTcpNetStackWorker(m_pClientSocket);
         }
 
         PosixTcpConnectionEventHandler::~PosixTcpConnectionEventHandler() {
+            m_pClientSocket->Close();
             DELETE_PTR(m_pClientSocket);
+            DELETE_PTR(m_pNetStackWorker);
         }
 
-        int PosixTcpConnectionEventHandler::HandleReadEvent() {
-            return 0;
+        bool PosixTcpConnectionEventHandler::HandleReadEvent() {
+            return m_pNetStackWorker->Recv();
         }
 
-        int PosixTcpConnectionEventHandler::HandleWriteEvent() {
-            return 0;
+        bool PosixTcpConnectionEventHandler::HandleWriteEvent() {
+            return m_pNetStackWorker->Send();
         }
     } // namespace net
 } // namespace netty

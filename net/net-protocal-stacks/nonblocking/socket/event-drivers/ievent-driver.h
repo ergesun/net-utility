@@ -32,13 +32,45 @@ namespace netty {
         public:
             virtual ~IEventDriver() {}
 
-            virtual int32_t init(int32_t nevent) = 0;
+            /**
+             *
+             * @param nevent
+             * @return 0成功
+             */
+            virtual int32_t Init(int32_t nevent) = 0;
 
-            virtual int32_t add_event(SocketEventHandler *socketEventHandler, int32_t cur_mask, int32_t mask) = 0;
+            /**
+             *
+             * @param socketEventHandler
+             * @param cur_mask
+             * @param mask
+             * @return 0成功
+             */
+            virtual int32_t AddEvent(SocketEventHandler *socketEventHandler, int32_t cur_mask, int32_t mask) = 0;
 
-            virtual int32_t del_event(SocketEventHandler *socketEventHandler, int32_t cur_mask, int32_t del_mask) = 0;
+            /**
+             *
+             * @param socketEventHandler
+             * @param cur_mask
+             * @param del_mask
+             * @return 0成功
+             */
+            virtual int32_t DeleteEvent(SocketEventHandler *socketEventHandler, int32_t cur_mask, int32_t del_mask) = 0;
 
-            virtual int32_t event_wait(std::vector<NetEvent> &events, struct timeval *tp) = 0;
+            /**
+             *
+             * @param socketEventHandler
+             * @return 0成功
+             */
+            virtual int32_t DeleteHandler(SocketEventHandler *socketEventHandler) = 0;
+
+            /**
+             *
+             * @param events
+             * @param tp
+             * @return 事件个数
+             */
+            virtual int32_t EventWait(std::vector<NetEvent> &events, struct timeval *tp) = 0;
         }; // interface IEventDriver
     }  // namespace net
 }  // namespace netty

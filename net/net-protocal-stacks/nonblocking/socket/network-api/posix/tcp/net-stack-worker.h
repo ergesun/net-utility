@@ -8,6 +8,7 @@
 
 #include "../../../../../../../common/common-def.h"
 #include "../../net-stack-msg-worker.h"
+#include "stack/connection-socket.h"
 
 namespace netty {
     namespace net {
@@ -16,6 +17,8 @@ namespace netty {
          */
         class GCC_INTERNAL PosixTcpNetStackWorker : public ANetStackMessageWorker {
         public:
+            PosixTcpNetStackWorker(PosixTcpClientSocket *socket) : m_pSocket(socket) {}
+
             /**
              * 错误: 返回false(无论是[socket错误或对端关闭]还是[codec校验错误])
              * 正常: 返回true(即便是遇到了EAGAIN，只要没有发生错误)
@@ -30,6 +33,10 @@ namespace netty {
             bool Send();
 
         private:
+            /**
+             * 此为弱引用关系，关联关系，外部创建者会释放，本类无需释放。
+             */
+            PosixTcpClientSocket    *m_pSocket;
 
         };
     } // namespace net

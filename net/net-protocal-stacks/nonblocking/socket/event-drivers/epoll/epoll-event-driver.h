@@ -17,11 +17,13 @@ namespace netty {
              * @param max_events
              * @return
              */
-            int init(int max_events) override;
+            int Init(int max_events) override;
 
-            int add_event(SocketEventHandler *socketEventHandler, int cur_mask, int mask) override;
+            int AddEvent(SocketEventHandler *socketEventHandler, int cur_mask, int mask) override;
 
-            int del_event(SocketEventHandler *socketEventHandler, int cur_mask, int del_mask) override;
+            int DeleteEvent(SocketEventHandler *socketEventHandler, int cur_mask, int del_mask) override;
+
+            int DeleteHandler(SocketEventHandler *socketEventHandler) override;
 
             /**
              * 获取epoll的事件。
@@ -29,7 +31,7 @@ namespace netty {
              * @param tp 阻塞等待的时间，若为nullptr为阻塞调用(epoll_wait(..., -1))。
              * @return 获取到的事件个数。
              */
-            int event_wait(std::vector<NetEvent> &events, struct timeval *tp) override;
+            int EventWait(std::vector<NetEvent> &events, struct timeval *tp) override;
 
         private:
             int m_epfd;

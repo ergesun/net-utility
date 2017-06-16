@@ -19,8 +19,8 @@ namespace netty {
             PosixTcpServerEventHandler(net_addr_t &nat, IEventDriver *ed);
             ~PosixTcpServerEventHandler();
 
-            int HandleReadEvent() override;
-            int HandleWriteEvent() override;
+            bool HandleReadEvent() override;
+            bool HandleWriteEvent() override;
 
         private:
             PosixTcpServerSocket *m_pSrvSocket;
