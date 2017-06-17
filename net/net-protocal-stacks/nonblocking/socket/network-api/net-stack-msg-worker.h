@@ -23,6 +23,14 @@ namespace netty {
          * 事件管理器有事件了会调用读写。
          */
         class GCC_INTERNAL ANetStackMessageWorker {
+        protected:
+            enum class NetWorkerState {
+                StartToRcvHeader = 0,
+                RcvingHeader,
+                StartToRcvPayload,
+                RcvingPayload
+            };
+
         public:
             /**
              *
@@ -51,10 +59,12 @@ namespace netty {
              */
             virtual bool Send() = 0;
 
-        private:
-            common::BlockingQueue<SndMessage*> *m_bqMessages;
+        protected:
             common::MemPool                    *m_pMemPool;
             common::Buffer                     *m_pHeaderBuffer;
+
+        private:
+            common::BlockingQueue<SndMessage*> *m_bqMessages;
         };
     } // namespace net
 } // namespace netty

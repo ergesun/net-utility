@@ -48,6 +48,20 @@ namespace netty {
                 MpObject = mpo;
             }
 
+            inline bool Valid() {
+                return Pos && Last && (uintptr_t)Last >= (uintptr_t)Pos;
+            }
+
+            inline void BZero() {
+                Pos = nullptr;
+                Last = nullptr;
+                bzero(Start, (uintptr_t)End - (uintptr_t)Start + 1);
+            }
+
+            inline int32_t TotalLength() {
+                return (int32_t)((uintptr_t)End - (uintptr_t)Start) + 1;
+            }
+
             inline int32_t AvailableLength() {
                 return (int32_t)((int64_t)(uintptr_t)Last - (int64_t)(uintptr_t)Pos) + 1;
             }

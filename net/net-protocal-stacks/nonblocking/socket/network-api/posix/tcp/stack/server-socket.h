@@ -12,7 +12,7 @@
 
 namespace netty {
     namespace net {
-        class PosixTcpServerSocket : public PosixTcpConnectionSocket {
+        class GCC_INTERNAL PosixTcpServerSocket : public PosixTcpConnectionSocket {
         public:
             PosixTcpServerSocket(net_addr_t *localAddr, int maxConns) : PosixTcpConnectionSocket(),
                                                                          m_local_addr(*localAddr),

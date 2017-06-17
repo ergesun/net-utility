@@ -37,16 +37,12 @@ namespace netty {
             bool Send();
 
         private:
-            enum class RcvState {
-                RcvingHeader  = 0,
-                RcvingPayload
-            };
-
-        private:
             /**
              * 此为弱引用关系，关联关系，外部创建者会释放，本类无需释放。
              */
             PosixTcpClientSocket    *m_pSocket;
+            NetWorkerState           m_state = NetWorkerState::RcvingHeader;
+            Message::Header          m_header;
         };
     } // namespace net
 } // namespace netty

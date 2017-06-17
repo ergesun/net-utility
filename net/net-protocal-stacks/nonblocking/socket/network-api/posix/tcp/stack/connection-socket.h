@@ -17,7 +17,7 @@ namespace netty {
         /**
          * 当前只考虑了ipv4.
          */
-        class PosixTcpConnectionSocket : public SocketDescriptor {
+        class GCC_INTERNAL PosixTcpConnectionSocket : public SocketDescriptor {
         public:
             PosixTcpConnectionSocket() = default;
             PosixTcpConnectionSocket(net_addr_t peerAddr, int sfd) {

@@ -17,7 +17,7 @@
 
 namespace netty {
     namespace net {
-        struct NetEvent {
+        struct GCC_INTERNAL NetEvent {
             ASocketEventHandler *eh;
             int                 mask;
         };
@@ -28,7 +28,7 @@ namespace netty {
          * For example, Linux will use epoll(2), BSD will use kqueue(2) and select will
          * be used for worst condition.
          */
-        class IEventDriver {
+        class GCC_INTERNAL IEventDriver {
         public:
             virtual ~IEventDriver() {}
 

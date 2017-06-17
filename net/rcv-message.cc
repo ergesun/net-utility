@@ -3,6 +3,7 @@
  * a Creative Commons Attribution 3.0 Unported License(https://creativecommons.org/licenses/by/3.0/).
  */
 
+#include <iostream>
 #include "../common/buffer.h"
 #include "../common/codec-utils.h"
 
@@ -19,6 +20,7 @@ namespace netty {
             uint32_t offset = 0;
             header->magic = ByteOrderUtils::ReadUInt32(buffer->Pos + offset);
             if (header->magic != MESSAGE_MAGIC_NO) {
+                std::cerr << "message magic no is invalid!" << std::endl;
                 return false;
             }
             offset += sizeof(header->magic);
@@ -28,7 +30,12 @@ namespace netty {
             offset += sizeof(header->id.seq);
             header->len = ByteOrderUtils::ReadUInt32(buffer->Pos + offset);
 
-            return header->len <= MAX_MSG_PAYLOAD_SIZE;
+            auto rc = header->len <= MAX_MSG_PAYLOAD_SIZE;
+            if (!rc) {
+                std::cerr << "message payload len is invalid!" << std::endl;
+            }
+
+            return rc;
         }
     } // namespace net
 } // namespace netty

@@ -17,7 +17,7 @@
 
 namespace netty {
     namespace net {
-        class PosixTcpEventManager : public AEventManager {
+        class GCC_INTERNAL PosixTcpEventManager : public AEventManager {
         public:
             PosixTcpEventManager(net_addr_t *nat, common::MemPool *memPool, uint32_t maxEvents,
                                  uint32_t connWorkersCnt, ConnectHandler connectHandler) :
