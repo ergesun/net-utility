@@ -19,6 +19,7 @@
 #define LIKELY(x)                      __builtin_expect(!!(x), 1)
 #define UNLIKELY(x)                    __builtin_expect(!!(x), 0)
 
+#define memory_barrier()               __sync_synchronize()
 #define soft_yield_cpu()               __asm__ ("pause")
 #define hard_yield_cpu()               sched_yield()
 #define atomic_cas(lock, old, set)     __sync_bool_compare_and_swap(lock, old, set)

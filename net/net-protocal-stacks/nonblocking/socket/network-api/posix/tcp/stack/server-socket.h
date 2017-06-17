@@ -14,8 +14,8 @@ namespace netty {
     namespace net {
         class PosixTcpServerSocket : public PosixTcpConnectionSocket {
         public:
-            PosixTcpServerSocket(net_addr_t &localAddr, int maxConns) : PosixTcpConnectionSocket(),
-                                                                         m_local_addr(localAddr),
+            PosixTcpServerSocket(net_addr_t *localAddr, int maxConns) : PosixTcpConnectionSocket(),
+                                                                         m_local_addr(*localAddr),
                                                                          m_max_listen_conns(maxConns) {}
 
             /* basic interfaces */
@@ -31,8 +31,8 @@ namespace netty {
             }
 
         private:
-            int        m_max_listen_conns;
-            net_addr_t m_local_addr;
+            int         m_max_listen_conns;
+            net_addr_t  m_local_addr;
         };
     } // namespace net
 } // namespace netty

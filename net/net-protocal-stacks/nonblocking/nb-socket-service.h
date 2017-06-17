@@ -7,6 +7,7 @@
 #define NET_CORE_NBSOCKETSERVICE_H
 
 #include <memory>
+#include <cassert>
 
 #include "../inet-msg-worker-manager.h"
 #include "../../abstract-socket-service.h"
@@ -18,6 +19,7 @@
 
 namespace netty {
     namespace net {
+        class AEventManager;
         class NBSocketService : public ASocketService {
         public:
             /**
@@ -27,7 +29,9 @@ namespace netty {
              * @param memPool 内存池。
              */
             NBSocketService(std::shared_ptr<net_local_info_t> nlt, INetStackWorkerManager *cp, common::MemPool *memPool) :
-                ASocketService(nlt), m_workerPolicy(cp), m_memPool(memPool), m_bStopped(false) {}
+                ASocketService(nlt), m_workerPolicy(cp), m_pMemPool(memPool), m_bStopped(false) {
+                assert(memPool);
+            }
 
             ~NBSocketService();
 
@@ -35,28 +39,23 @@ namespace netty {
              * 开启服务。
              * @return 成功true,失败false.
              */
-            virtual bool Start(NonBlockingEventModel m) override;
+            bool Start(NonBlockingEventModel m) override;
 
-            virtual bool Stop() override;
+            bool Stop() override;
 
-            virtual bool Connect(net_peer_info_t &npt) override;
+            bool Connect(net_peer_info_t &npt) override;
 
-            virtual bool SendMessage(Message *m) override;
+            bool Disconnect(net_peer_info_t &npt) override;
+
+            bool SendMessage(Message *m) override;
 
         private:
-            void process_events();
-
-        private:
-            std::thread            *m_pEventLoopThread = nullptr;
             INetStackWorkerManager *m_workerPolicy = nullptr;
-            // TODO(sunchao): 扩展为多driver均衡处理。
-            IEventDriver           *m_eventDriver = nullptr;
-            // 无需本类释放。
-            common::MemPool        *m_memPool = nullptr;
-            SocketEventHandler     *m_srvEventHandler = nullptr;
+            // 关联关系，外部传入的，根据谁创建谁销毁原则，本类无需释放。
+            common::MemPool        *m_pMemPool = nullptr;
+            AEventManager          *m_pEventManager = nullptr;
 
             bool                    m_bStopped;
-            std::vector<NetEvent>   m_vEvents;
         }; // class NBSocketService
     }  // namespace net
 } // namespace netty

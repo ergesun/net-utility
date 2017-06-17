@@ -13,10 +13,14 @@
 #include "../../../event-drivers/ievent-driver.h"
 
 namespace netty {
+    namespace common {
+        class MemPool;
+    }
+
     namespace net {
         class GCC_INTERNAL PosixTcpServerEventHandler : public SocketEventHandler {
         public:
-            PosixTcpServerEventHandler(net_addr_t &nat, IEventDriver *ed);
+            PosixTcpServerEventHandler(net_addr_t *nat, IEventDriver *ed, common::MemPool *memPool);
             ~PosixTcpServerEventHandler();
 
             bool HandleReadEvent() override;
@@ -26,9 +30,13 @@ namespace netty {
             PosixTcpServerSocket *m_pSrvSocket;
 
             /**
-             * 此为弱引用关系，关联关系，外部创建者会释放，本类无需释放。
+             * 关联关系，外部创建者会释放，本类无需释放。
              */
             IEventDriver         *m_pEventDriver;
+            /**
+             * 关联关系，外部创建者会释放，本类无需释放。
+             */
+            common::MemPool      *m_pMemPool;
         };
     } // namespace net
 } // namespace netty

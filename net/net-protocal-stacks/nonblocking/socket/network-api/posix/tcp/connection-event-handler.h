@@ -12,10 +12,14 @@
 #include "net-stack-worker.h"
 
 namespace netty {
+    namespace common {
+        class MemPool;
+    }
+
     namespace net {
         class GCC_INTERNAL PosixTcpConnectionEventHandler : public SocketEventHandler {
         public:
-            PosixTcpConnectionEventHandler(net_addr_t &peerAddr, int sfd);
+            PosixTcpConnectionEventHandler(net_addr_t &peerAddr, int sfd, common::MemPool *memPool);
             ~PosixTcpConnectionEventHandler();
 
             bool HandleReadEvent() override;
@@ -24,6 +28,7 @@ namespace netty {
         private:
             PosixTcpClientSocket   *m_pClientSocket = nullptr;
             PosixTcpNetStackWorker *m_pNetStackWorker = nullptr;
+            common::MemPool        *m_pMemPool;
         };
     } // namespace net
 } // namespace netty

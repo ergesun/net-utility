@@ -11,13 +11,17 @@
 #include "stack/connection-socket.h"
 
 namespace netty {
+    namespace common {
+        class MemPool;
+    }
+
     namespace net {
         /**
          * Posix tcp的消息处理类。事件管理器有事件了会调用。
          */
         class GCC_INTERNAL PosixTcpNetStackWorker : public ANetStackMessageWorker {
         public:
-            PosixTcpNetStackWorker(PosixTcpClientSocket *socket) : m_pSocket(socket) {}
+            PosixTcpNetStackWorker(common::MemPool *memPool, PosixTcpClientSocket *socket);
 
             /**
              * 错误: 返回false(无论是[socket错误或对端关闭]还是[codec校验错误])
@@ -33,11 +37,16 @@ namespace netty {
             bool Send();
 
         private:
+            enum class RcvState {
+                RcvingHeader  = 0,
+                RcvingPayload
+            };
+
+        private:
             /**
              * 此为弱引用关系，关联关系，外部创建者会释放，本类无需释放。
              */
             PosixTcpClientSocket    *m_pSocket;
-
         };
     } // namespace net
 } // namespace netty

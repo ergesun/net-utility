@@ -12,10 +12,10 @@
 namespace netty {
     namespace common {
         /**
-         * 本buffer的使用规则需要统一如下：
+         * [约定] 本buffer的使用规则需要统一如下：
          *   - last为空格，last最大到end为止
          *   - 总长度为  ：[start, end] --> 闭区间
-         *   - 有效长度为：[pos, last)  --> 闭开区间
+         *   - 有效长度为：[pos, last]  --> 闭区间
          */
         class Buffer {
         public:
@@ -33,8 +33,11 @@ namespace netty {
             inline void Put() {
                 if (MpObject) {
                     MpObject->Put();
-                    Refresh(nullptr, nullptr, nullptr, nullptr, nullptr);
+                } else {
+                    DELETE_ARR_PTR(this->Start);
                 }
+
+                Refresh(nullptr, nullptr, nullptr, nullptr, nullptr);
             }
 
             inline void Refresh(uchar *pos, uchar *last, uchar *start, uchar *end, MemPoolObject *mpo) {

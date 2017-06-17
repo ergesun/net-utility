@@ -21,6 +21,8 @@ namespace netty {
 
             virtual bool Connect(net_peer_info_t &npt) = 0;
 
+            virtual bool Disconnect(net_peer_info_t &npt) = 0;
+
             virtual bool SendMessage(Message *m) = 0;
         }; // interface ISocketService
     } // namespace net

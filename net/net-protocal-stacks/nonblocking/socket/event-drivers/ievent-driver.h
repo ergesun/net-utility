@@ -70,7 +70,7 @@ namespace netty {
              * @param tp
              * @return 事件个数
              */
-            virtual int32_t EventWait(std::vector<NetEvent> &events, struct timeval *tp) = 0;
+            virtual int32_t EventWait(std::vector<NetEvent> *events, struct timeval *tp) = 0;
         }; // interface IEventDriver
     }  // namespace net
 }  // namespace netty

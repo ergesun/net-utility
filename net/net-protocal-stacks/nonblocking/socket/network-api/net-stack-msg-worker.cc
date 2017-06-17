@@ -3,12 +3,20 @@
  * a Creative Commons Attribution 3.0 Unported License(https://creativecommons.org/licenses/by/3.0/).
  */
 
+#include "../../../../../common/mem-pool.h"
+#include "../../../../../common/buffer.h"
+
 #include "net-stack-msg-worker.h"
+#include "../../../../../common/common-utils.h"
 
 namespace netty {
     namespace net {
-        ANetStackMessageWorker::ANetStackMessageWorker(uint32_t maxCacheMessageCnt) {
+        ANetStackMessageWorker::ANetStackMessageWorker(common::MemPool *memPool, uint32_t maxCacheMessageCnt) {
+            m_pMemPool = memPool;
             m_bqMessages = new common::BlockingQueue<SndMessage*>(maxCacheMessageCnt);
+            auto size = RcvMessage::HeaderSize();
+            auto headerMemObj = m_pMemPool->Get(size);
+            m_pHeaderBuffer = common::CommonUtils::GetNewBuffer(headerMemObj, size);
         }
 
         ANetStackMessageWorker::~ANetStackMessageWorker() {

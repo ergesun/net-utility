@@ -7,9 +7,11 @@
 #define NET_COMMON_COMMON_UTILS_H
 
 #include "common-def.h"
+#include "mem-pool.h"
 
 namespace netty {
     namespace common {
+        class Buffer;
         class CommonUtils {
         public:
             /**
@@ -32,6 +34,14 @@ namespace netty {
              * @return
              */
             static void* PosixMemAlign(size_t align, size_t size);
+
+            /**
+             *
+             * @param mpo
+             * @param size
+             * @return
+             */
+            static common::Buffer* GetNewBuffer(common::MemPoolObject *mpo, uint32_t totalBufferSize);
         }; // class CommonUtils
     }  // namespace common
 }  // namespace netty

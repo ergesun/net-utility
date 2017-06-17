@@ -12,6 +12,11 @@
 #include "../../../../rcv-message.h"
 
 namespace netty {
+    namespace common {
+        class MemPool;
+        class Buffer;
+    }
+
     namespace net {
         /**
          * 本类负责对message的处理。具体的socket实现类要继承于此类。
@@ -23,7 +28,7 @@ namespace netty {
              *
              * @param maxCacheMessageCnt 消息缓冲队列的最大消息个数。0为无限制。
              */
-            ANetStackMessageWorker(uint32_t maxCacheMessageCnt = 0);
+            ANetStackMessageWorker(common::MemPool *memPool, uint32_t maxCacheMessageCnt = 0);
             ~ANetStackMessageWorker();
 
             /**
@@ -48,7 +53,8 @@ namespace netty {
 
         private:
             common::BlockingQueue<SndMessage*> *m_bqMessages;
-
+            common::MemPool                    *m_pMemPool;
+            common::Buffer                     *m_pHeaderBuffer;
         };
     } // namespace net
 } // namespace netty

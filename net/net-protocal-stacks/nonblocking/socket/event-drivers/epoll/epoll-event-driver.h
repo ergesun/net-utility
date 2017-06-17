@@ -31,7 +31,7 @@ namespace netty {
              * @param tp 阻塞等待的时间，若为nullptr为阻塞调用(epoll_wait(..., -1))。
              * @return 获取到的事件个数。
              */
-            int EventWait(std::vector<NetEvent> &events, struct timeval *tp) override;
+            int EventWait(std::vector<NetEvent> *events, struct timeval *tp) override;
 
         private:
             int m_epfd;

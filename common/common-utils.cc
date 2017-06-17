@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <iostream>
 
+#include "buffer.h"
 #include "common-utils.h"
 
 namespace netty {
@@ -45,6 +46,12 @@ namespace netty {
             }
 
             return pln;
+        }
+
+        common::Buffer* CommonUtils::GetNewBuffer(common::MemPoolObject *mpo, uint32_t totalBufferSize) {
+            auto bufferStart = (uchar*)(mpo->Pointer());
+            auto bufferEnd = bufferStart + totalBufferSize - 1;
+            return new common::Buffer(nullptr, nullptr, bufferStart, bufferEnd, mpo);
         }
     } // namespace common
 } // namespace netty

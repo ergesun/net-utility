@@ -28,6 +28,7 @@ namespace netty {
         enum class SocketProtocal {
             None = 0,
             Tcp,
+            Udp
         };
 
         typedef struct net_addr_s {
