@@ -7,7 +7,7 @@
 #define NET_CORE_POSIX_TCP_CONNECTION_EVENT_HANDLER_H
 
 #include "../../../../../../../common/common-def.h"
-#include "../../socket-event-handler.h"
+#include "../../abstract-socket-event-handler.h"
 #include "stack/connection-socket.h"
 #include "net-stack-worker.h"
 
@@ -17,13 +17,15 @@ namespace netty {
     }
 
     namespace net {
-        class GCC_INTERNAL PosixTcpConnectionEventHandler : public SocketEventHandler {
+        class GCC_INTERNAL PosixTcpConnectionEventHandler : public ASocketEventHandler {
         public:
             PosixTcpConnectionEventHandler(net_addr_t &peerAddr, int sfd, common::MemPool *memPool);
             ~PosixTcpConnectionEventHandler();
 
             bool HandleReadEvent() override;
             bool HandleWriteEvent() override;
+
+            ANetStackMessageWorker *GetStackMsgWorker() override;
 
         private:
             PosixTcpClientSocket   *m_pClientSocket = nullptr;

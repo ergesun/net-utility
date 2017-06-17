@@ -27,5 +27,9 @@ namespace netty {
         bool PosixTcpConnectionEventHandler::HandleWriteEvent() {
             return m_pNetStackWorker->Send();
         }
+
+        ANetStackMessageWorker *PosixTcpConnectionEventHandler::GetStackMsgWorker() {
+            return m_pNetStackWorker;
+        }
     } // namespace net
 } // namespace netty

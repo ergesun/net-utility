@@ -9,17 +9,21 @@
 #include "../../ievent-handler.h"
 #include "socket-descriptor.h"
 #include "../../../../../common/common-def.h"
+#include "net-stack-msg-worker.h"
 
 namespace netty {
     namespace net {
-        class SocketEventHandler : public IEventHandler {
+
+        class ASocketEventHandler : public IEventHandler {
         public:
-            SocketEventHandler() = default;
-            SocketEventHandler(SocketDescriptor *socketDesc) : m_socketDesc(socketDesc) {}
+            ASocketEventHandler() = default;
+            ASocketEventHandler(SocketDescriptor *socketDesc) : m_socketDesc(socketDesc) {}
 
             inline SocketDescriptor* GetSocketDescriptor() {
                 return m_socketDesc;
             }
+
+            virtual ANetStackMessageWorker* GetStackMsgWorker() = 0;
 
         protected:
             inline void SetSocketDescriptor(SocketDescriptor *psd) {

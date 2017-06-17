@@ -7,10 +7,10 @@
 #define NET_CORE_INET_SERVICE_H
 
 #include "common-def.h"
-#include "message.h"
 
 namespace netty {
     namespace net {
+        class SndMessage;
         class ISocketService {
         public:
             virtual ~ISocketService() {}
@@ -23,7 +23,7 @@ namespace netty {
 
             virtual bool Disconnect(net_peer_info_t &npt) = 0;
 
-            virtual bool SendMessage(Message *m) = 0;
+            virtual bool SendMessage(SndMessage *m) = 0;
         }; // interface ISocketService
     } // namespace net
 } // namespace netty

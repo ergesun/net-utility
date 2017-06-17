@@ -13,7 +13,7 @@
 namespace netty {
     namespace common {
         /**
-         * 一个会阻塞队列。api应用了move语义。
+         * 阻塞队列。
          */
         template <typename T>
         class BlockingQueue {

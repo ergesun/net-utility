@@ -8,9 +8,10 @@
 
 #include "../../../../../../../common/common-def.h"
 #include "../../../../../../common-def.h"
-#include "../../socket-event-handler.h"
+#include "../../abstract-socket-event-handler.h"
 #include "stack/server-socket.h"
 #include "../../../event-drivers/ievent-driver.h"
+#include "../../abstract-event-manager.h"
 
 namespace netty {
     namespace common {
@@ -18,25 +19,23 @@ namespace netty {
     }
 
     namespace net {
-        class GCC_INTERNAL PosixTcpServerEventHandler : public SocketEventHandler {
+        class GCC_INTERNAL PosixTcpServerEventHandler : public ASocketEventHandler {
         public:
-            PosixTcpServerEventHandler(net_addr_t *nat, IEventDriver *ed, common::MemPool *memPool);
+            PosixTcpServerEventHandler(net_addr_t *nat, ConnectHandler onConnect, common::MemPool *memPool);
             ~PosixTcpServerEventHandler();
 
             bool HandleReadEvent() override;
             bool HandleWriteEvent() override;
 
-        private:
-            PosixTcpServerSocket *m_pSrvSocket;
+            ANetStackMessageWorker *GetStackMsgWorker() override;
 
+        private:
+            PosixTcpServerSocket   *m_pSrvSocket;
+            ConnectHandler          m_onConnect;
             /**
              * 关联关系，外部创建者会释放，本类无需释放。
              */
-            IEventDriver         *m_pEventDriver;
-            /**
-             * 关联关系，外部创建者会释放，本类无需释放。
-             */
-            common::MemPool      *m_pMemPool;
+            common::MemPool        *m_pMemPool;
         };
     } // namespace net
 } // namespace netty

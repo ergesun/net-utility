@@ -20,6 +20,9 @@
 namespace netty {
     namespace net {
         class AEventManager;
+        /**
+         * 支持Tcp/Udp(暂未实现)协议的收发server。
+         */
         class NBSocketService : public ASocketService {
         public:
             /**
@@ -29,7 +32,7 @@ namespace netty {
              * @param memPool 内存池。
              */
             NBSocketService(std::shared_ptr<net_local_info_t> nlt, INetStackWorkerManager *cp, common::MemPool *memPool) :
-                ASocketService(nlt), m_workerPolicy(cp), m_pMemPool(memPool), m_bStopped(false) {
+                ASocketService(nlt), m_netStackWorkerManager(cp), m_pMemPool(memPool), m_bStopped(false) {
                 assert(memPool);
             }
 
@@ -47,10 +50,13 @@ namespace netty {
 
             bool Disconnect(net_peer_info_t &npt) override;
 
-            bool SendMessage(Message *m) override;
+            bool SendMessage(SndMessage *m) override;
 
         private:
-            INetStackWorkerManager *m_workerPolicy = nullptr;
+            void on_connect(net_peer_info_t peer, ASocketEventHandler *handler);
+
+        private:
+            INetStackWorkerManager *m_netStackWorkerManager = nullptr;
             // 关联关系，外部传入的，根据谁创建谁销毁原则，本类无需释放。
             common::MemPool        *m_pMemPool = nullptr;
             AEventManager          *m_pEventManager = nullptr;

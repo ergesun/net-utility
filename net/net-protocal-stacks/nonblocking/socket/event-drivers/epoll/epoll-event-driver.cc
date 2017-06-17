@@ -25,7 +25,7 @@ namespace netty {
             return 0;
         }
 
-        int EpollEventDriver::AddEvent(SocketEventHandler *socketEventHandler, int cur_mask, int mask) {
+        int EpollEventDriver::AddEvent(ASocketEventHandler *socketEventHandler, int cur_mask, int mask) {
             assert(socketEventHandler);
             auto fd = socketEventHandler->GetSocketDescriptor()->GetSfd();
             int op = (cur_mask == EVENT_NONE) ? EPOLL_CTL_ADD : EPOLL_CTL_MOD;
@@ -53,7 +53,7 @@ namespace netty {
             return 0;
         }
 
-        int EpollEventDriver::DeleteEvent(SocketEventHandler *socketEventHandler, int cur_mask, int del_mask) {
+        int EpollEventDriver::DeleteEvent(ASocketEventHandler *socketEventHandler, int cur_mask, int del_mask) {
             assert(socketEventHandler);
             auto fd = socketEventHandler->GetSocketDescriptor()->GetSfd();
             struct epoll_event ee;
@@ -90,7 +90,7 @@ namespace netty {
             return 0;
         }
 
-        int EpollEventDriver::DeleteHandler(SocketEventHandler *socketEventHandler) {
+        int EpollEventDriver::DeleteHandler(ASocketEventHandler *socketEventHandler) {
             assert(socketEventHandler);
             auto fd = socketEventHandler->GetSocketDescriptor()->GetSfd();
             struct epoll_event ee;
@@ -129,7 +129,7 @@ namespace netty {
                         mask |= EVENT_READ;
                     }
 
-                    (*events)[i].eh = reinterpret_cast<SocketEventHandler*>(m_events[i].data.ptr);
+                    (*events)[i].eh = reinterpret_cast<ASocketEventHandler*>(m_events[i].data.ptr);
                     (*events)[i].mask = mask;
                 }
             }

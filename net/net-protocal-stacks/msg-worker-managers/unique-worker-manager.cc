@@ -8,15 +8,15 @@
 namespace netty {
     namespace net {
 
-        INetMessageWorker *UniqueWorkerManager::GetWorker(net_peer_info_t &npt) {
+        ANetStackMessageWorker *UniqueWorkerManager::GetWorker(net_peer_info_t &npt) {
             return nullptr;
         }
 
-        void UniqueWorkerManager::PutWorker(INetMessageWorker *worker) {
+        void UniqueWorkerManager::PutWorker(ANetStackMessageWorker *worker) {
 
         }
 
-        INetMessageWorker *UniqueWorkerManager::lookup_conn(net_peer_info_t &npt) {
+        ANetStackMessageWorker *UniqueWorkerManager::lookup_conn(net_peer_info_t &npt) {
             auto p = m_hmap_workers.find(npt);
             if (m_hmap_workers.end() != p) {
                 return p->second;

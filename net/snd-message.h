@@ -15,13 +15,15 @@ namespace netty {
             /**
              *
              * @param mp
+             * @param socketInfo 标识所走的协议以及本地socket信息
              * @param deadline 排队等待的截止时间，超过这个时间就出队回调发送错误。
              * @param cb 回复消息回调函数
              * @param cbCtx 回调时带回的ctx
              * @param canBeRelease Message可不可以被框架释放。
              */
-            SndMessage(common::MemPool *mp, common::uctime_t deadline, CallbackHandler cb, void *cbCtx, bool canBeRelease = true) :
-                Message(mp) {
+            SndMessage(common::MemPool *mp, net_local_info_t socketInfo, common::uctime_t deadline,
+                       CallbackHandler cb, void *cbCtx, bool canBeRelease = true) :
+                Message(mp), m_socketInfo(socketInfo) {
                 m_deadline = deadline;
                 m_cb = cb;
                 m_pCallbackCtx = cbCtx;
@@ -46,6 +48,10 @@ namespace netty {
                 return m_deadline;
             }
 
+            inline net_local_info_t GetSocketInfo() {
+                return m_socketInfo;
+            }
+
         protected:
             /**
              * 获取派生类的消息encode之后待发送字节的长度。
@@ -68,6 +74,7 @@ namespace netty {
             common::uctime_t    m_deadline;
             void               *m_pCallbackCtx;
             bool                m_bCanBeReleased;
+            net_local_info_t    m_socketInfo;
         };
     } // namespace net
 } // namespace netty

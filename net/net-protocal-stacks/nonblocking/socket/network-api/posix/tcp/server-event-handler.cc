@@ -6,19 +6,21 @@
 #include <netinet/in.h>
 #include <iostream>
 #include <arpa/inet.h>
-#include "server-event-handler.h"
+
 #include "connection-event-handler.h"
+
+#include "server-event-handler.h"
 
 namespace netty {
     namespace net {
-        PosixTcpServerEventHandler::PosixTcpServerEventHandler(net_addr_t *nat, IEventDriver *ed, common::MemPool *memPool) {
+        PosixTcpServerEventHandler::PosixTcpServerEventHandler(net_addr_t *nat, ConnectHandler onConnect, common::MemPool *memPool) {
             // TODO(sunchao): backlog改成可配置？
             m_pSrvSocket = new PosixTcpServerSocket(nat, 512);
             m_pSrvSocket->Socket();
             m_pSrvSocket->Bind();
             m_pSrvSocket->Listen();
             SetSocketDescriptor(m_pSrvSocket);
-            m_pEventDriver = ed;
+            m_onConnect = onConnect;
             m_pMemPool = memPool;
         }
 
@@ -51,7 +53,10 @@ namespace netty {
                     net_addr_t peerAddr(std::move(addrStr), port);
                     // 连接失效的时候再释放。
                     PosixTcpConnectionEventHandler *connEventHandler = new PosixTcpConnectionEventHandler(peerAddr, conn_fd, m_pMemPool);
-                    m_pEventDriver->AddEvent(connEventHandler, EVENT_NONE, EVENT_WRITE | EVENT_READ);
+                    net_peer_info_t peer = net_peer_info_t(peerAddr, SocketProtocal::Tcp);
+                    if (m_onConnect) {
+                        m_onConnect(peer, connEventHandler);
+                    }
                 }
             }
 
@@ -59,6 +64,10 @@ namespace netty {
         }
 
         bool PosixTcpServerEventHandler::HandleWriteEvent() {
+            throw std::runtime_error("Not support!");
+        }
+
+        ANetStackMessageWorker *PosixTcpServerEventHandler::GetStackMsgWorker() {
             throw std::runtime_error("Not support!");
         }
     } // namespace net

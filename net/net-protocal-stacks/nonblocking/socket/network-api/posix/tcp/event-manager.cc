@@ -7,6 +7,8 @@
 
 #include "event-manager.h"
 
+using namespace std::placeholders;
+
 namespace netty {
     namespace net {
         PosixTcpEventManager::~PosixTcpEventManager() {
@@ -21,7 +23,7 @@ namespace netty {
             m_bStopped = false;
             if (m_pNat) {
                 auto ew = new EventWorker(m_iMaxEvents, m);
-                m_pServerEventHandler = new PosixTcpServerEventHandler(m_pNat, ew->GetDriver(), m_pMemPool);
+                m_pServerEventHandler = new PosixTcpServerEventHandler(m_pNat, std::bind(&PosixTcpEventManager::on_connect, this, _1, _2), m_pMemPool);
                 // 不需要lock，因为正常只有主线程会add/delete一次
                 ew->GetDriver()->AddEvent(m_pServerEventHandler, EVENT_NONE, EVENT_READ);
                 m_pListenWorkerEventLoopCtx.second = ew;
@@ -53,9 +55,11 @@ namespace netty {
                 m_vConnsWorkerEventLoopCtxs[i].first->join();
                 DELETE_PTR(m_vConnsWorkerEventLoopCtxs[i].first);
             }
+
+            return true;
         }
 
-        int PosixTcpEventManager::AddEvent(SocketEventHandler *socketEventHandler, int cur_mask, int mask) {
+        int PosixTcpEventManager::AddEvent(ASocketEventHandler *socketEventHandler, int cur_mask, int mask) {
             {
                 common::SpinLock l(&m_slSelectEvents);
                 /**
@@ -109,6 +113,12 @@ namespace netty {
                         }
                     }
                 }
+            }
+        }
+
+        void PosixTcpEventManager::on_connect(net_peer_info_t peer, ASocketEventHandler *handler) {
+            if (m_onConnect) {
+                m_onConnect(peer, handler);
             }
         }
     } // namespace net

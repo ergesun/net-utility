@@ -24,19 +24,19 @@ namespace netty {
              * @param npit
              * @return
              */
-            virtual INetMessageWorker *GetWorker(net_peer_info_t &npit) override;
+            virtual ANetStackMessageWorker *GetWorker(net_peer_info_t &npit) override;
 
             /**
              * 销毁一个worker。
              * @param worker
              */
-            virtual void PutWorker(INetMessageWorker *worker) override;
+            virtual void PutWorker(ANetStackMessageWorker *worker) override;
 
         private:
-            INetMessageWorker *lookup_conn(net_peer_info_t &npt);
+            ANetStackMessageWorker *lookup_conn(net_peer_info_t &npt);
 
         private:
-            std::unordered_map<net_peer_info_t, INetMessageWorker *> m_hmap_workers;
+            std::unordered_map<net_peer_info_t, ANetStackMessageWorker*> m_hmap_workers;
         }; // class UniqueWorkerManager
     }  // namespace net
 }  // namespace netty

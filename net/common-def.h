@@ -66,6 +66,8 @@ namespace netty {
             net_addr_t nat;
             SocketProtocal sp;
 
+            net_peer_info_s(net_addr_t &n, SocketProtocal s) : nat(n), sp(s) {}
+
             net_peer_info_s(net_addr_t &&n, SocketProtocal s) : nat(std::move(n)), sp(s) {}
 
             net_peer_info_s(std::string &&addr, uint16_t port, SocketProtocal s) {
@@ -82,7 +84,7 @@ namespace netty {
         inline bool operator==(const net_peer_info_t &a, const net_peer_info_t &b) {
             return a.sp == b.sp && a.nat.port == b.nat.port && (0 == a.nat.addr.compare(b.nat.addr));
         }
-    }
+    } // namespace net
 } // namespace netty
 
 // declare hash<net_peer_info_t>

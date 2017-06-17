@@ -1,6 +1,5 @@
 aux_source_directory(. NET_ROOT_SRCS)
-aux_source_directory(net-protocal-stacks/msg-worker-policies NPS_MWP_SRCS)
-aux_source_directory(net-protocal-stacks/msg-worker-policies NPS_MWP_SRCS)
+aux_source_directory(net-protocal-stacks/msg-worker-managers NPS_MWP_SRCS)
 aux_source_directory(net-protocal-stacks/nonblocking NPS_NB_SRCS)
 aux_source_directory(net-protocal-stacks/nonblocking/socket/network-api NPS_NB_SA_SRCS)
 aux_source_directory(net-protocal-stacks/nonblocking/socket/network-api/posix NPS_NB_SA_POSIX_SRCS)
@@ -26,7 +25,7 @@ add_library(net SHARED
         net-protocal-stacks/nonblocking/socket/event-drivers/ievent-driver.h
         net-protocal-stacks/nonblocking/socket/event-drivers/factory.h
         net-protocal-stacks/nonblocking/socket/network-api/socket-descriptor.h
-        net-protocal-stacks/nonblocking/socket/network-api/socket-event-handler.h
+        net-protocal-stacks/nonblocking/socket/network-api/abstract-socket-event-handler.h
         message.h
         isocket-service.h
         abstract-socket-service.h

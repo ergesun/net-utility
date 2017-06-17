@@ -9,7 +9,7 @@
 #include <vector>
 #include <cstdint>
 #include "../../ievent-handler.h"
-#include "../network-api/socket-event-handler.h"
+#include "../network-api/abstract-socket-event-handler.h"
 
 #define EVENT_NONE       0
 #define EVENT_READ       1
@@ -18,7 +18,7 @@
 namespace netty {
     namespace net {
         struct NetEvent {
-            SocketEventHandler *eh;
+            ASocketEventHandler *eh;
             int                 mask;
         };
 
@@ -46,7 +46,7 @@ namespace netty {
              * @param mask
              * @return 0成功
              */
-            virtual int32_t AddEvent(SocketEventHandler *socketEventHandler, int32_t cur_mask, int32_t mask) = 0;
+            virtual int32_t AddEvent(ASocketEventHandler *socketEventHandler, int32_t cur_mask, int32_t mask) = 0;
 
             /**
              *
@@ -55,14 +55,14 @@ namespace netty {
              * @param del_mask
              * @return 0成功
              */
-            virtual int32_t DeleteEvent(SocketEventHandler *socketEventHandler, int32_t cur_mask, int32_t del_mask) = 0;
+            virtual int32_t DeleteEvent(ASocketEventHandler *socketEventHandler, int32_t cur_mask, int32_t del_mask) = 0;
 
             /**
              *
              * @param socketEventHandler
              * @return 0成功
              */
-            virtual int32_t DeleteHandler(SocketEventHandler *socketEventHandler) = 0;
+            virtual int32_t DeleteHandler(ASocketEventHandler *socketEventHandler) = 0;
 
             /**
              *
