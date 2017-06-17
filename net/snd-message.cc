@@ -23,7 +23,7 @@ namespace netty {
             m_header.len = deriveBufferSize;
 
             auto memPoolObject = m_pMemPool->Get(totalBufferSize);
-            auto buf = Message::get_new_buffer(memPoolObject, totalBufferSize);
+            auto buf = Message::GetNewAvailableBuffer(memPoolObject, totalBufferSize);
             SndMessage::encode_header(buf, m_header);
             EncodeDerive(buf);
 

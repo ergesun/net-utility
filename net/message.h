@@ -89,13 +89,15 @@ namespace netty {
             static void AddCallback(Id id, Callback);
             static void RemoveCallback(Id id);
 
+            static common::Buffer* GetNewBuffer();
+            static common::Buffer* GetNewBuffer(uchar *pos, uchar *last, uchar *start, uchar *end,
+                                                common::MemPoolObject *mpo);
+            static common::Buffer* GetNewBuffer(common::MemPoolObject *mpo, uint32_t totalBufferSize);
+            static common::Buffer* GetNewAvailableBuffer(common::MemPoolObject *mpo, uint32_t totalBufferSize);
+            static common::Buffer* PutBuffer(common::Buffer *buffer);
+
         protected:
             static Id get_new_id();
-            static common::Buffer* get_new_buffer();
-            static common::Buffer* get_new_buffer(uchar *pos, uchar *last, uchar *start, uchar *end,
-                                                  common::MemPoolObject *mpo);
-            static common::Buffer* get_new_buffer(common::MemPoolObject *mpo, uint32_t totalBufferSize);
-            static common::Buffer* put_buffer(common::Buffer *buffer);
 
         protected:
 

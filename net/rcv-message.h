@@ -22,7 +22,7 @@ namespace netty {
             }
 
             ~RcvMessage() {
-                Message::put_buffer(m_pBuffer);
+                Message::PutBuffer(m_pBuffer);
                 m_pBuffer = nullptr;
             }
 

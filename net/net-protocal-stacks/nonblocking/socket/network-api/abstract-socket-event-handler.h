@@ -19,6 +19,7 @@ namespace netty {
             ASocketEventHandler() = default;
             ASocketEventHandler(SocketDescriptor *socketDesc) : m_socketDesc(socketDesc) {}
 
+            virtual ~ASocketEventHandler() = default;
             inline SocketDescriptor* GetSocketDescriptor() {
                 return m_socketDesc;
             }

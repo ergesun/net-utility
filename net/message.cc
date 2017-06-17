@@ -40,7 +40,7 @@ namespace netty {
             return Id(s_lastId.ts, s_lastId.seq);
         }
 
-        common::Buffer* Message::get_new_buffer() {
+        common::Buffer* Message::GetNewBuffer() {
             common::SpinLock l(&s_freeBufferLock);
             if (s_freeBuffers.empty()) {
                 return new common::Buffer();
@@ -53,20 +53,26 @@ namespace netty {
             }
         }
 
-        common::Buffer* Message::get_new_buffer(uchar *pos, uchar *last, uchar *start, uchar *end,
-                                                common::MemPoolObject *mpo) {
-            auto buf = Message::get_new_buffer();
+        common::Buffer* Message::GetNewBuffer(uchar *pos, uchar *last, uchar *start, uchar *end,
+                                              common::MemPoolObject *mpo) {
+            auto buf = Message::GetNewBuffer();
             buf->Refresh(pos, last, start, end, mpo);
             return buf;
         }
 
-        common::Buffer* Message::get_new_buffer(common::MemPoolObject *mpo, uint32_t totalBufferSize) {
+        common::Buffer* Message::GetNewBuffer(common::MemPoolObject *mpo, uint32_t totalBufferSize) {
             auto bufferStart = (uchar*)(mpo->Pointer());
             auto bufferEnd = bufferStart + totalBufferSize - 1;
-            return Message::get_new_buffer(bufferStart, bufferEnd, bufferStart, bufferEnd, mpo);
+            return Message::GetNewBuffer(nullptr, nullptr, bufferStart, bufferEnd, mpo);
         }
 
-        common::Buffer* Message::put_buffer(common::Buffer *buffer) {
+        common::Buffer* Message::GetNewAvailableBuffer(common::MemPoolObject *mpo, uint32_t totalBufferSize) {
+            auto bufferStart = (uchar*)(mpo->Pointer());
+            auto bufferEnd = bufferStart + totalBufferSize - 1;
+            return Message::GetNewBuffer(bufferStart, bufferEnd, bufferStart, bufferEnd, mpo);
+        }
+
+        common::Buffer* Message::PutBuffer(common::Buffer *buffer) {
             common::SpinLock l(&s_freeBufferLock);
             buffer->Put();
             s_freeBuffers.push_back(buffer);

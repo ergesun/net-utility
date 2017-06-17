@@ -66,6 +66,14 @@ namespace netty {
                 return (int32_t)((int64_t)(uintptr_t)Last - (int64_t)(uintptr_t)Pos) + 1;
             }
 
+            inline size_t UnusedSize() {
+                if (Last) {
+                    return (size_t)(End - Last);
+                } else {
+                    return (size_t)(End - Start) + 1;
+                }
+            }
+
             uchar *Pos              = nullptr;
             uchar *Last             = nullptr;
             uchar *Start            = nullptr;

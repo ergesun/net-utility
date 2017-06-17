@@ -22,6 +22,7 @@ namespace netty {
         class GCC_INTERNAL PosixTcpNetStackWorker : public ANetStackMessageWorker {
         public:
             PosixTcpNetStackWorker(common::MemPool *memPool, PosixTcpClientSocket *socket);
+            ~PosixTcpNetStackWorker();
 
             /**
              * 错误: 返回false(无论是[socket错误或对端关闭]还是[codec校验错误])
@@ -43,6 +44,7 @@ namespace netty {
             PosixTcpClientSocket    *m_pSocket;
             NetWorkerState           m_state = NetWorkerState::RcvingHeader;
             Message::Header          m_header;
+            common::Buffer          *m_payloadBuffer = nullptr;
         };
     } // namespace net
 } // namespace netty

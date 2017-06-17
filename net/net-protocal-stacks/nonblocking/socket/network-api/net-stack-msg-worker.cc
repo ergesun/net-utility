@@ -21,7 +21,8 @@ namespace netty {
 
         ANetStackMessageWorker::~ANetStackMessageWorker() {
             m_bqMessages->Clear();
-            delete m_bqMessages;
+            DELETE_PTR(m_bqMessages);
+            DELETE_PTR(m_pHeaderBuffer);
         }
 
         bool ANetStackMessageWorker::SendMessage(SndMessage *m) {
@@ -32,6 +33,7 @@ namespace netty {
         }
 
         void ANetStackMessageWorker::HandleMessage(RcvMessage *m) {
+            // TODO(sunchao): 增加异步派发的逻辑？目前的话，按照设计思想，user应该自己在handler回调异步处理消息，不可以阻塞网络服务的IO线程。
             auto pCb = RcvMessage::LookupCallback(m->GetId());
             if (pCb) {
                 pCb->first(m, pCb->second);

@@ -37,7 +37,7 @@ namespace netty {
              * @param maxCacheMessageCnt 消息缓冲队列的最大消息个数。0为无限制。
              */
             ANetStackMessageWorker(common::MemPool *memPool, uint32_t maxCacheMessageCnt = 0);
-            ~ANetStackMessageWorker();
+            virtual ~ANetStackMessageWorker();
 
             /**
              *

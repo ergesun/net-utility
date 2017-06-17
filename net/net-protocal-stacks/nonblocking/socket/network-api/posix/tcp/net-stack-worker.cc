@@ -28,6 +28,12 @@ namespace netty {
         PosixTcpNetStackWorker::PosixTcpNetStackWorker(common::MemPool *memPool, PosixTcpClientSocket *socket)
             : ANetStackMessageWorker(memPool), m_pSocket(socket) {}
 
+        PosixTcpNetStackWorker::~PosixTcpNetStackWorker() {
+            if (m_payloadBuffer) {
+                Message::PutBuffer(m_payloadBuffer);
+            }
+        }
+
         bool PosixTcpNetStackWorker::Recv() {
             bool rc = true;
             bool interrupt = false;
@@ -45,7 +51,7 @@ namespace netty {
                         break;
                     }
                     case NetWorkerState::RcvingHeader:{
-                        auto n = m_pSocket->Read(m_pHeaderBuffer->Last + 1, (size_t)(m_pHeaderBuffer->End - m_pHeaderBuffer->Last));
+                        auto n = m_pSocket->Read(m_pHeaderBuffer->Last + 1, m_pHeaderBuffer->UnusedSize());
                         if (n > 0) {
                             m_pHeaderBuffer->Last = m_pHeaderBuffer->Last + n;
                         }
@@ -54,7 +60,22 @@ namespace netty {
                         break;
                     }
                     case NetWorkerState::StartToRcvPayload:{
+                        auto mpo = m_pMemPool->Get(m_header.len);
+                        m_payloadBuffer = Message::GetNewBuffer(mpo, m_header.len);
+                        auto n = m_pSocket->Read(m_payloadBuffer->Start, (size_t)m_payloadBuffer->TotalLength());
+                        if (n > 0) {
+                            m_payloadBuffer->Pos = m_payloadBuffer->Start;
+                            m_payloadBuffer->Last = m_payloadBuffer->Start + n - 1;
+                        }
 
+                        if (m_payloadBuffer->AvailableLength() == m_header.len) {
+                            m_state = NetWorkerState::StartToRcvHeader;
+                            interrupt = false;
+                            RcvMessage *rcvMessage = new RcvMessage(m_pMemPool, m_header, m_payloadBuffer, NettyMsgCode::OK);
+                            HandleMessage(rcvMessage);
+                        } else {
+
+                        }
                         break;
                     }
                     case NetWorkerState::RcvingPayload:{
