@@ -15,13 +15,15 @@ namespace netty {
          */
         class RcvMessage : public Message {
         public:
-            RcvMessage(common::MemPool *mp, Message::Header h, common::Buffer *buffer, NettyMsgCode rc) : Message(mp) {
+            RcvMessage(common::MemPoolObject *refMpo, common::MemPool *mp, Message::Header h, common::Buffer *buffer, NettyMsgCode rc) : Message(mp) {
                 m_header = h;
                 m_pBuffer = buffer;
                 m_rc = rc;
+                m_refMpo = refMpo;
             }
 
             ~RcvMessage() {
+                m_refMpo->Put();
                 Message::PutBuffer(m_pBuffer);
                 m_pBuffer = nullptr;
             }
@@ -47,8 +49,9 @@ namespace netty {
             }
 
         private:
-            common::Buffer     *m_pBuffer;
-            NettyMsgCode        m_rc;
+            common::Buffer             *m_pBuffer;
+            NettyMsgCode                m_rc;
+            common::MemPoolObject      *m_refMpo;
         };
 
         class RcvMessageRef {

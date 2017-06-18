@@ -159,6 +159,7 @@ namespace netty {
             /**************通用简单接口***********************/
             /**
              * 获取一块指定大小的内存。
+             * 注意：不要释放返回的MemObject，只需要调用MemObject::Put。
              * @param size
              * @return 失败的话MemObjectRef.get()为nullptr
              */

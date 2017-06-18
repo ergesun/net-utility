@@ -58,6 +58,18 @@ namespace netty {
                 bzero(Start, (uintptr_t)End - (uintptr_t)Start + 1);
             }
 
+            inline void RecvN(uint32_t n) {
+                if (!Pos) {
+                    Pos = Start;
+                }
+
+                if (Last) {
+                    Last += n;
+                } else {
+                    Last = Start + n - 1;
+                }
+            }
+
             inline int32_t TotalLength() {
                 return (int32_t)((uintptr_t)End - (uintptr_t)Start) + 1;
             }

@@ -26,6 +26,17 @@
             m_state = NetWorkerState::RcvingHeader;                                                         \
         }
 
+#define CheckPayload()                                                                                      \
+        if (m_payloadBuffer->AvailableLength() == m_header.len) {                                           \
+            m_state = NetWorkerState::StartToRcvHeader;                                                     \
+            interrupt = false;                                                                              \
+            auto rcvMessage = get_new_rcv_message(m_pMemPool, m_header, m_payloadBuffer, NettyMsgCode::OK); \
+            HandleMessage(rcvMessage);                                                                      \
+        } else {                                                                                            \
+            m_state = NetWorkerState::RcvingPayload;                                                        \
+            interrupt = true;                                                                               \
+        }
+
 namespace netty {
     namespace net {
         PosixTcpNetStackWorker::PosixTcpNetStackWorker(common::MemPool *memPool, PosixTcpClientSocket *socket)
@@ -46,17 +57,22 @@ namespace netty {
                         m_pHeaderBuffer->BZero();
                         auto n = m_pSocket->Read(m_pHeaderBuffer->Start, (size_t)m_pHeaderBuffer->TotalLength());
                         if (n > 0) {
-                            m_pHeaderBuffer->Pos = m_pHeaderBuffer->Start;
-                            m_pHeaderBuffer->Last = m_pHeaderBuffer->Start + n - 1;
+                            m_pHeaderBuffer->RecvN((uint32_t)n);
                         }
 
                         ParseHeader();
                         break;
                     }
                     case NetWorkerState::RcvingHeader:{
-                        auto n = m_pSocket->Read(m_pHeaderBuffer->Last + 1, m_pHeaderBuffer->UnusedSize());
+                        void *pos;
+                        if (LIKELY(m_pHeaderBuffer->Last)) {
+                            pos = m_pHeaderBuffer->Last + 1;
+                        } else {
+                            pos = m_pHeaderBuffer->Start;
+                        }
+                        auto n = m_pSocket->Read(pos, m_pHeaderBuffer->UnusedSize());
                         if (n > 0) {
-                            m_pHeaderBuffer->Last = m_pHeaderBuffer->Last + n;
+                            m_pHeaderBuffer->RecvN((uint32_t)n);
                         }
 
                         ParseHeader();
@@ -67,21 +83,25 @@ namespace netty {
                         m_payloadBuffer = Message::GetNewBuffer(mpo, m_header.len);
                         auto n = m_pSocket->Read(m_payloadBuffer->Start, (size_t)m_payloadBuffer->TotalLength());
                         if (n > 0) {
-                            m_payloadBuffer->Pos = m_payloadBuffer->Start;
-                            m_payloadBuffer->Last = m_payloadBuffer->Start + n - 1;
+                            m_payloadBuffer->RecvN((uint32_t)n);
                         }
 
-                        if (m_payloadBuffer->AvailableLength() == m_header.len) {
-                            m_state = NetWorkerState::StartToRcvHeader;
-                            interrupt = false;
-                            RcvMessage *rcvMessage = new RcvMessage(m_pMemPool, m_header, m_payloadBuffer, NettyMsgCode::OK);
-                            HandleMessage(rcvMessage);
-                        } else {
-
-                        }
+                        CheckPayload();
                         break;
                     }
                     case NetWorkerState::RcvingPayload:{
+                        void *pos;
+                        if (m_payloadBuffer->Last) {
+                            pos = m_payloadBuffer->Last + 1;
+                        } else {
+                            pos = m_payloadBuffer->Start;
+                        }
+                        auto n = m_pSocket->Read(pos, m_payloadBuffer->UnusedSize());
+                        if (n > 0) {
+                            m_payloadBuffer->RecvN((uint32_t)n);
+                        }
+
+                        CheckPayload();
                         break;
                     }
                 }

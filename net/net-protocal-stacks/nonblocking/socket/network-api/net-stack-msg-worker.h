@@ -65,6 +65,10 @@ namespace netty {
              */
             virtual bool Send() = 0;
 
+        protected:
+            static RcvMessage* get_new_rcv_message(common::MemPool *mp, Message::Header h, common::Buffer *buffer, NettyMsgCode rc);
+            static void release_rcv_message(RcvMessage *rm);
+
         private:
             static MsgCallback* lookup_callback(Message::Id id);
             static void add_callback(Message::Id id, MsgCallback);
