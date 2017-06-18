@@ -16,8 +16,6 @@ namespace netty {
         Message::Id Message::s_lastId = Id(0, 0);
         common::spin_lock_t Message::s_freeBufferLock = UNLOCKED;
         std::list<common::Buffer*> Message::s_freeBuffers = std::list<common::Buffer*>();
-        common::spin_lock_t Message::s_cbLock = UNLOCKED;
-        std::unordered_map<Message::Id, Message::Callback> Message::s_callbacks = std::unordered_map<Message::Id, Message::Callback>();
 
         Message::Message(common::MemPool *mp) :
             m_pMemPool(mp) {
@@ -78,25 +76,7 @@ namespace netty {
             s_freeBuffers.push_back(buffer);
         }
 
-        Message::Callback* Message::LookupCallback(Id id) {
-            common::SpinLock l(&s_cbLock);
-            auto cbIter = s_callbacks.find(id);
-            if (LIKELY(cbIter != s_callbacks.end())) {
-                return &cbIter->second;
-            }
 
-            return nullptr;
-        }
-
-        void Message::AddCallback(Id id, Callback cb) {
-            common::SpinLock l(&s_cbLock);
-            s_callbacks[id] = cb;
-        }
-
-        void Message::RemoveCallback(Id id) {
-            common::SpinLock l(&s_cbLock);
-            s_callbacks.erase(id);
-        }
     } // namespace net
 } // namespace netty
 

@@ -4,9 +4,12 @@
  */
 
 #include <iostream>
+
 #include "../../../../../../../common/buffer.h"
+#include "../../../../../../rcv-message.h"
 
 #include "net-stack-worker.h"
+
 
 #define ParseHeader()                                                                                       \
         if (m_pHeaderBuffer->AvailableLength() == m_pHeaderBuffer->TotalLength()) {                         \

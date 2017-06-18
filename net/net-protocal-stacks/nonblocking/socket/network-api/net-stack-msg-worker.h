@@ -6,10 +6,12 @@
 #ifndef NET_CORE_SOCKETAPI_NETSTACKMESSAGEWORKER_H
 #define NET_CORE_SOCKETAPI_NETSTACKMESSAGEWORKER_H
 
+#include <unordered_map>
+
 #include "../../../../../common/common-def.h"
 #include "../../../../../common/blocking-queue.h"
+
 #include "../../../../snd-message.h"
-#include "../../../../rcv-message.h"
 
 namespace netty {
     namespace common {
@@ -18,6 +20,10 @@ namespace netty {
     }
 
     namespace net {
+//        class MsgCallback;
+//        class SndMessage;
+//        class RcvMessage;
+
         /**
          * 本类负责对message的处理。具体的socket实现类要继承于此类。
          * 事件管理器有事件了会调用读写。
@@ -59,12 +65,21 @@ namespace netty {
              */
             virtual bool Send() = 0;
 
+        private:
+            static MsgCallback* lookup_callback(Message::Id id);
+            static void add_callback(Message::Id id, MsgCallback);
+            static void remove_callback(Message::Id id);
+
         protected:
             common::MemPool                    *m_pMemPool;
             common::Buffer                     *m_pHeaderBuffer;
 
         private:
             common::BlockingQueue<SndMessage*> *m_bqMessages;
+
+        private:
+            static common::spin_lock_t                          s_cbLock;
+            static std::unordered_map<Message::Id, MsgCallback> s_callbacks;
         };
     } // namespace net
 } // namespace netty

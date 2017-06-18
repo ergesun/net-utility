@@ -32,13 +32,6 @@ namespace netty {
          */
         class Message {
         public:
-            typedef void* CallbackCtx;
-            /**
-             * user需要负责RcvMessage的释放。
-             */
-            typedef std::function<void(RcvMessage*, void*)> CallbackHandler;
-            typedef std::pair<CallbackHandler, CallbackCtx> Callback;
-
             struct Id {
                 __time_t ts;  /* 时间戳，为了就是id回环了之后防重。 */
                 uint32_t seq; /* 消息的唯一标识 */
@@ -85,10 +78,6 @@ namespace netty {
                 return sizeof(Header);
             }
 
-            static Callback* LookupCallback(Id id);
-            static void AddCallback(Id id, Callback);
-            static void RemoveCallback(Id id);
-
             static common::Buffer* GetNewBuffer();
             static common::Buffer* GetNewBuffer(uchar *pos, uchar *last, uchar *start, uchar *end,
                                                 common::MemPoolObject *mpo);
@@ -110,8 +99,6 @@ namespace netty {
             static common::spin_lock_t              s_freeBufferLock;
             // TODO(sunchao): 做一个个数限制？
             static std::list<common::Buffer*>       s_freeBuffers;
-            static common::spin_lock_t              s_cbLock;
-            static std::unordered_map<Id, Callback> s_callbacks;
         }; // interface Message
 
         inline bool operator<(const Message::Id &a, const Message::Id &b) {

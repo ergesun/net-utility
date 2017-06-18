@@ -50,6 +50,26 @@ namespace netty {
             common::Buffer     *m_pBuffer;
             NettyMsgCode        m_rc;
         };
+
+        class RcvMessageRef {
+        public:
+            RcvMessageRef(RcvMessage* rm, std::function<void(RcvMessage*)> releaseHandle)
+                    : m_ref(rm) {
+                m_releaseHandle = releaseHandle;
+            }
+            ~RcvMessageRef() {
+                if (m_releaseHandle) {
+                    m_releaseHandle(m_ref);
+                    m_ref = nullptr;
+                }
+            }
+            inline const RcvMessage* GetContent() const {
+                return m_ref;
+            }
+        private:
+            RcvMessage                      *m_ref;
+            std::function<void(RcvMessage*)> m_releaseHandle;
+        };
     } // namespace net
 } // namespace netty
 

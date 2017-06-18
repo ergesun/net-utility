@@ -10,6 +10,14 @@
 
 namespace netty {
     namespace net {
+        class RcvMessageRef;
+        typedef void* MsgCallbackCtx;
+        /**
+         * user不需要负责RcvMessage的释放。
+         */
+        typedef std::function<void(std::shared_ptr<RcvMessageRef>, void*)> MsgCallbackHandler;
+        typedef std::pair<MsgCallbackHandler, MsgCallbackCtx> MsgCallback;
+
         class SndMessage : public Message, public IEncoder {
         public:
             /**
@@ -22,7 +30,7 @@ namespace netty {
              * @param canBeRelease Message可不可以被框架释放。
              */
             SndMessage(common::MemPool *mp, net_local_info_t socketInfo, common::uctime_t deadline,
-                       CallbackHandler cb, void *cbCtx, bool canBeRelease = true) :
+                       MsgCallbackHandler cb, void *cbCtx, bool canBeRelease = true) :
                 Message(mp), m_socketInfo(socketInfo) {
                 m_deadline = deadline;
                 m_cb = cb;
@@ -36,7 +44,7 @@ namespace netty {
              * 获取消息的回调。
              * @return
              */
-            inline CallbackHandler GetCallbackHandler() const {
+            inline MsgCallbackHandler GetCallbackHandler() const {
                 return m_cb;
             }
 
@@ -70,11 +78,11 @@ namespace netty {
             static void encode_header(common::Buffer *b, Header &h);
 
         private:
-            CallbackHandler     m_cb;
-            common::uctime_t    m_deadline;
-            void               *m_pCallbackCtx;
-            bool                m_bCanBeReleased;
-            net_local_info_t    m_socketInfo;
+            MsgCallbackHandler     m_cb;
+            common::uctime_t       m_deadline;
+            void                  *m_pCallbackCtx;
+            bool                   m_bCanBeReleased;
+            net_local_info_t       m_socketInfo;
         };
     } // namespace net
 } // namespace netty
