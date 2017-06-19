@@ -12,7 +12,7 @@
 namespace netty {
     namespace net {
         bool PosixTcpServerSocket::Bind() {
-            common::CommonUtils::SetNonBlocking(m_sd);
+            common::CommonUtils::SetNonBlocking(m_fd);
 
             struct sockaddr_in serv_addr;
             bzero(&serv_addr, sizeof(serv_addr));
@@ -23,22 +23,22 @@ namespace netty {
             serv_addr.sin_port = htons(m_local_addr.port);
 
             // 讲socket fd绑定到ip:port
-            return 0 == bind(m_sd, (sockaddr *) &serv_addr, sizeof(serv_addr));
+            return 0 == bind(m_fd, (sockaddr *) &serv_addr, sizeof(serv_addr));
         }
 
         bool PosixTcpServerSocket::Listen() {
-            return 0 == listen(m_sd, m_max_listen_conns);
+            return 0 == listen(m_fd, m_max_listen_conns);
         }
 
         bool PosixTcpServerSocket::SetPortReuse() {
-            return 0 == setsockopt(m_sd, SOL_SOCKET, SO_REUSEPORT, &m_local_addr.port, sizeof(int));
+            return 0 == setsockopt(m_fd, SOL_SOCKET, SO_REUSEPORT, &m_local_addr.port, sizeof(int));
         }
 
         int PosixTcpServerSocket::Accept4(__SOCKADDR_ARG __addr, socklen_t *__addr_len, int __flags) {
             struct sockaddr_in client_addr;
             socklen_t sock_len = sizeof(struct sockaddr_in);
 
-            return accept4(m_sd, __addr, __addr_len, __flags);
+            return accept4(m_fd, __addr, __addr_len, __flags);
         }
     } // namespace net
 } // namespace netty

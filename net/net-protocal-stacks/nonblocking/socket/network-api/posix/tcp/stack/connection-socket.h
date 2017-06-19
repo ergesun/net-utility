@@ -10,19 +10,19 @@
 #include <sys/socket.h>
 
 #include "../../../../../../../common-def.h"
-#include "../../../socket-descriptor.h"
+#include "../../../file-descriptor.h"
 
 namespace netty {
     namespace net {
         /**
          * 当前只考虑了ipv4.
          */
-        class GCC_INTERNAL PosixTcpConnectionSocket : public SocketDescriptor {
+        class GCC_INTERNAL PosixTcpConnectionSocket : public FileDescriptor {
         public:
             PosixTcpConnectionSocket() = default;
             PosixTcpConnectionSocket(net_addr_t peerAddr, int sfd) {
-                m_peer_addr = peerAddr;
-                m_sd = sfd;
+                m_peer = net_peer_info_t(peerAddr, SocketProtocal::Tcp);
+                m_fd = sfd;
             }
 
             virtual ~PosixTcpConnectionSocket() {}
@@ -72,9 +72,6 @@ namespace netty {
                            const void *__optval, socklen_t __optlen);
 
             int Close();
-
-        protected:
-            net_addr_t m_peer_addr;
 
         private:
             volatile bool m_connected = false;

@@ -7,32 +7,31 @@
 #define NET_CORE_SOCKETAPI_SOCKET_EVENT_HANDLER_H
 
 #include "../../ievent-handler.h"
-#include "socket-descriptor.h"
+#include "file-descriptor.h"
 #include "../../../../../common/common-def.h"
 #include "net-stack-msg-worker.h"
 
 namespace netty {
     namespace net {
-
-        class ASocketEventHandler : public IEventHandler {
+        class AFileEventHandler : public IEventHandler {
         public:
-            ASocketEventHandler() = default;
-            ASocketEventHandler(SocketDescriptor *socketDesc) : m_socketDesc(socketDesc) {}
+            AFileEventHandler() = default;
+            AFileEventHandler(FileDescriptor *socketDesc) : m_socketDesc(socketDesc) {}
 
-            virtual ~ASocketEventHandler() = default;
-            inline SocketDescriptor* GetSocketDescriptor() {
+            virtual ~AFileEventHandler() = default;
+            inline FileDescriptor* GetSocketDescriptor() {
                 return m_socketDesc;
             }
 
             virtual ANetStackMessageWorker* GetStackMsgWorker() = 0;
 
         protected:
-            inline void SetSocketDescriptor(SocketDescriptor *psd) {
+            inline void SetSocketDescriptor(FileDescriptor *psd) {
                 m_socketDesc = psd;
             }
 
         private:
-            SocketDescriptor *m_socketDesc;
+            FileDescriptor *m_socketDesc;
         };
     }
 }

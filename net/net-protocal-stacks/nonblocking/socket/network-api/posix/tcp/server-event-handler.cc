@@ -39,9 +39,13 @@ namespace netty {
                 auto conn_fd = m_pSrvSocket->Accept4((struct sockaddr*)&client_addr, &sock_len, SOCK_NONBLOCK);
                 if (-1 == conn_fd) {
                     auto err = errno;
-                    if (EAGAIN != err && EINTR != err && ECONNABORTED != err) {
-                        std::cerr << __func__ << ": accept errno = " << err << ", msg = " << strerror(err) << std::endl;
+                    if (EAGAIN == err) {
                         break;
+                    } else if (EINTR == err || ECONNABORTED == err) {
+                        continue;
+                    } else {
+                        std::cerr << __func__ << ": accept errno = " << err << ", msg = " << strerror(err) << std::endl;
+                        return false;
                     }
                 } else {
                     // just IPv4 now
@@ -53,14 +57,13 @@ namespace netty {
                     net_addr_t peerAddr(std::move(addrStr), port);
                     // 连接失效的时候再释放。
                     PosixTcpConnectionEventHandler *connEventHandler = new PosixTcpConnectionEventHandler(peerAddr, conn_fd, m_pMemPool);
-                    net_peer_info_t peer = net_peer_info_t(peerAddr, SocketProtocal::Tcp);
                     if (m_onConnect) {
-                        m_onConnect(peer, connEventHandler);
+                        m_onConnect(connEventHandler);
                     }
                 }
             }
 
-            return 0;
+            return true;
         }
 
         bool PosixTcpServerEventHandler::HandleWriteEvent() {

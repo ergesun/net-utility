@@ -66,6 +66,10 @@ namespace netty {
             net_addr_t nat;
             SocketProtocal sp;
 
+            net_peer_info_s() {
+                sp = SocketProtocal::None;
+            }
+
             net_peer_info_s(net_addr_t &n, SocketProtocal s) : nat(n), sp(s) {}
 
             net_peer_info_s(net_addr_t &&n, SocketProtocal s) : nat(std::move(n)), sp(s) {}

@@ -8,7 +8,7 @@
 
 #include "../../../../../../../common/common-def.h"
 #include "../../../../../../common-def.h"
-#include "../../abstract-socket-event-handler.h"
+#include "../../abstract-file-event-handler.h"
 #include "stack/server-socket.h"
 #include "../../../event-drivers/ievent-driver.h"
 #include "../../abstract-event-manager.h"
@@ -19,7 +19,7 @@ namespace netty {
     }
 
     namespace net {
-        class GCC_INTERNAL PosixTcpServerEventHandler : public ASocketEventHandler {
+        class GCC_INTERNAL PosixTcpServerEventHandler : public AFileEventHandler {
         public:
             PosixTcpServerEventHandler(net_addr_t *nat, ConnectHandler onConnect, common::MemPool *memPool);
             ~PosixTcpServerEventHandler();

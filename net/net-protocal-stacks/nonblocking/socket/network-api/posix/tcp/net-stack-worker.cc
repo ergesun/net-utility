@@ -63,8 +63,8 @@
 
 namespace netty {
     namespace net {
-        PosixTcpNetStackWorker::PosixTcpNetStackWorker(common::MemPool *memPool, PosixTcpClientSocket *socket)
-            : ANetStackMessageWorker(memPool), m_pSocket(socket) {
+        PosixTcpNetStackWorker::PosixTcpNetStackWorker(AFileEventHandler *eventHandler, common::MemPool *memPool, PosixTcpClientSocket *socket)
+            : ANetStackMessageWorker(eventHandler, memPool), m_pSocket(socket) {
             m_pSendingBuffer = Message::GetNewBuffer();
         }
 

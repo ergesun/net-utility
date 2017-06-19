@@ -9,6 +9,7 @@
 #include <unordered_map>
 
 #include "../inet-msg-worker-manager.h"
+#include "../../../common/spin-lock.h"
 
 namespace netty {
     namespace net {
@@ -21,22 +22,25 @@ namespace netty {
 
             /**
              * 获取一个worker。
-             * @param npit
+             * @param npt
              * @return
              */
-            virtual ANetStackMessageWorker *GetWorker(net_peer_info_t &npit) override;
+            AFileEventHandler *GetWorkerEventHandler(net_peer_info_t &npt) override;
 
             /**
-             * 销毁一个worker。
-             * @param worker
+             * 放入一个worker。
+             * @param workerEventHandler
              */
-            virtual void PutWorker(ANetStackMessageWorker *worker) override;
+            void PutWorkerEventHandler(net_peer_info_t npt, AFileEventHandler *workerEventHandler) override;
+
+            void ReleaseWorkerEventHandler(AFileEventHandler *workerEventHandler) override;
 
         private:
-            ANetStackMessageWorker *lookup_conn(net_peer_info_t &npt);
+            AFileEventHandler *lookup_worker(net_peer_info_t &npt);
 
         private:
-            std::unordered_map<net_peer_info_t, ANetStackMessageWorker*> m_hmap_workers;
+            common::spin_lock_t                                     m_sl = UNLOCKED;
+            std::unordered_map<net_peer_info_t, AFileEventHandler*> m_hmap_workers;
         }; // class UniqueWorkerManager
     }  // namespace net
 }  // namespace netty

@@ -17,9 +17,9 @@ namespace netty {
     }
 
     namespace net {
-        class ASocketEventHandler;
+        class AFileEventHandler;
 
-        typedef std::function<void(net_peer_info_t, ASocketEventHandler*)> ConnectHandler;
+        typedef std::function<void(AFileEventHandler*)> ConnectHandler, FinishHandler;
         class AEventManager {
         public:
             AEventManager(common::MemPool *memPool, uint32_t maxEvents) :
@@ -27,7 +27,7 @@ namespace netty {
             virtual ~AEventManager() = default;
             virtual bool Start(NonBlockingEventModel m) = 0;
             virtual bool Stop() = 0;
-            virtual int AddEvent(ASocketEventHandler *socketEventHandler, int cur_mask, int mask) = 0;
+            virtual int AddEvent(AFileEventHandler *socketEventHandler, int cur_mask, int mask) = 0;
 
         protected:
             common::MemPool   *m_pMemPool;

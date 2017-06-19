@@ -25,9 +25,9 @@ namespace netty {
             return 0;
         }
 
-        int EpollEventDriver::AddEvent(ASocketEventHandler *socketEventHandler, int cur_mask, int mask) {
+        int EpollEventDriver::AddEvent(AFileEventHandler *socketEventHandler, int cur_mask, int mask) {
             assert(socketEventHandler);
-            auto fd = socketEventHandler->GetSocketDescriptor()->GetSfd();
+            auto fd = socketEventHandler->GetSocketDescriptor()->GetFd();
             int op = (cur_mask == EVENT_NONE) ? EPOLL_CTL_ADD : EPOLL_CTL_MOD;
 
             // 放置到epoll中
@@ -53,9 +53,9 @@ namespace netty {
             return 0;
         }
 
-        int EpollEventDriver::DeleteEvent(ASocketEventHandler *socketEventHandler, int cur_mask, int del_mask) {
+        int EpollEventDriver::DeleteEvent(AFileEventHandler *socketEventHandler, int cur_mask, int del_mask) {
             assert(socketEventHandler);
-            auto fd = socketEventHandler->GetSocketDescriptor()->GetSfd();
+            auto fd = socketEventHandler->GetSocketDescriptor()->GetFd();
             struct epoll_event ee;
 
             ee.data.ptr = socketEventHandler;
@@ -90,9 +90,9 @@ namespace netty {
             return 0;
         }
 
-        int EpollEventDriver::DeleteHandler(ASocketEventHandler *socketEventHandler) {
+        int EpollEventDriver::DeleteHandler(AFileEventHandler *socketEventHandler) {
             assert(socketEventHandler);
-            auto fd = socketEventHandler->GetSocketDescriptor()->GetSfd();
+            auto fd = socketEventHandler->GetSocketDescriptor()->GetFd();
             struct epoll_event ee;
 
             ee.data.ptr = socketEventHandler;
@@ -129,7 +129,7 @@ namespace netty {
                         mask |= EVENT_READ;
                     }
 
-                    (*events)[i].eh = reinterpret_cast<ASocketEventHandler*>(m_events[i].data.ptr);
+                    (*events)[i].eh = reinterpret_cast<AFileEventHandler*>(m_events[i].data.ptr);
                     (*events)[i].mask = mask;
                 }
             }

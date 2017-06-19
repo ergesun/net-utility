@@ -19,11 +19,11 @@ namespace netty {
              */
             int Init(int max_events) override;
 
-            int AddEvent(ASocketEventHandler *socketEventHandler, int cur_mask, int mask) override;
+            int AddEvent(AFileEventHandler *socketEventHandler, int cur_mask, int mask) override;
 
-            int DeleteEvent(ASocketEventHandler *socketEventHandler, int cur_mask, int del_mask) override;
+            int DeleteEvent(AFileEventHandler *socketEventHandler, int cur_mask, int del_mask) override;
 
-            int DeleteHandler(ASocketEventHandler *socketEventHandler) override;
+            int DeleteHandler(AFileEventHandler *socketEventHandler) override;
 
             /**
              * 获取epoll的事件。

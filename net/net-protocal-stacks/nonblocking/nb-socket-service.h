@@ -53,7 +53,9 @@ namespace netty {
             bool SendMessage(SndMessage *m) override;
 
         private:
-            void on_connect(net_peer_info_t peer, ASocketEventHandler *handler);
+            void on_connect(AFileEventHandler *handler);
+            void on_finish(AFileEventHandler *handler);
+            bool check_handler_valid(AFileEventHandler *handler);
 
         private:
             INetStackWorkerManager *m_netStackWorkerManager = nullptr;

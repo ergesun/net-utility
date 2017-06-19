@@ -23,18 +23,18 @@ namespace netty {
             m_bStopped = false;
             if (m_pNat) {
                 auto ew = new EventWorker(m_iMaxEvents, m);
-                m_pServerEventHandler = new PosixTcpServerEventHandler(m_pNat, std::bind(&PosixTcpEventManager::on_connect, this, _1, _2), m_pMemPool);
+                m_pServerEventHandler = new PosixTcpServerEventHandler(m_pNat, std::bind(&PosixTcpEventManager::on_connect, this, _1), m_pMemPool);
                 // 不需要lock，因为正常只有主线程会add/delete一次
                 ew->GetDriver()->AddEvent(m_pServerEventHandler, EVENT_NONE, EVENT_READ);
                 m_pListenWorkerEventLoopCtx.second = ew;
-                m_pListenWorkerEventLoopCtx.first = new std::thread(std::bind(&PosixTcpEventManager::worker_loop, this, ew, true));
+                m_pListenWorkerEventLoopCtx.first = new std::thread(std::bind(&PosixTcpEventManager::worker_loop, this, ew));
             }
 
             m_vConnsWorkerEventLoopCtxs.resize(m_iConnWorkersCnt);
             for (int i = 0; i < m_iConnWorkersCnt; ++i) {
                 auto ew = new EventWorker(m_iMaxEvents, m);
                 m_vConnsWorkerEventLoopCtxs[i].second = ew;
-                m_vConnsWorkerEventLoopCtxs[i].first = new std::thread(std::bind(&PosixTcpEventManager::worker_loop, this, ew, false));
+                m_vConnsWorkerEventLoopCtxs[i].first = new std::thread(std::bind(&PosixTcpEventManager::worker_loop, this, ew));
             }
         }
 
@@ -59,7 +59,7 @@ namespace netty {
             return true;
         }
 
-        int PosixTcpEventManager::AddEvent(ASocketEventHandler *socketEventHandler, int cur_mask, int mask) {
+        int PosixTcpEventManager::AddEvent(AFileEventHandler *socketEventHandler, int cur_mask, int mask) {
             {
                 common::SpinLock l(&m_slSelectEvents);
                 /**
@@ -74,18 +74,12 @@ namespace netty {
             return ew->GetDriver()->AddEvent(socketEventHandler, cur_mask, mask);
         }
 
-        void PosixTcpEventManager::worker_loop(EventWorker *ew, bool isServer) {
-            static timeval tp = {
-                // 两秒一跳的回调以对stop状态进行检测
-                .tv_sec = 2,
-                .tv_usec = 0
-            };
-
+        void PosixTcpEventManager::worker_loop(EventWorker *ew) {
             auto eventDriver = ew->GetDriver();
             auto events = ew->GetEventsContainer();
             memory_barrier(); // 或者给m_bStopped加个volatile关键字
             while (!m_bStopped) {
-                auto nevents = eventDriver->EventWait(events, &tp);
+                auto nevents = eventDriver->EventWait(events, nullptr);
                 if (nevents > 0) {
                     for (int i = 0; i < nevents; ++i) {
                         auto evMask = (*events)[i].mask;
@@ -98,27 +92,26 @@ namespace netty {
                             rc = (*events)[i].eh->HandleWriteEvent();
                         }
 
-                        // 失败了就移除事件并且释放socket资源。 server的handler在stop的时候会释放，这里就没必要释放了。
-                        if (!rc && !isServer) {
-                            auto delRc = 0;
-                            {
-                                // 可能多线程在add，需要加lock
-                                common::SpinLock l(ew->GetSpinLock());
-                                delRc = eventDriver->DeleteHandler((*events)[i].eh);
-                            }
-
-                            if (0 == delRc) {
-                                DELETE_PTR((*events)[i].eh);
-                            }
+                        // 失败了就移除事件并发送结束回调(管理者回收资源等)。
+                        if (!rc) {
+                            // 可能多线程在add，所以这里需要加lock
+                            common::SpinLock l(ew->GetSpinLock());
+                            eventDriver->DeleteHandler((*events)[i].eh);
                         }
                     }
                 }
+
+                auto externalEvents = ew->GetExternalEvents();
+                for (auto &eev : externalEvents) {
+
+                }
+
             }
         }
 
-        void PosixTcpEventManager::on_connect(net_peer_info_t peer, ASocketEventHandler *handler) {
+        void PosixTcpEventManager::on_connect(AFileEventHandler *handler) {
             if (m_onConnect) {
-                m_onConnect(peer, handler);
+                m_onConnect(handler);
             }
         }
     } // namespace net

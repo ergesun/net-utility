@@ -8,14 +8,18 @@
 #include "../../../../../common/common-utils.h"
 #include "../../../../rcv-message.h"
 
+#include "abstract-file-event-handler.h"
+
 #include "net-stack-msg-worker.h"
+
 
 namespace netty {
     namespace net {
 
         common::spin_lock_t ANetStackMessageWorker::s_cbLock = UNLOCKED;
         std::unordered_map<Message::Id, MsgCallback> ANetStackMessageWorker::s_callbacks = std::unordered_map<Message::Id, MsgCallback>();
-        ANetStackMessageWorker::ANetStackMessageWorker(common::MemPool *memPool, uint32_t maxCacheMessageCnt) {
+        ANetStackMessageWorker::ANetStackMessageWorker(AFileEventHandler *eventHandler, common::MemPool *memPool, uint32_t maxCacheMessageCnt) {
+            m_pEventHandler = eventHandler;
             m_pMemPool = memPool;
             m_bqMessages = new common::BlockingQueue<SndMessage*>(maxCacheMessageCnt);
             auto size = RcvMessage::HeaderSize();

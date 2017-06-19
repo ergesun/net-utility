@@ -17,15 +17,19 @@
 
 namespace netty {
     namespace net {
+        typedef std::function<bool(AFileEventHandler*)> ValidHandlerFunc;
         /**
          * socket出错了manager检测到后会释放。
          */
         class GCC_INTERNAL PosixTcpEventManager : public AEventManager {
         public:
             PosixTcpEventManager(net_addr_t *nat, common::MemPool *memPool, uint32_t maxEvents,
-                                 uint32_t connWorkersCnt, ConnectHandler connectHandler) :
+                                 uint32_t connWorkersCnt, ConnectHandler connectHandler, FinishHandler finishHandler,
+                                 ValidHandlerFunc checkHandlerValid) :
                 AEventManager(memPool, maxEvents), m_pNat(nat), m_iConnWorkersCnt(connWorkersCnt) {
                 m_onConnect = connectHandler;
+                m_onFinish = finishHandler;
+                m_checkHandlerValid = checkHandlerValid;
             }
 
             ~PosixTcpEventManager();
@@ -33,22 +37,24 @@ namespace netty {
             bool Start(NonBlockingEventModel m) override;
             bool Stop() override;
 
-            int AddEvent(ASocketEventHandler *socketEventHandler, int cur_mask, int mask) override;
+            int AddEvent(AFileEventHandler *socketEventHandler, int cur_mask, int mask) override;
 
         private:
-            void worker_loop(EventWorker *ew, bool isServer);
-            void on_connect(net_peer_info_t peer, ASocketEventHandler *handler);
+            void worker_loop(EventWorker *ew);
+            void on_connect(AFileEventHandler *handler);
 
         private:
             uint32_t                                           m_iConnWorkersCnt;
             int32_t                                            m_iCurWorkerIdx = -1;
             net_addr_t                                        *m_pNat;
             bool                                               m_bStopped = true;
-            ASocketEventHandler                                *m_pServerEventHandler = nullptr;
+            AFileEventHandler                                 *m_pServerEventHandler = nullptr;
             std::pair<std::thread*, EventWorker*>              m_pListenWorkerEventLoopCtx;
             std::vector<std::pair<std::thread*, EventWorker*>> m_vConnsWorkerEventLoopCtxs;
             common::spin_lock_t                                m_slSelectEvents = UNLOCKED;
             ConnectHandler                                     m_onConnect;
+            FinishHandler                                      m_onFinish;
+            ValidHandlerFunc                                   m_checkHandlerValid;
         };
     } // namespace net
 } // namespace netty

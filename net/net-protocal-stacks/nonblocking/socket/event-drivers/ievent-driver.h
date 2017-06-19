@@ -9,7 +9,7 @@
 #include <vector>
 #include <cstdint>
 #include "../../ievent-handler.h"
-#include "../network-api/abstract-socket-event-handler.h"
+#include "../network-api/abstract-file-event-handler.h"
 
 #define EVENT_NONE       0
 #define EVENT_READ       1
@@ -18,7 +18,7 @@
 namespace netty {
     namespace net {
         struct GCC_INTERNAL NetEvent {
-            ASocketEventHandler *eh;
+            AFileEventHandler  *eh;
             int                 mask;
         };
 
@@ -46,7 +46,7 @@ namespace netty {
              * @param mask
              * @return 0成功
              */
-            virtual int32_t AddEvent(ASocketEventHandler *socketEventHandler, int32_t cur_mask, int32_t mask) = 0;
+            virtual int32_t AddEvent(AFileEventHandler *socketEventHandler, int32_t cur_mask, int32_t mask) = 0;
 
             /**
              *
@@ -55,19 +55,19 @@ namespace netty {
              * @param del_mask
              * @return 0成功
              */
-            virtual int32_t DeleteEvent(ASocketEventHandler *socketEventHandler, int32_t cur_mask, int32_t del_mask) = 0;
+            virtual int32_t DeleteEvent(AFileEventHandler *socketEventHandler, int32_t cur_mask, int32_t del_mask) = 0;
 
             /**
              *
              * @param socketEventHandler
              * @return 0成功
              */
-            virtual int32_t DeleteHandler(ASocketEventHandler *socketEventHandler) = 0;
+            virtual int32_t DeleteHandler(AFileEventHandler *socketEventHandler) = 0;
 
             /**
              *
              * @param events
-             * @param tp
+             * @param tp nullptr为阻塞，相当于epoll_wait(,,, -1)。
              * @return 事件个数
              */
             virtual int32_t EventWait(std::vector<NetEvent> *events, struct timeval *tp) = 0;

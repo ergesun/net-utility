@@ -18,7 +18,7 @@ namespace netty {
             ~EventWorker();
 
             inline std::vector<NetEvent>* GetEventsContainer() {
-                return &m_vEvents;
+                return &m_vEpollEvents;
             }
 
             inline IEventDriver* GetDriver() {
@@ -29,10 +29,31 @@ namespace netty {
                 return &m_sl;
             }
 
+            inline void AddExternalEvent(NetEvent ne) {
+                common::SpinLock l(&m_slEE);
+                m_lExternalEvents.push_back(ne);
+            }
+
+            inline std::list<NetEvent> GetExternalEvents() {
+                common::SpinLock l(&m_slEE);
+                std::list<NetEvent> tmp;
+                tmp.swap(m_lExternalEvents);
+
+                return std::move(tmp);
+            }
+
+            void Wakeup();
+
         private:
-            std::vector<NetEvent>   m_vEvents;
+            std::vector<NetEvent>   m_vEpollEvents;
             IEventDriver           *m_pEventDriver;
             common::spin_lock_t     m_sl = UNLOCKED;
+
+            common::spin_lock_t     m_slEE = UNLOCKED;
+            std::list<NetEvent>     m_lExternalEvents;
+            int                     m_notifySendFd;
+            int                     m_notifyRecvFd;
+            AFileEventHandler      *m_pLocalReadEventHandler;
         };
     }  // namespace net
 }  // namespace netty

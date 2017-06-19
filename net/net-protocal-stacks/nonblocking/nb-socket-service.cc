@@ -26,7 +26,9 @@ namespace netty {
             if (m_nlt.get()) {
                 if (SocketProtocal::Tcp == m_nlt->sp) {
                     m_pEventManager = new PosixTcpEventManager(&m_nlt->nat, m_pMemPool, MAX_EVENTS, (uint32_t)(common::CPUS_CNT / 2),
-                                                                std::bind(&NBSocketService::on_connect, this, _1, _2));
+                                                                std::bind(&NBSocketService::on_connect, this, _1),
+                                                               std::bind(&NBSocketService::on_finish, this, _1),
+                                                               std::bind(&NBSocketService::check_handler_valid, this, _1));
                     m_pEventManager->Start(m);
                 } else {
                     throw std::runtime_error("Not support now!");
@@ -53,9 +55,17 @@ namespace netty {
 
         }
 
-        void NBSocketService::on_connect(net_peer_info_t peer, ASocketEventHandler *handler) {
+        void NBSocketService::on_connect(AFileEventHandler *handler) {
             m_pEventManager->AddEvent(handler, EVENT_NONE, EVENT_READ|EVENT_WRITE);
-            m_netStackWorkerManager->PutWorker(handler->GetStackMsgWorker());
+            m_netStackWorkerManager->PutWorkerEventHandler(handler->GetSocketDescriptor()->GetPeerInfo(), handler);
+        }
+
+        void NBSocketService::on_finish(AFileEventHandler *handler) {
+
+        }
+
+        bool NBSocketService::check_handler_valid(AFileEventHandler *handler) {
+
         }
     } // namespace net
 } // namespace netty

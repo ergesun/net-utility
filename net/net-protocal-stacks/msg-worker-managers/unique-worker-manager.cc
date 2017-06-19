@@ -7,16 +7,20 @@
 
 namespace netty {
     namespace net {
-
-        ANetStackMessageWorker *UniqueWorkerManager::GetWorker(net_peer_info_t &npt) {
+        AFileEventHandler *UniqueWorkerManager::GetWorkerEventHandler(net_peer_info_t &npt) {
+            common::SpinLock l(&m_sl);
             return nullptr;
         }
 
-        void UniqueWorkerManager::PutWorker(ANetStackMessageWorker *worker) {
-
+        void UniqueWorkerManager::PutWorkerEventHandler(net_peer_info_t npt, AFileEventHandler *workerEventHandler) {
+            common::SpinLock l(&m_sl);
         }
 
-        ANetStackMessageWorker *UniqueWorkerManager::lookup_conn(net_peer_info_t &npt) {
+        void UniqueWorkerManager::ReleaseWorkerEventHandler(AFileEventHandler *workerEventHandler) {
+            common::SpinLock l(&m_sl);
+        }
+
+        AFileEventHandler *UniqueWorkerManager::lookup_worker(net_peer_info_t &npt) {
             auto p = m_hmap_workers.find(npt);
             if (m_hmap_workers.end() != p) {
                 return p->second;

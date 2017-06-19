@@ -11,7 +11,7 @@
 
 namespace netty {
     namespace net {
-        class ANetStackMessageWorker;
+        class AFileEventHandler;
 
         /**
          * worker管理器。
@@ -20,9 +20,9 @@ namespace netty {
         public:
             virtual ~INetStackWorkerManager() = default;
 
-            virtual ANetStackMessageWorker *GetWorker(net_peer_info_t &npt) = 0;
-            virtual void PutWorker(ANetStackMessageWorker *conn) = 0;
-            virtual void ReleaseWorker(ANetStackMessageWorker *conn) = 0;
+            virtual AFileEventHandler *GetWorkerEventHandler(net_peer_info_t &npt) = 0;
+            virtual void PutWorkerEventHandler(net_peer_info_t npt, AFileEventHandler *handler) = 0;
+            virtual void ReleaseWorkerEventHandler(AFileEventHandler *handler) = 0;
         }; // interface INetStackWorkerManager
     }  // namespace net
 } // namespace netty

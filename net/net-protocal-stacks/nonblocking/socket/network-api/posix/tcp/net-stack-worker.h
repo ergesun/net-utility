@@ -21,7 +21,7 @@ namespace netty {
          */
         class GCC_INTERNAL PosixTcpNetStackWorker : public ANetStackMessageWorker {
         public:
-            PosixTcpNetStackWorker(common::MemPool *memPool, PosixTcpClientSocket *socket);
+            PosixTcpNetStackWorker(AFileEventHandler *eventHandler, common::MemPool *memPool, PosixTcpClientSocket *socket);
             ~PosixTcpNetStackWorker();
 
             /**

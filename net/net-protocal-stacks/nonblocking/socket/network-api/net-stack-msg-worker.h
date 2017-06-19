@@ -20,9 +20,7 @@ namespace netty {
     }
 
     namespace net {
-//        class MsgCallback;
-//        class SndMessage;
-//        class RcvMessage;
+        class AFileEventHandler;
 
         /**
          * 本类负责对message的处理。具体的socket实现类要继承于此类。
@@ -42,7 +40,7 @@ namespace netty {
              *
              * @param maxCacheMessageCnt 消息缓冲队列的最大消息个数。0为无限制。
              */
-            ANetStackMessageWorker(common::MemPool *memPool, uint32_t maxCacheMessageCnt = 0);
+            ANetStackMessageWorker(AFileEventHandler *eventHandler, common::MemPool *memPool, uint32_t maxCacheMessageCnt = 0);
             virtual ~ANetStackMessageWorker();
 
             /**
@@ -65,6 +63,10 @@ namespace netty {
              */
             virtual bool Send() = 0;
 
+            inline AFileEventHandler* GetEventHandler() {
+                return m_pEventHandler;
+            }
+
         protected:
             static RcvMessage* get_new_rcv_message(common::MemPool *mp, Message::Header h, common::Buffer *buffer, NettyMsgCode rc);
             static void release_rcv_message(RcvMessage *rm);
@@ -78,6 +80,7 @@ namespace netty {
             common::MemPool                    *m_pMemPool;
             common::Buffer                     *m_pHeaderBuffer;
             common::BlockingQueue<SndMessage*> *m_bqMessages;
+            AFileEventHandler                  *m_pEventHandler;
 
         private:
             static common::spin_lock_t                          s_cbLock;
