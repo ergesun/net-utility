@@ -7,9 +7,21 @@
 #include "../common/codec-utils.h"
 
 #include "snd-message.h"
+#include "../common/common-utils.h"
 
 namespace netty {
     namespace net {
+        common::spin_lock_t SndMessage::s_idLock = UNLOCKED;
+        Message::Id SndMessage::s_lastId = Id(0, 0);
+
+        SndMessage::SndMessage(common::MemPool *mp, net_local_info_t socketInfo, common::uctime_t deadline,
+                               MsgCallback cb) :
+            Message(mp), m_socketInfo(socketInfo) {
+            m_deadline = deadline;
+            m_cb = cb;
+            m_header.id = get_new_id();
+        }
+
         common::Buffer* SndMessage::Encode() {
             auto headerBufferSize = sizeof(Header);
             auto deriveBufferSize = GetDerivePayloadLength();
@@ -39,6 +51,22 @@ namespace netty {
             b->Pos += sizeof(h.id.seq);
             ByteOrderUtils::WriteUInt32(b->Pos, h.len);
             b->Pos += sizeof(h.len);
+        }
+
+        Message::Id SndMessage::get_new_id() {
+            common::SpinLock l(&s_idLock);
+            ++s_lastId.seq;
+            if (UNLIKELY(s_lastId.seq == UINT32_MAX)) {
+                s_lastId.seq = 1;
+                s_lastId.ts = common::CommonUtils::GetCurrentTime().sec;
+            }
+
+            if (UNLIKELY(s_lastId.ts == 0)) {
+                // 0说明没有初始化过，那就
+                s_lastId.ts = common::CommonUtils::GetCurrentTime().sec;
+            }
+
+            return Id(s_lastId.ts, s_lastId.seq);
         }
     } // namespace net
 } // namespace netty

@@ -42,9 +42,9 @@ namespace netty {
              */
             bool Connect(struct timeval *timeout);
 
-            ssize_t Write(void *buf, size_t nbytes);
+            ssize_t Write(void *buf, size_t nbytes, int &err);
 
-            ssize_t Read(void *buf, size_t nbytes);
+            ssize_t Read(void *buf, size_t nbytes, int &err);
 
             /* sock opts interfaces */
             bool SetSndBufferSize(int nbytes) throw(std::runtime_error);

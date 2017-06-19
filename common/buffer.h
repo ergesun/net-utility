@@ -58,6 +58,12 @@ namespace netty {
                 bzero(Start, (uintptr_t)End - (uintptr_t)Start + 1);
             }
 
+            inline void SendN(uint32_t n) {
+                if (Pos && Last) {
+                    Pos += n;
+                }
+            }
+
             inline void RecvN(uint32_t n) {
                 if (!Pos) {
                     Pos = Start;
@@ -71,10 +77,18 @@ namespace netty {
             }
 
             inline int32_t TotalLength() {
+                if (!Start || !End) {
+                    return 0;
+                }
+
                 return (int32_t)((uintptr_t)End - (uintptr_t)Start) + 1;
             }
 
             inline int32_t AvailableLength() {
+                if (!Last || !Pos) {
+                    return 0;
+                }
+
                 return (int32_t)((int64_t)(uintptr_t)Last - (int64_t)(uintptr_t)Pos) + 1;
             }
 

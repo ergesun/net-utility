@@ -3,39 +3,17 @@
  * a Creative Commons Attribution 3.0 Unported License(https://creativecommons.org/licenses/by/3.0/).
  */
 
-#include <endian.h>
-
-#include "../common/common-utils.h"
 #include "../common/buffer.h"
 
 #include "message.h"
 
 namespace netty {
     namespace net {
-        common::spin_lock_t Message::s_idLock = UNLOCKED;
-        Message::Id Message::s_lastId = Id(0, 0);
         common::spin_lock_t Message::s_freeBufferLock = UNLOCKED;
         std::list<common::Buffer*> Message::s_freeBuffers = std::list<common::Buffer*>();
 
         Message::Message(common::MemPool *mp) :
             m_pMemPool(mp) {
-            m_header.id = get_new_id();
-        }
-
-        Message::Id Message::get_new_id() {
-            common::SpinLock l(&s_idLock);
-            ++s_lastId.seq;
-            if (UNLIKELY(s_lastId.seq == UINT32_MAX)) {
-                s_lastId.seq = 1;
-                s_lastId.ts = common::CommonUtils::GetCurrentTime().sec;
-            }
-
-            if (UNLIKELY(s_lastId.ts == 0)) {
-                // 0说明没有初始化过，那就
-                s_lastId.ts = common::CommonUtils::GetCurrentTime().sec;
-            }
-
-            return Id(s_lastId.ts, s_lastId.seq);
         }
 
         common::Buffer* Message::GetNewBuffer() {

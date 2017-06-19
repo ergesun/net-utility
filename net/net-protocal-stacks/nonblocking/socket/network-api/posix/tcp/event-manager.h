@@ -17,6 +17,9 @@
 
 namespace netty {
     namespace net {
+        /**
+         * socket出错了manager检测到后会释放。
+         */
         class GCC_INTERNAL PosixTcpEventManager : public AEventManager {
         public:
             PosixTcpEventManager(net_addr_t *nat, common::MemPool *memPool, uint32_t maxEvents,

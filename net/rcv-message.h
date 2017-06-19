@@ -36,7 +36,7 @@ namespace netty {
              */
             static bool DecodeMsgHeader(common::Buffer *buffer, Header *header);
 
-            inline common::Buffer* GetBuffer() {
+            inline const common::Buffer* GetBuffer() {
                 return m_pBuffer;
             }
 

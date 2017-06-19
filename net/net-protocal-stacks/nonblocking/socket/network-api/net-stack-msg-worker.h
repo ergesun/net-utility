@@ -77,8 +77,6 @@ namespace netty {
         protected:
             common::MemPool                    *m_pMemPool;
             common::Buffer                     *m_pHeaderBuffer;
-
-        private:
             common::BlockingQueue<SndMessage*> *m_bqMessages;
 
         private:

@@ -89,20 +89,20 @@ namespace netty {
             }
         }
 
-        ssize_t PosixTcpConnectionSocket::Read(void *buf, size_t nbytes) {
+        ssize_t PosixTcpConnectionSocket::Read(void *buf, size_t nbytes, int &err) {
             ssize_t n;
             do {
                 n = ::read(m_sd, buf, nbytes);
-            } while (n < 0 && EINTR == errno);
+            } while (n < 0 && EINTR == (err = errno));
 
             return n;
         }
 
-        ssize_t PosixTcpConnectionSocket::Write(void *buf, size_t nbytes) {
+        ssize_t PosixTcpConnectionSocket::Write(void *buf, size_t nbytes, int &err) {
             ssize_t n;
             do {
                 n = ::write(m_sd, buf, nbytes);
-            } while (n < 0 && EINTR == errno);
+            } while (n < 0 && EINTR == (err = errno));
 
             return n;
         }

@@ -86,16 +86,11 @@ namespace netty {
             static common::Buffer* PutBuffer(common::Buffer *buffer);
 
         protected:
-            static Id get_new_id();
-
-        protected:
 
             Header              m_header;
             common::MemPool    *m_pMemPool;
 
         private:
-            static common::spin_lock_t              s_idLock;
-            static Id                               s_lastId;
             static common::spin_lock_t              s_freeBufferLock;
             // TODO(sunchao): 做一个个数限制？
             static std::list<common::Buffer*>       s_freeBuffers;

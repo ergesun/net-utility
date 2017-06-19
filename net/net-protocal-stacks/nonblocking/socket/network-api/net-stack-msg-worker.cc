@@ -30,8 +30,10 @@ namespace netty {
         }
 
         bool ANetStackMessageWorker::SendMessage(SndMessage *m) {
+            ANetStackMessageWorker::add_callback(m->GetId(), m->GetCallback());
             auto ret = m_bqMessages->TryPush(m);
             if (!ret) {
+                ANetStackMessageWorker::remove_callback(m->GetId());
                 return ret;
             }
         }
