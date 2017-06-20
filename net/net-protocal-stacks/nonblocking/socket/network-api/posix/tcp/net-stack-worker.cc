@@ -64,9 +64,7 @@
 namespace netty {
     namespace net {
         PosixTcpNetStackWorker::PosixTcpNetStackWorker(AFileEventHandler *eventHandler, common::MemPool *memPool, PosixTcpClientSocket *socket)
-            : ANetStackMessageWorker(eventHandler, memPool), m_pSocket(socket) {
-            m_pSendingBuffer = Message::GetNewBuffer();
-        }
+            : ANetStackMessageWorker(eventHandler, memPool), m_pSocket(socket) {}
 
         PosixTcpNetStackWorker::~PosixTcpNetStackWorker() {
             if (m_payloadBuffer) {
@@ -130,33 +128,44 @@ namespace netty {
         }
 
         bool PosixTcpNetStackWorker::Send() {
+#define Put_Send_Buffer()                          \
+        Message::PutBuffer(m_pSendingBuffer);      \
+        m_pSendingBuffer = nullptr;
+
             int err;
             size_t size;
             bool rc = true;
             bool interrupt = false;
             while (rc && !interrupt) {
-                size = (size_t)m_pSendingBuffer->AvailableLength();
+                size = m_pSendingBuffer ? (size_t)m_pSendingBuffer->AvailableLength() : 0;
                 if (0 < size) {
                     auto n = m_pSocket->Write(m_pSendingBuffer->Pos, size, err);
                     if (0 == n) {
                         rc = false;
-                        m_pSendingBuffer->Put();
+                        Put_Send_Buffer();
                     } else if (0 < n) {
                         m_pSendingBuffer->SendN(uint32_t(n));
                         if (m_pSendingBuffer->AvailableLength() <= 0) {
-                            m_pSendingBuffer->Put();
+                            Put_Send_Buffer();
                         }
                     } else {
                         interrupt = true;
                         if (EAGAIN != err) {
                             rc = false;
-                            m_pSendingBuffer->Put();
+                            Put_Send_Buffer();
                         }
                     }
                 } else {
-
+                    SndMessage *sm;
+                    if (m_bqMessages->TryPop(sm)) {
+                        m_pSendingBuffer = sm->Encode();
+                    } else {
+                        interrupt = true;
+                    }
                 }
             }
+
+#undef Put_Send_Buffer
         }
     } // namespace net
 } // namespace netty
