@@ -21,7 +21,7 @@ namespace netty {
             virtual ~INetStackWorkerManager() = default;
 
             virtual AFileEventHandler *GetWorkerEventHandler(net_peer_info_t &npt) = 0;
-            virtual void PutWorkerEventHandler(net_peer_info_t npt, AFileEventHandler *handler) = 0;
+            virtual bool PutWorkerEventHandler(net_peer_info_t npt, AFileEventHandler *handler) = 0;
             virtual void ReleaseWorkerEventHandler(AFileEventHandler *handler) = 0;
         }; // interface INetStackWorkerManager
     }  // namespace net

@@ -25,12 +25,7 @@ namespace netty {
         public:
             PosixTcpEventManager(net_addr_t *nat, common::MemPool *memPool, uint32_t maxEvents,
                                  uint32_t connWorkersCnt, ConnectHandler connectHandler, FinishHandler finishHandler,
-                                 ValidHandlerFunc checkHandlerValid) :
-                AEventManager(memPool, maxEvents), m_pNat(nat), m_iConnWorkersCnt(connWorkersCnt) {
-                m_onConnect = connectHandler;
-                m_onFinish = finishHandler;
-                m_checkHandlerValid = checkHandlerValid;
-            }
+                                 ValidHandlerFunc checkHandlerValid);
 
             ~PosixTcpEventManager();
 
@@ -42,6 +37,7 @@ namespace netty {
         private:
             void worker_loop(EventWorker *ew);
             void on_connect(AFileEventHandler *handler);
+            inline void process_event(NetEvent *netEvent);
 
         private:
             uint32_t                                           m_iConnWorkersCnt;

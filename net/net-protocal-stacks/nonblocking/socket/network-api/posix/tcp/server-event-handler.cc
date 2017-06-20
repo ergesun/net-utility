@@ -13,13 +13,15 @@
 
 namespace netty {
     namespace net {
-        PosixTcpServerEventHandler::PosixTcpServerEventHandler(net_addr_t *nat, ConnectHandler onConnect, common::MemPool *memPool) {
+        PosixTcpServerEventHandler::PosixTcpServerEventHandler(EventWorker *ew, net_addr_t *nat,
+                                                               ConnectHandler onConnect, common::MemPool *memPool) {
             // TODO(sunchao): backlog改成可配置？
             m_pSrvSocket = new PosixTcpServerSocket(nat, 512);
             m_pSrvSocket->Socket();
             m_pSrvSocket->Bind();
             m_pSrvSocket->Listen();
             SetSocketDescriptor(m_pSrvSocket);
+            SetOwnWorker(ew);
             m_onConnect = onConnect;
             m_pMemPool = memPool;
         }

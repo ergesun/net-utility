@@ -13,6 +13,7 @@
 
 namespace netty {
     namespace net {
+        class EventWorker;
         class AFileEventHandler : public IEventHandler {
         public:
             AFileEventHandler() = default;
@@ -23,6 +24,14 @@ namespace netty {
                 return m_socketDesc;
             }
 
+            inline void SetOwnWorker(EventWorker* ew) {
+                m_pOwnEvWorker = ew;
+            }
+
+            inline EventWorker* GetOwnWorker() {
+                return m_pOwnEvWorker;
+            }
+
             virtual ANetStackMessageWorker* GetStackMsgWorker() = 0;
 
         protected:
@@ -31,7 +40,8 @@ namespace netty {
             }
 
         private:
-            FileDescriptor *m_socketDesc;
+            FileDescriptor *m_socketDesc = nullptr;
+            EventWorker    *m_pOwnEvWorker = nullptr;
         };
     }
 }

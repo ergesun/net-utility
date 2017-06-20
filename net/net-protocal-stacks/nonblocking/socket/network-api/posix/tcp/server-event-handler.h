@@ -21,7 +21,7 @@ namespace netty {
     namespace net {
         class GCC_INTERNAL PosixTcpServerEventHandler : public AFileEventHandler {
         public:
-            PosixTcpServerEventHandler(net_addr_t *nat, ConnectHandler onConnect, common::MemPool *memPool);
+            PosixTcpServerEventHandler(EventWorker *ew, net_addr_t *nat, ConnectHandler onConnect, common::MemPool *memPool);
             ~PosixTcpServerEventHandler();
 
             bool HandleReadEvent() override;

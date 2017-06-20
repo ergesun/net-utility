@@ -29,9 +29,10 @@ namespace netty {
 
             /**
              * 放入一个worker。
+             * 注意：当前的连接管理策略是两点之间同一个连接，并且保留最早的连接，新的put会失败。
              * @param workerEventHandler
              */
-            void PutWorkerEventHandler(net_peer_info_t npt, AFileEventHandler *workerEventHandler) override;
+            bool PutWorkerEventHandler(net_peer_info_t npt, AFileEventHandler *workerEventHandler) override;
 
             void ReleaseWorkerEventHandler(AFileEventHandler *workerEventHandler) override;
 

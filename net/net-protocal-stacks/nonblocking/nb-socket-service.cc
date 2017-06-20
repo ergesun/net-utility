@@ -56,12 +56,17 @@ namespace netty {
         }
 
         void NBSocketService::on_connect(AFileEventHandler *handler) {
-            m_pEventManager->AddEvent(handler, EVENT_NONE, EVENT_READ|EVENT_WRITE);
-            m_netStackWorkerManager->PutWorkerEventHandler(handler->GetSocketDescriptor()->GetPeerInfo(), handler);
+            if (m_netStackWorkerManager->PutWorkerEventHandler(handler->GetSocketDescriptor()->GetPeerInfo(), handler)) {
+                m_pEventManager->AddEvent(handler, EVENT_NONE, EVENT_READ|EVENT_WRITE);
+            } else {
+                DELETE_PTR(handler);
+            }
         }
 
         void NBSocketService::on_finish(AFileEventHandler *handler) {
-
+            auto ew = handler->GetOwnWorker();
+            ew->DeleteHandler(handler);
+            m_netStackWorkerManager->ReleaseWorkerEventHandler(handler);
         }
 
         bool NBSocketService::check_handler_valid(AFileEventHandler *handler) {

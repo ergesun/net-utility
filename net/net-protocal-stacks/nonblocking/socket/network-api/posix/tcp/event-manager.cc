@@ -11,6 +11,15 @@ using namespace std::placeholders;
 
 namespace netty {
     namespace net {
+        PosixTcpEventManager::PosixTcpEventManager(net_addr_t *nat, common::MemPool *memPool, uint32_t maxEvents,
+                                                   uint32_t connWorkersCnt, ConnectHandler connectHandler,
+                                                   FinishHandler finishHandler, ValidHandlerFunc checkHandlerValid)  :
+            AEventManager(memPool, maxEvents), m_pNat(nat), m_iConnWorkersCnt(connWorkersCnt) {
+            m_onConnect = connectHandler;
+            m_onFinish = finishHandler;
+            m_checkHandlerValid = checkHandlerValid;
+        }
+
         PosixTcpEventManager::~PosixTcpEventManager() {
             if (!m_bStopped) {
                 Stop();
@@ -23,7 +32,9 @@ namespace netty {
             m_bStopped = false;
             if (m_pNat) {
                 auto ew = new EventWorker(m_iMaxEvents, m);
-                m_pServerEventHandler = new PosixTcpServerEventHandler(m_pNat, std::bind(&PosixTcpEventManager::on_connect, this, _1), m_pMemPool);
+                m_pServerEventHandler = new PosixTcpServerEventHandler(ew, m_pNat,
+                                                                       std::bind(&PosixTcpEventManager::on_connect, this, _1),
+                                                                       m_pMemPool);
                 // 不需要lock，因为正常只有主线程会add/delete一次
                 ew->GetDriver()->AddEvent(m_pServerEventHandler, EVENT_NONE, EVENT_READ);
                 m_pListenWorkerEventLoopCtx.second = ew;
@@ -70,8 +81,8 @@ namespace netty {
 
             auto ew = m_vConnsWorkerEventLoopCtxs[m_iCurWorkerIdx].second;
 
-            common::SpinLock l(ew->GetSpinLock());
-            return ew->GetDriver()->AddEvent(socketEventHandler, cur_mask, mask);
+            socketEventHandler->SetOwnWorker(ew);
+            return ew->AddEvent(socketEventHandler, cur_mask, mask);
         }
 
         void PosixTcpEventManager::worker_loop(EventWorker *ew) {
@@ -82,36 +93,46 @@ namespace netty {
                 auto nevents = eventDriver->EventWait(events, nullptr);
                 if (nevents > 0) {
                     for (int i = 0; i < nevents; ++i) {
-                        auto evMask = (*events)[i].mask;
-                        bool rc = true;
-                        if (evMask & EVENT_READ) {
-                            rc = (*events)[i].eh->HandleReadEvent();
-                        }
-
-                        if (rc && (evMask & EVENT_WRITE)) {
-                            rc = (*events)[i].eh->HandleWriteEvent();
-                        }
-
-                        // 失败了就移除事件并发送结束回调(管理者回收资源等)。
-                        if (!rc) {
-                            // 可能多线程在add，所以这里需要加lock
-                            common::SpinLock l(ew->GetSpinLock());
-                            eventDriver->DeleteHandler((*events)[i].eh);
-                        }
+                        process_event(&(*events)[i]);
                     }
                 }
 
+                auto pendingDeleteEventHandlers = ew->GetPendingDeleteEventHandlers();
                 auto externalEvents = ew->GetExternalEvents();
                 for (auto &eev : externalEvents) {
-
+                    if (pendingDeleteEventHandlers.find(eev.eh) == pendingDeleteEventHandlers.end()) {
+                        process_event(&eev);
+                    }
                 }
 
+                for (auto deleteEventHandler : pendingDeleteEventHandlers) {
+                    DELETE_PTR(deleteEventHandler);
+                }
+
+                pendingDeleteEventHandlers.clear();
             }
         }
 
         void PosixTcpEventManager::on_connect(AFileEventHandler *handler) {
             if (m_onConnect) {
                 m_onConnect(handler);
+            }
+        }
+
+        inline void PosixTcpEventManager::process_event(NetEvent *netEvent) {
+            auto evMask = netEvent->mask;
+            bool rc = true;
+            if (evMask & EVENT_READ) {
+                rc = netEvent->eh->HandleReadEvent();
+            }
+
+            if (rc && (evMask & EVENT_WRITE)) {
+                rc = netEvent->eh->HandleWriteEvent();
+            }
+
+            // 失败了就发送结束回调(连接管理者回收资源等)。
+            if (!rc) {
+                m_onFinish(netEvent->eh);
             }
         }
     } // namespace net

@@ -12,7 +12,7 @@ namespace netty {
             return nullptr;
         }
 
-        void UniqueWorkerManager::PutWorkerEventHandler(net_peer_info_t npt, AFileEventHandler *workerEventHandler) {
+        bool UniqueWorkerManager::PutWorkerEventHandler(net_peer_info_t npt, AFileEventHandler *workerEventHandler) {
             common::SpinLock l(&m_sl);
         }
 
