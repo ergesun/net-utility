@@ -10,61 +10,74 @@
 
 #include "net-stack-worker.h"
 
+#define NotifyWorkerBrokenMessage()                                                                                 \
+        auto wnm = get_broken_worker_message(strerror(err));                                                        \
+        HandleMessage(wnm);
 
-#define ParseHeader()                                                                                       \
-        if (m_pHeaderBuffer->AvailableLength() == m_pHeaderBuffer->TotalLength()) {                         \
-            auto headerRc = RcvMessage::DecodeMsgHeader(m_pHeaderBuffer, &m_header);                        \
-            if (!headerRc) {                                                                                \
-                std::cerr << "Decode message header failed!" << std::endl;                                  \
-                rc = false;                                                                                 \
-            } else {                                                                                        \
-                m_rcvState = NetWorkerState::StartToRcvPayload;                                             \
-            }                                                                                               \
-        } else {                                                                                            \
-            interrupt = true;                                                                               \
-            m_rcvState = NetWorkerState::RcvingHeader;                                                      \
+#define NotifyWorkerPeerClosedMessage()                                                                             \
+        auto wnm = get_closed_by_peer_worker_message("closed by peer.");                                            \
+        HandleMessage(wnm);
+
+#define ParseHeader()                                                                                               \
+        if (m_pHeaderBuffer->AvailableLength() == m_pHeaderBuffer->TotalLength()) {                                 \
+            auto headerRc = RcvMessage::DecodeMsgHeader(m_pHeaderBuffer, &m_header);                                \
+            if (!headerRc) {                                                                                        \
+                std::cerr << "Decode message header failed!" << std::endl;                                          \
+                rc = false;                                                                                         \
+                NotifyWorkerBrokenMessage();                                                                        \
+            } else {                                                                                                \
+                m_rcvState = NetWorkerState::StartToRcvPayload;                                                     \
+            }                                                                                                       \
+        } else {                                                                                                    \
+            interrupt = true;                                                                                       \
+            m_rcvState = NetWorkerState::RcvingHeader;                                                              \
         }
 
-#define ProcessAfterRcvHeader()                                                                             \
-        if (0 == n) {                                                                                       \
-            rc = false;                                                                                     \
-        } else if (n > 0) {                                                                                 \
-            m_pHeaderBuffer->RecvN((uint32_t)n);                                                            \
-            ParseHeader();                                                                                  \
-        } else {                                                                                            \
-            interrupt = true;                                                                               \
-            if (EAGAIN != err) {                                                                            \
-                rc = false;                                                                                 \
-            }                                                                                               \
+#define ProcessAfterRcvHeader()                                                                                     \
+        if (0 == n) {                                                                                               \
+            rc = false;                                                                                             \
+            NotifyWorkerPeerClosedMessage();                                                                        \
+        } else if (n > 0) {                                                                                         \
+            m_pHeaderBuffer->RecvN((uint32_t)n);                                                                    \
+            ParseHeader();                                                                                          \
+        } else {                                                                                                    \
+            interrupt = true;                                                                                       \
+            if (EAGAIN != err) {                                                                                    \
+                rc = false;                                                                                         \
+                NotifyWorkerBrokenMessage();                                                                        \
+            }                                                                                                       \
         }
 
 #define CheckPayload()                                                                                              \
         if (m_payloadBuffer->AvailableLength() == m_header.len) {                                                   \
             m_rcvState = NetWorkerState::StartToRcvHeader;                                                          \
             auto rcvMessage = get_new_rcv_message(m_pMemPool, m_header, m_payloadBuffer);                           \
-            auto mnm = new MessageNotifyMessage(MessageNotifyMessageCode::OK, "", rcvMessage, s_release_rm_handle); \
+            auto mnm = new MessageNotifyMessage(rcvMessage, s_release_rm_handle);                                   \
             HandleMessage(mnm);                                                                                     \
         } else {                                                                                                    \
             m_rcvState = NetWorkerState::RcvingPayload;                                                             \
             interrupt = true;                                                                                       \
         }
 
-#define ProcessAfterRcvPayload()                                                                            \
-        if (0 == n) {                                                                                       \
-            rc = false;                                                                                     \
-        } else if (n > 0) {                                                                                 \
-            m_payloadBuffer->RecvN((uint32_t)n);                                                            \
-            CheckPayload();                                                                                 \
-        } else {                                                                                            \
-            interrupt = true;                                                                               \
-            if (EAGAIN != err) {                                                                            \
-                rc = false;                                                                                 \
-            }                                                                                               \
+#define ProcessAfterRcvPayload()                                                                                    \
+        if (0 == n) {                                                                                               \
+            rc = false;                                                                                             \
+            NotifyWorkerPeerClosedMessage();                                                                        \
+        } else if (n > 0) {                                                                                         \
+            m_payloadBuffer->RecvN((uint32_t)n);                                                                    \
+            CheckPayload();                                                                                         \
+        } else {                                                                                                    \
+            interrupt = true;                                                                                       \
+            if (EAGAIN != err) {                                                                                    \
+                rc = false;                                                                                         \
+                NotifyWorkerBrokenMessage();                                                                        \
+            }                                                                                                       \
         }
 
 namespace netty {
     namespace net {
-        PosixTcpNetStackWorker::PosixTcpNetStackWorker(AFileEventHandler *eventHandler, common::MemPool *memPool, PosixTcpClientSocket *socket,
+        PosixTcpNetStackWorker::PosixTcpNetStackWorker(AFileEventHandler *eventHandler, common::MemPool *memPool,
+                                                       PosixTcpClientSocket *socket,
                                                        NotifyMessageCallbackHandler msgCallbackHandler)
             : ANetStackMessageWorker(eventHandler, memPool, msgCallbackHandler), m_pSocket(socket) {}
 
@@ -145,6 +158,7 @@ namespace netty {
                     if (0 == n) {
                         rc = false;
                         Put_Send_Buffer();
+                        NotifyWorkerPeerClosedMessage();
                     } else if (0 < n) {
                         m_pSendingBuffer->SendN(uint32_t(n));
                         if (m_pSendingBuffer->AvailableLength() <= 0) {
@@ -155,6 +169,7 @@ namespace netty {
                         if (EAGAIN != err) {
                             rc = false;
                             Put_Send_Buffer();
+                            NotifyWorkerBrokenMessage();
                         }
                     }
                 } else {
@@ -168,6 +183,14 @@ namespace netty {
             }
 
 #undef Put_Send_Buffer
+        }
+
+        WorkerNotifyMessage* PosixTcpNetStackWorker::get_closed_by_peer_worker_message(std::string &&msg) {
+            return new WorkerNotifyMessage(WorkerNotifyMessageCode::ClosedByPeer, std::move(msg));
+        }
+
+        WorkerNotifyMessage* PosixTcpNetStackWorker::get_broken_worker_message(std::string &&msg) {
+            return new WorkerNotifyMessage(WorkerNotifyMessageCode::Error, std::move(msg));
         }
     } // namespace net
 } // namespace netty

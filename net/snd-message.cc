@@ -14,9 +14,8 @@ namespace netty {
         common::spin_lock_t SndMessage::s_idLock = UNLOCKED;
         Message::Id SndMessage::s_lastId = Id(0, 0);
 
-        SndMessage::SndMessage(common::MemPool *mp, net_local_info_t socketInfo, common::uctime_t deadline) :
+        SndMessage::SndMessage(common::MemPool *mp, net_local_info_t socketInfo) :
             Message(mp), m_socketInfo(socketInfo) {
-            m_deadline = deadline;
             m_header.id = get_new_id();
         }
 

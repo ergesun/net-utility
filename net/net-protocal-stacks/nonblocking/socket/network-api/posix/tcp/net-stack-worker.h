@@ -39,6 +39,10 @@ namespace netty {
             bool Send();
 
         private:
+            static WorkerNotifyMessage* get_closed_by_peer_worker_message(std::string &&msg);
+            static WorkerNotifyMessage* get_broken_worker_message(std::string &&msg);
+
+        private:
             /**
              * 此为弱引用关系，关联关系，外部创建者会释放，本类无需释放。
              */

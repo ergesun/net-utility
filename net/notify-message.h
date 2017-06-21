@@ -24,12 +24,8 @@ namespace netty {
 
         enum class WorkerNotifyMessageCode {
             Ok    = 0,
+            ClosedByPeer,
             Error
-        };
-
-        enum class MessageNotifyMessageCode {
-            OK            = 0,
-            ErrorTimeout
         };
 
         class NotifyMessage {
@@ -78,8 +74,8 @@ namespace netty {
         class RcvMessage;
         class MessageNotifyMessage : public NotifyMessage {
         public:
-            MessageNotifyMessage(MessageNotifyMessageCode code, std::string &&msg, RcvMessage* rm, std::function<void(RcvMessage*)> releaseHandle) :
-                NotifyMessage(NotifyMessageType::Message, std::move(msg)), m_code(code) {}
+            MessageNotifyMessage(RcvMessage* rm, std::function<void(RcvMessage*)> releaseHandle) :
+                NotifyMessage(NotifyMessageType::Message, "") {}
 
             ~MessageNotifyMessage() {
                 if (m_releaseHandle) {
@@ -88,16 +84,9 @@ namespace netty {
                 }
             }
 
-            inline MessageNotifyMessageCode GetCode() {
-                return m_code;
-            }
-
             inline const RcvMessage* GetContent() const {
                 return m_ref;
             }
-
-        private:
-            MessageNotifyMessageCode m_code;
 
         private:
             RcvMessage                      *m_ref;

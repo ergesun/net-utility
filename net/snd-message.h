@@ -16,22 +16,13 @@ namespace netty {
              * 一旦发送，则SndMessage的所有权便属于了框架，user无需再管理此SndMessage。生命周期由框架控制。
              * @param mp
              * @param socketInfo 标识所走的协议以及本地socket信息
-             * @param deadline 排队等待的截止时间，超过这个时间就出队回调发送错误。
              * @param cb 回复消息回调函数。当前是IO线程同步回调，设计上要求回调函数快速执行、非阻塞。
              * @param cbCtx 回调时带回的ctx
              */
-            SndMessage(common::MemPool *mp, net_local_info_t socketInfo, common::uctime_t deadline);
+            SndMessage(common::MemPool *mp, net_local_info_t socketInfo);
 
         public:
             common::Buffer* Encode() override final;
-
-            /**
-             * 获取死亡时间
-             * @return
-             */
-            inline common::uctime_t GetDeadline() const {
-                return m_deadline;
-            }
 
             inline net_local_info_t GetSocketInfo() {
                 return m_socketInfo;
@@ -56,7 +47,6 @@ namespace netty {
             static Id get_new_id();
 
         private:
-            common::uctime_t                        m_deadline;
             net_local_info_t                        m_socketInfo;
 
             static common::spin_lock_t              s_idLock;
