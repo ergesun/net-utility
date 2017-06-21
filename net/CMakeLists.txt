@@ -20,6 +20,7 @@ add_library(net SHARED
         ${NPS_NB_SA_POSIX_TCP_SK_SRCS}
         ${NPS_NB_SA_ED_SRCS}
         ${NPS_NB_SA_ED_EP_SRCS}
+        msg-callback.h
         common-def.h
         net-protocal-stacks/nonblocking/socket/network-api/abstract-event-manager.h
         net-protocal-stacks/nonblocking/ievent-handler.h

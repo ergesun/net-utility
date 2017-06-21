@@ -15,16 +15,15 @@
 
 namespace netty {
     namespace net {
-
-        common::spin_lock_t ANetStackMessageWorker::s_cbLock = UNLOCKED;
-        std::unordered_map<Message::Id, MsgCallback> ANetStackMessageWorker::s_callbacks = std::unordered_map<Message::Id, MsgCallback>();
-        ANetStackMessageWorker::ANetStackMessageWorker(AFileEventHandler *eventHandler, common::MemPool *memPool, uint32_t maxCacheMessageCnt) {
+        ANetStackMessageWorker::ANetStackMessageWorker(AFileEventHandler *eventHandler, common::MemPool *memPool,
+                                                       MsgCallbackHandler msgCallbackHandler, uint32_t maxCacheMessageCnt) {
             m_pEventHandler = eventHandler;
             m_pMemPool = memPool;
             m_bqMessages = new common::BlockingQueue<SndMessage*>(maxCacheMessageCnt);
             auto size = RcvMessage::HeaderSize();
             auto headerMemObj = m_pMemPool->Get(size);
             m_pHeaderBuffer = common::CommonUtils::GetNewBuffer(headerMemObj, size);
+            m_msgCallback = msgCallbackHandler;
         }
 
         ANetStackMessageWorker::~ANetStackMessageWorker() {
@@ -34,10 +33,8 @@ namespace netty {
         }
 
         bool ANetStackMessageWorker::SendMessage(SndMessage *m) {
-            ANetStackMessageWorker::add_callback(m->GetId(), m->GetCallback());
             auto ret = m_bqMessages->TryPush(m);
             if (!ret) {
-                ANetStackMessageWorker::remove_callback(m->GetId());
                 return ret;
             }
         }
@@ -49,11 +46,8 @@ namespace netty {
             };
             auto rmRef = new RcvMessageRef(m, release_rm_handle);
             auto ssp_rmr = std::shared_ptr<RcvMessageRef>(rmRef);
-            auto pCb = ANetStackMessageWorker::lookup_callback(m->GetId());
-            if (pCb) {
-                pCb->first(ssp_rmr, pCb->second);
-            } else {
-                delete m;
+            if (m_msgCallback) {
+                m_msgCallback(ssp_rmr);
             }
         }
 
@@ -66,26 +60,6 @@ namespace netty {
 
         void ANetStackMessageWorker::release_rcv_message(RcvMessage *rm) {
             rm->~RcvMessage();
-        }
-
-        MsgCallback* ANetStackMessageWorker::lookup_callback(Message::Id id) {
-            common::SpinLock l(&s_cbLock);
-            auto cbIter = s_callbacks.find(id);
-            if (LIKELY(cbIter != s_callbacks.end())) {
-                return &cbIter->second;
-            }
-
-            return nullptr;
-        }
-
-        void ANetStackMessageWorker::add_callback(Message::Id id, MsgCallback cb) {
-            common::SpinLock l(&s_cbLock);
-            s_callbacks[id] = cb;
-        }
-
-        void ANetStackMessageWorker::remove_callback(Message::Id id) {
-            common::SpinLock l(&s_cbLock);
-            s_callbacks.erase(id);
         }
     } // namespace net
 } // namespace netty

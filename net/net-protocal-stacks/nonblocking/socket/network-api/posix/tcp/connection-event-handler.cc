@@ -7,11 +7,13 @@
 
 namespace netty {
     namespace net {
-        PosixTcpConnectionEventHandler::PosixTcpConnectionEventHandler(net_addr_t &peerAddr, int sfd, common::MemPool *memPool) {
+        PosixTcpConnectionEventHandler::PosixTcpConnectionEventHandler(net_addr_t &peerAddr, int sfd,
+                                                                       common::MemPool *memPool,
+                                                                       MsgCallbackHandler msgCallbackHandler) {
             m_pClientSocket = new PosixTcpClientSocket(peerAddr, sfd);
             SetSocketDescriptor(m_pClientSocket);
 
-            m_pNetStackWorker = new PosixTcpNetStackWorker(this, memPool, m_pClientSocket);
+            m_pNetStackWorker = new PosixTcpNetStackWorker(this, memPool, m_pClientSocket, msgCallbackHandler);
             m_pMemPool = memPool;
         }
 

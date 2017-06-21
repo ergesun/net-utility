@@ -13,11 +13,11 @@ namespace netty {
     namespace net {
         PosixTcpEventManager::PosixTcpEventManager(net_addr_t *nat, common::MemPool *memPool, uint32_t maxEvents,
                                                    uint32_t connWorkersCnt, ConnectHandler connectHandler,
-                                                   FinishHandler finishHandler, ValidHandlerFunc checkHandlerValid)  :
+                                                   FinishHandler finishHandler, MsgCallbackHandler msgCallbackHandler)  :
             AEventManager(memPool, maxEvents), m_pNat(nat), m_iConnWorkersCnt(connWorkersCnt) {
             m_onConnect = connectHandler;
             m_onFinish = finishHandler;
-            m_checkHandlerValid = checkHandlerValid;
+            m_msgCallback = msgCallbackHandler;
         }
 
         PosixTcpEventManager::~PosixTcpEventManager() {
@@ -34,7 +34,7 @@ namespace netty {
                 auto ew = new EventWorker(m_iMaxEvents, m);
                 m_pServerEventHandler = new PosixTcpServerEventHandler(ew, m_pNat,
                                                                        std::bind(&PosixTcpEventManager::on_connect, this, _1),
-                                                                       m_pMemPool);
+                                                                       m_pMemPool, m_msgCallback);
                 // 不需要lock，因为正常只有主线程会add/delete一次
                 ew->GetDriver()->AddEvent(m_pServerEventHandler, EVENT_NONE, EVENT_READ);
                 m_pListenWorkerEventLoopCtx.second = ew;

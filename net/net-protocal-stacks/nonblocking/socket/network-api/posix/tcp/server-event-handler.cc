@@ -14,7 +14,8 @@
 namespace netty {
     namespace net {
         PosixTcpServerEventHandler::PosixTcpServerEventHandler(EventWorker *ew, net_addr_t *nat,
-                                                               ConnectHandler onConnect, common::MemPool *memPool) {
+                                                               ConnectHandler onConnect, common::MemPool *memPool,
+                                                               MsgCallbackHandler msgCallbackHandler) {
             // TODO(sunchao): backlog改成可配置？
             m_pSrvSocket = new PosixTcpServerSocket(nat, 512);
             m_pSrvSocket->Socket();
@@ -24,6 +25,7 @@ namespace netty {
             SetOwnWorker(ew);
             m_onConnect = onConnect;
             m_pMemPool = memPool;
+            m_msgCallbackHandler = msgCallbackHandler;
         }
 
         PosixTcpServerEventHandler::~PosixTcpServerEventHandler() {
@@ -58,7 +60,8 @@ namespace netty {
                     std::string addrStr(addrBuf);
                     net_addr_t peerAddr(std::move(addrStr), port);
                     // 连接失效的时候再释放。
-                    PosixTcpConnectionEventHandler *connEventHandler = new PosixTcpConnectionEventHandler(peerAddr, conn_fd, m_pMemPool);
+                    PosixTcpConnectionEventHandler *connEventHandler =
+                        new PosixTcpConnectionEventHandler(peerAddr, conn_fd, m_pMemPool, m_msgCallbackHandler);
                     if (m_onConnect) {
                         m_onConnect(connEventHandler);
                     }

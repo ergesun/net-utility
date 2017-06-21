@@ -10,14 +10,6 @@
 
 namespace netty {
     namespace net {
-        class RcvMessageRef;
-        typedef void* MsgCallbackCtx;
-        /**
-         * user不需要负责RcvMessage的释放。
-         */
-        typedef std::function<void(std::shared_ptr<RcvMessageRef>, void*)> MsgCallbackHandler;
-        typedef std::pair<MsgCallbackHandler, MsgCallbackCtx> MsgCallback;
-
         class SndMessage : public Message, public IEncoder {
         public:
             /**
@@ -28,17 +20,10 @@ namespace netty {
              * @param cb 回复消息回调函数。当前是IO线程同步回调，设计上要求回调函数快速执行、非阻塞。
              * @param cbCtx 回调时带回的ctx
              */
-            SndMessage(common::MemPool *mp, net_local_info_t socketInfo, common::uctime_t deadline, MsgCallback cb);
+            SndMessage(common::MemPool *mp, net_local_info_t socketInfo, common::uctime_t deadline);
 
         public:
             common::Buffer* Encode() override final;
-            /**
-             * 获取消息的回调。
-             * @return
-             */
-            inline MsgCallback GetCallback() const {
-                return m_cb;
-            }
 
             /**
              * 获取死亡时间
@@ -71,7 +56,6 @@ namespace netty {
             static Id get_new_id();
 
         private:
-            MsgCallback                             m_cb;
             common::uctime_t                        m_deadline;
             net_local_info_t                        m_socketInfo;
 

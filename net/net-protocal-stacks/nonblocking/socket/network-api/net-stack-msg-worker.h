@@ -12,6 +12,7 @@
 #include "../../../../../common/blocking-queue.h"
 
 #include "../../../../snd-message.h"
+#include "../../../../msg-callback.h"
 
 namespace netty {
     namespace common {
@@ -40,7 +41,7 @@ namespace netty {
              *
              * @param maxCacheMessageCnt 消息缓冲队列的最大消息个数。0为无限制。
              */
-            ANetStackMessageWorker(AFileEventHandler *eventHandler, common::MemPool *memPool, uint32_t maxCacheMessageCnt = 0);
+            ANetStackMessageWorker(AFileEventHandler *eventHandler, common::MemPool *memPool, MsgCallbackHandler msgCallbackHandler, uint32_t maxCacheMessageCnt = 0);
             virtual ~ANetStackMessageWorker();
 
             /**
@@ -71,20 +72,12 @@ namespace netty {
             static RcvMessage* get_new_rcv_message(common::MemPool *mp, Message::Header h, common::Buffer *buffer, NettyMsgCode rc);
             static void release_rcv_message(RcvMessage *rm);
 
-        private:
-            static MsgCallback* lookup_callback(Message::Id id);
-            static void add_callback(Message::Id id, MsgCallback);
-            static void remove_callback(Message::Id id);
-
         protected:
             common::MemPool                    *m_pMemPool;
             common::Buffer                     *m_pHeaderBuffer;
             common::BlockingQueue<SndMessage*> *m_bqMessages;
             AFileEventHandler                  *m_pEventHandler;
-
-        private:
-            static common::spin_lock_t                          s_cbLock;
-            static std::unordered_map<Message::Id, MsgCallback> s_callbacks;
+            MsgCallbackHandler                  m_msgCallback;
         };
     } // namespace net
 } // namespace netty

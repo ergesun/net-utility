@@ -13,6 +13,7 @@
 #include "../../abstract-socket-service.h"
 #include "socket/event-drivers/ievent-driver.h"
 #include "../../message.h"
+#include "../../msg-callback.h"
 
 // TODO(sunchao): 可配值
 #define MAX_EVENTS  256
@@ -20,6 +21,7 @@
 namespace netty {
     namespace net {
         class AEventManager;
+
         /**
          * 支持Tcp/Udp(暂未实现)协议的收发server。
          */
@@ -31,9 +33,11 @@ namespace netty {
              * @param cp  worker的管理策略。
              * @param memPool 内存池。
              */
-            NBSocketService(std::shared_ptr<net_local_info_t> nlt, INetStackWorkerManager *cp, common::MemPool *memPool) :
+            NBSocketService(std::shared_ptr<net_local_info_t> nlt, INetStackWorkerManager *cp, common::MemPool *memPool,
+                            MsgCallbackHandler msgCallbackHandler) :
                 ASocketService(nlt), m_netStackWorkerManager(cp), m_pMemPool(memPool), m_bStopped(false) {
                 assert(memPool);
+                m_msgCallback = msgCallbackHandler;
             }
 
             ~NBSocketService();
@@ -55,13 +59,13 @@ namespace netty {
         private:
             void on_connect(AFileEventHandler *handler);
             void on_finish(AFileEventHandler *handler);
-            bool check_handler_valid(AFileEventHandler *handler);
 
         private:
             INetStackWorkerManager *m_netStackWorkerManager = nullptr;
             // 关联关系，外部传入的，根据谁创建谁销毁原则，本类无需释放。
             common::MemPool        *m_pMemPool = nullptr;
             AEventManager          *m_pEventManager = nullptr;
+            MsgCallbackHandler      m_msgCallback;
 
             bool                    m_bStopped;
         }; // class NBSocketService

@@ -28,7 +28,7 @@ namespace netty {
                     m_pEventManager = new PosixTcpEventManager(&m_nlt->nat, m_pMemPool, MAX_EVENTS, (uint32_t)(common::CPUS_CNT / 2),
                                                                 std::bind(&NBSocketService::on_connect, this, _1),
                                                                std::bind(&NBSocketService::on_finish, this, _1),
-                                                               std::bind(&NBSocketService::check_handler_valid, this, _1));
+                                                                m_msgCallback);
                     m_pEventManager->Start(m);
                 } else {
                     throw std::runtime_error("Not support now!");
@@ -67,10 +67,6 @@ namespace netty {
             auto ew = handler->GetOwnWorker();
             ew->DeleteHandler(handler);
             m_netStackWorkerManager->ReleaseWorkerEventHandler(handler);
-        }
-
-        bool NBSocketService::check_handler_valid(AFileEventHandler *handler) {
-
         }
     } // namespace net
 } // namespace netty

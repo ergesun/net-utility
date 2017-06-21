@@ -21,7 +21,8 @@ namespace netty {
          */
         class GCC_INTERNAL PosixTcpNetStackWorker : public ANetStackMessageWorker {
         public:
-            PosixTcpNetStackWorker(AFileEventHandler *eventHandler, common::MemPool *memPool, PosixTcpClientSocket *socket);
+            PosixTcpNetStackWorker(AFileEventHandler *eventHandler, common::MemPool *memPool, PosixTcpClientSocket *socket,
+                                   MsgCallbackHandler msgCallbackHandler);
             ~PosixTcpNetStackWorker();
 
             /**
@@ -46,6 +47,7 @@ namespace netty {
             Message::Header          m_header;
             common::Buffer          *m_payloadBuffer = nullptr;
             common::Buffer          *m_pSendingBuffer = nullptr;
+            MsgCallbackHandler       m_msgCallback;
         };
     } // namespace net
 } // namespace netty

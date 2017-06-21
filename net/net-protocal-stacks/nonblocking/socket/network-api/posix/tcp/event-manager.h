@@ -25,7 +25,7 @@ namespace netty {
         public:
             PosixTcpEventManager(net_addr_t *nat, common::MemPool *memPool, uint32_t maxEvents,
                                  uint32_t connWorkersCnt, ConnectHandler connectHandler, FinishHandler finishHandler,
-                                 ValidHandlerFunc checkHandlerValid);
+                                 MsgCallbackHandler msgCallbackHandler);
 
             ~PosixTcpEventManager();
 
@@ -50,7 +50,7 @@ namespace netty {
             common::spin_lock_t                                m_slSelectEvents = UNLOCKED;
             ConnectHandler                                     m_onConnect;
             FinishHandler                                      m_onFinish;
-            ValidHandlerFunc                                   m_checkHandlerValid;
+            MsgCallbackHandler                                 m_msgCallback;
         };
     } // namespace net
 } // namespace netty
