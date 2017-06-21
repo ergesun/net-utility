@@ -50,6 +50,7 @@ namespace netty {
             }
 
             if (SocketProtocal::Tcp == npt.sp) {
+                PosixTcpConnectionEventHandler *eventHandler = nullptr;
                 // 既为connect，就是TCP
                 PosixTcpClientSocket *ptcs = new PosixTcpClientSocket(npt.nat);
                 if (!ptcs->Socket()) {
@@ -58,7 +59,7 @@ namespace netty {
                 if (!ptcs->Connect(nullptr)) {
                     goto Label_failed;
                 }
-                auto eventHandler = new PosixTcpConnectionEventHandler(ptcs, m_pMemPool, m_msgCallback);
+                eventHandler = new PosixTcpConnectionEventHandler(ptcs, m_pMemPool, m_msgCallback);
                 if (!m_pNetStackWorkerManager->PutWorkerEventHandler(eventHandler)) {
                     // put失败代表已经有了。
                     DELETE_PTR(eventHandler);

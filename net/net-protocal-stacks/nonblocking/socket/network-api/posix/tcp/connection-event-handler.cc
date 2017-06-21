@@ -17,9 +17,9 @@ namespace netty {
             m_pMemPool = memPool;
         }
 
-        PosixTcpConnectionEventHandler::PosixTcpConnectionEventHandler(net_addr_t &peerAddr, common::MemPool *memPool,
+        PosixTcpConnectionEventHandler::PosixTcpConnectionEventHandler(net_addr_t &peerAddr, int sfd, common::MemPool *memPool,
                                                                        NotifyMessageCallbackHandler msgCallbackHandler) {
-            m_pClientSocket = new PosixTcpClientSocket(peerAddr);
+            m_pClientSocket = new PosixTcpClientSocket(peerAddr, sfd);
             SetSocketDescriptor(m_pClientSocket);
 
             m_pNetStackWorker = new PosixTcpNetStackWorker(this, memPool, m_pClientSocket, msgCallbackHandler);

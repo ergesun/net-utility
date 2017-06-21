@@ -24,6 +24,11 @@ namespace netty {
                 m_peer = net_peer_info_t(peerAddr, SocketProtocal::Tcp);
             }
 
+            PosixTcpConnectionSocket(net_addr_t peerAddr, int sfd) {
+                m_peer = net_peer_info_t(peerAddr, SocketProtocal::Tcp);
+                m_fd = sfd;
+            }
+
             virtual ~PosixTcpConnectionSocket() {}
 
             /* basic interfaces */

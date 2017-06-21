@@ -21,7 +21,7 @@ namespace netty {
         public:
             PosixTcpConnectionEventHandler(PosixTcpClientSocket *pSocket, common::MemPool *memPool,
                                            NotifyMessageCallbackHandler msgCallbackHandler);
-            PosixTcpConnectionEventHandler(net_addr_t &peerAddr, common::MemPool *memPool,
+            PosixTcpConnectionEventHandler(net_addr_t &peerAddr, int sfd, common::MemPool *memPool,
                                            NotifyMessageCallbackHandler msgCallbackHandler);
             ~PosixTcpConnectionEventHandler();
 
