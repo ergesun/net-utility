@@ -15,7 +15,7 @@ namespace netty {
     namespace net {
         PosixTcpServerEventHandler::PosixTcpServerEventHandler(EventWorker *ew, net_addr_t *nat,
                                                                ConnectHandler onConnect, common::MemPool *memPool,
-                                                               MsgCallbackHandler msgCallbackHandler) {
+                                                               NotifyMessageCallbackHandler msgCallbackHandler) {
             // TODO(sunchao): backlog改成可配置？
             m_pSrvSocket = new PosixTcpServerSocket(nat, 512);
             m_pSrvSocket->Socket();

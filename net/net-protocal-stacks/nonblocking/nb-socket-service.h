@@ -13,7 +13,7 @@
 #include "../../abstract-socket-service.h"
 #include "socket/event-drivers/ievent-driver.h"
 #include "../../message.h"
-#include "../../msg-callback.h"
+#include "../../notify-message.h"
 
 // TODO(sunchao): 可配值
 #define MAX_EVENTS  256
@@ -34,7 +34,7 @@ namespace netty {
              * @param memPool 内存池。
              */
             NBSocketService(std::shared_ptr<net_local_info_t> nlt, INetStackWorkerManager *cp, common::MemPool *memPool,
-                            MsgCallbackHandler msgCallbackHandler) :
+                            NotifyMessageCallbackHandler msgCallbackHandler) :
                 ASocketService(nlt), m_netStackWorkerManager(cp), m_pMemPool(memPool), m_bStopped(false) {
                 assert(memPool);
                 m_msgCallback = msgCallbackHandler;
@@ -65,7 +65,7 @@ namespace netty {
             // 关联关系，外部传入的，根据谁创建谁销毁原则，本类无需释放。
             common::MemPool        *m_pMemPool = nullptr;
             AEventManager          *m_pEventManager = nullptr;
-            MsgCallbackHandler      m_msgCallback;
+            NotifyMessageCallbackHandler      m_msgCallback;
 
             bool                    m_bStopped;
         }; // class NBSocketService

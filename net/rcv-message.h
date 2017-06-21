@@ -15,10 +15,9 @@ namespace netty {
          */
         class RcvMessage : public Message {
         public:
-            RcvMessage(common::MemPoolObject *refMpo, common::MemPool *mp, Message::Header h, common::Buffer *buffer, NettyMsgCode rc) : Message(mp) {
+            RcvMessage(common::MemPoolObject *refMpo, common::MemPool *mp, Message::Header h, common::Buffer *buffer) : Message(mp) {
                 m_header = h;
                 m_pBuffer = buffer;
-                m_rc = rc;
                 m_refMpo = refMpo;
             }
 
@@ -40,38 +39,9 @@ namespace netty {
                 return m_pBuffer;
             }
 
-            /**
-             * 获取消息码。
-             * @return
-             */
-            inline NettyMsgCode GetMessageCode() {
-                return m_rc;
-            }
-
         private:
             common::Buffer             *m_pBuffer;
-            NettyMsgCode                m_rc;
             common::MemPoolObject      *m_refMpo;
-        };
-
-        class RcvMessageRef {
-        public:
-            RcvMessageRef(RcvMessage* rm, std::function<void(RcvMessage*)> releaseHandle)
-                    : m_ref(rm) {
-                m_releaseHandle = releaseHandle;
-            }
-            ~RcvMessageRef() {
-                if (m_releaseHandle) {
-                    m_releaseHandle(m_ref);
-                    m_ref = nullptr;
-                }
-            }
-            inline const RcvMessage* GetContent() const {
-                return m_ref;
-            }
-        private:
-            RcvMessage                      *m_ref;
-            std::function<void(RcvMessage*)> m_releaseHandle;
         };
     } // namespace net
 } // namespace netty

@@ -10,7 +10,7 @@ namespace netty {
     namespace net {
         ISocketService *
         SocketServiceFactory::CreateService(std::shared_ptr<net_local_info_t> nlt,
-                                            common::MemPool *memPool, MsgCallbackHandler msgCallbackHandler,
+                                            common::MemPool *memPool, NotifyMessageCallbackHandler msgCallbackHandler,
                                             INetStackWorkerManager *cp) {
 #ifdef __linux__
             return new NBSocketService(nlt, cp, memPool, msgCallbackHandler);

@@ -13,13 +13,6 @@
 
 namespace netty {
     namespace net {
-        enum class NettyMsgCode {
-            OK           = 0,
-            ErrLocal,
-            ErrTimeout,
-            ErrPeer
-        };
-
         enum class NonBlockingEventModel {
             DPDK   = 0,
             Posix

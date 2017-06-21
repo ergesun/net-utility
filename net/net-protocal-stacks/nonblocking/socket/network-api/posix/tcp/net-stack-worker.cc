@@ -38,14 +38,15 @@
             }                                                                                               \
         }
 
-#define CheckPayload()                                                                                      \
-        if (m_payloadBuffer->AvailableLength() == m_header.len) {                                           \
-            m_rcvState = NetWorkerState::StartToRcvHeader;                                                  \
-            auto rcvMessage = get_new_rcv_message(m_pMemPool, m_header, m_payloadBuffer, NettyMsgCode::OK); \
-            HandleMessage(rcvMessage);                                                                      \
-        } else {                                                                                            \
-            m_rcvState = NetWorkerState::RcvingPayload;                                                     \
-            interrupt = true;                                                                               \
+#define CheckPayload()                                                                                              \
+        if (m_payloadBuffer->AvailableLength() == m_header.len) {                                                   \
+            m_rcvState = NetWorkerState::StartToRcvHeader;                                                          \
+            auto rcvMessage = get_new_rcv_message(m_pMemPool, m_header, m_payloadBuffer);                           \
+            auto mnm = new MessageNotifyMessage(MessageNotifyMessageCode::OK, "", rcvMessage, s_release_rm_handle); \
+            HandleMessage(mnm);                                                                                     \
+        } else {                                                                                                    \
+            m_rcvState = NetWorkerState::RcvingPayload;                                                             \
+            interrupt = true;                                                                                       \
         }
 
 #define ProcessAfterRcvPayload()                                                                            \
@@ -64,7 +65,7 @@
 namespace netty {
     namespace net {
         PosixTcpNetStackWorker::PosixTcpNetStackWorker(AFileEventHandler *eventHandler, common::MemPool *memPool, PosixTcpClientSocket *socket,
-                                                       MsgCallbackHandler msgCallbackHandler)
+                                                       NotifyMessageCallbackHandler msgCallbackHandler)
             : ANetStackMessageWorker(eventHandler, memPool, msgCallbackHandler), m_pSocket(socket) {}
 
         PosixTcpNetStackWorker::~PosixTcpNetStackWorker() {

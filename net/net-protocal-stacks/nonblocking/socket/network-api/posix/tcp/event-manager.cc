@@ -13,7 +13,7 @@ namespace netty {
     namespace net {
         PosixTcpEventManager::PosixTcpEventManager(net_addr_t *nat, common::MemPool *memPool, uint32_t maxEvents,
                                                    uint32_t connWorkersCnt, ConnectHandler connectHandler,
-                                                   FinishHandler finishHandler, MsgCallbackHandler msgCallbackHandler)  :
+                                                   FinishHandler finishHandler, NotifyMessageCallbackHandler msgCallbackHandler)  :
             AEventManager(memPool, maxEvents), m_pNat(nat), m_iConnWorkersCnt(connWorkersCnt) {
             m_onConnect = connectHandler;
             m_onFinish = finishHandler;

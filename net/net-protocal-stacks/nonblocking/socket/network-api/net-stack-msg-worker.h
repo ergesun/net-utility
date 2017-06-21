@@ -12,7 +12,7 @@
 #include "../../../../../common/blocking-queue.h"
 
 #include "../../../../snd-message.h"
-#include "../../../../msg-callback.h"
+#include "../../../../notify-message.h"
 
 namespace netty {
     namespace common {
@@ -41,7 +41,7 @@ namespace netty {
              *
              * @param maxCacheMessageCnt 消息缓冲队列的最大消息个数。0为无限制。
              */
-            ANetStackMessageWorker(AFileEventHandler *eventHandler, common::MemPool *memPool, MsgCallbackHandler msgCallbackHandler, uint32_t maxCacheMessageCnt = 0);
+            ANetStackMessageWorker(AFileEventHandler *eventHandler, common::MemPool *memPool, NotifyMessageCallbackHandler msgCallbackHandler, uint32_t maxCacheMessageCnt = 0);
             virtual ~ANetStackMessageWorker();
 
             /**
@@ -49,7 +49,7 @@ namespace netty {
              */
             bool SendMessage(SndMessage *m);
 
-            void HandleMessage(RcvMessage *m);
+            void HandleMessage(NotifyMessage *m);
 
             /**
              * 错误: 返回false(无论是[socket错误或对端关闭]还是[codec校验错误])
@@ -69,7 +69,8 @@ namespace netty {
             }
 
         protected:
-            static RcvMessage* get_new_rcv_message(common::MemPool *mp, Message::Header h, common::Buffer *buffer, NettyMsgCode rc);
+            static std::function<void(RcvMessage*)> s_release_rm_handle;
+            static RcvMessage* get_new_rcv_message(common::MemPool *mp, Message::Header h, common::Buffer *buffer);
             static void release_rcv_message(RcvMessage *rm);
 
         protected:
@@ -77,7 +78,7 @@ namespace netty {
             common::Buffer                     *m_pHeaderBuffer;
             common::BlockingQueue<SndMessage*> *m_bqMessages;
             AFileEventHandler                  *m_pEventHandler;
-            MsgCallbackHandler                  m_msgCallback;
+            NotifyMessageCallbackHandler        m_msgCallback;
         };
     } // namespace net
 } // namespace netty

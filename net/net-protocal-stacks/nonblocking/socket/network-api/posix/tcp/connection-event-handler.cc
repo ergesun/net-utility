@@ -9,7 +9,7 @@ namespace netty {
     namespace net {
         PosixTcpConnectionEventHandler::PosixTcpConnectionEventHandler(net_addr_t &peerAddr, int sfd,
                                                                        common::MemPool *memPool,
-                                                                       MsgCallbackHandler msgCallbackHandler) {
+                                                                       NotifyMessageCallbackHandler msgCallbackHandler) {
             m_pClientSocket = new PosixTcpClientSocket(peerAddr, sfd);
             SetSocketDescriptor(m_pClientSocket);
 

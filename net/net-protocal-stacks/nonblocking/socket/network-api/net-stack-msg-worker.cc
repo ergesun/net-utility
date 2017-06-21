@@ -15,8 +15,10 @@
 
 namespace netty {
     namespace net {
+        std::function<void(RcvMessage*)> ANetStackMessageWorker::s_release_rm_handle = std::bind(&ANetStackMessageWorker::release_rcv_message,
+                                                                                                 std::placeholders::_1);
         ANetStackMessageWorker::ANetStackMessageWorker(AFileEventHandler *eventHandler, common::MemPool *memPool,
-                                                       MsgCallbackHandler msgCallbackHandler, uint32_t maxCacheMessageCnt) {
+                                                       NotifyMessageCallbackHandler msgCallbackHandler, uint32_t maxCacheMessageCnt) {
             m_pEventHandler = eventHandler;
             m_pMemPool = memPool;
             m_bqMessages = new common::BlockingQueue<SndMessage*>(maxCacheMessageCnt);
@@ -39,22 +41,18 @@ namespace netty {
             }
         }
 
-        void ANetStackMessageWorker::HandleMessage(RcvMessage *m) {
+        void ANetStackMessageWorker::HandleMessage(NotifyMessage *m) {
             // TODO(sunchao): 增加异步派发的逻辑？目前的话，按照设计思想，user应该自己在handler回调异步处理消息，不可以阻塞网络服务的IO线程。
-            static auto release_rm_handle = [](RcvMessage *rm) -> void {
-                release_rcv_message(rm);
-            };
-            auto rmRef = new RcvMessageRef(m, release_rm_handle);
-            auto ssp_rmr = std::shared_ptr<RcvMessageRef>(rmRef);
+            auto ssp_rmr = std::shared_ptr<NotifyMessage>(m);
             if (m_msgCallback) {
                 m_msgCallback(ssp_rmr);
             }
         }
 
         RcvMessage * ANetStackMessageWorker::get_new_rcv_message(common::MemPool *mp, Message::Header h,
-                                                                 common::Buffer *buffer, NettyMsgCode rc) {
+                                                                 common::Buffer *buffer) {
             auto rmMpo = mp->Get(sizeof(RcvMessage));
-            auto rcvMessage = new(rmMpo->Pointer()) RcvMessage(rmMpo, mp, h, buffer, rc);
+            auto rcvMessage = new(rmMpo->Pointer()) RcvMessage(rmMpo, mp, h, buffer);
             return rcvMessage;
         }
 
