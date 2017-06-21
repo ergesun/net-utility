@@ -18,12 +18,12 @@ namespace netty {
         };
 
         enum class ServerNotifyMessageCode {
-            Ok    = 0,
+            OK    = 0,
             Error
         };
 
         enum class WorkerNotifyMessageCode {
-            Ok    = 0,
+            OK    = 0,
             ClosedByPeer,
             Error
         };

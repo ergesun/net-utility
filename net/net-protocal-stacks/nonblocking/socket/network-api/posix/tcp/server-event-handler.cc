@@ -18,9 +18,15 @@ namespace netty {
                                                                NotifyMessageCallbackHandler msgCallbackHandler) {
             // TODO(sunchao): backlog改成可配置？
             m_pSrvSocket = new PosixTcpServerSocket(nat, 512);
-            m_pSrvSocket->Socket();
-            m_pSrvSocket->Bind();
-            m_pSrvSocket->Listen();
+            if (!m_pSrvSocket->Socket()) {
+                throw std::runtime_error("socket err!");
+            }
+            if (!m_pSrvSocket->Bind()) {
+                throw std::runtime_error("bind err!");
+            }
+            if (!m_pSrvSocket->Listen()) {
+                throw std::runtime_error("listen err!");
+            }
             SetSocketDescriptor(m_pSrvSocket);
             SetOwnWorker(ew);
             m_onConnect = onConnect;
@@ -48,6 +54,8 @@ namespace netty {
                     } else if (EINTR == err || ECONNABORTED == err) {
                         continue;
                     } else {
+                        auto snm = new ServerNotifyMessage(ServerNotifyMessageCode::Error, "broken server fd, accept err!");
+                        handle_message(snm);
                         std::cerr << __func__ << ": accept errno = " << err << ", msg = " << strerror(err) << std::endl;
                         return false;
                     }
@@ -77,6 +85,13 @@ namespace netty {
 
         ANetStackMessageWorker *PosixTcpServerEventHandler::GetStackMsgWorker() {
             throw std::runtime_error("Not support!");
+        }
+
+        inline void PosixTcpServerEventHandler::handle_message(NotifyMessage *nm) {
+            if (m_msgCallbackHandler) {
+                std::shared_ptr<NotifyMessage> ssp(nm);
+                m_msgCallbackHandler(ssp);
+            }
         }
     } // namespace net
 } // namespace netty

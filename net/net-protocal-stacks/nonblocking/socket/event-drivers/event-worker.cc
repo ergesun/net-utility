@@ -12,7 +12,7 @@
 namespace netty {
     namespace net {
         EventWorker::EventWorker(uint32_t maxEvents, NonBlockingEventModel m) {
-            m_vEpollEvents.resize(maxEvents);
+            m_vDriverInternalEvents.resize(maxEvents);
             m_pEventDriver = EventDriverFactory::GetNewDriver(m);
             m_pEventDriver->Init(maxEvents);
             int fds[2];
@@ -43,7 +43,6 @@ namespace netty {
         }
 
         EventWorker::~EventWorker() {
-            m_pEventDriver->DeleteHandler(m_pLocalReadEventHandler);
             DELETE_PTR(m_pEventDriver);
             DELETE_PTR(m_pLocalReadEventHandler);
         }

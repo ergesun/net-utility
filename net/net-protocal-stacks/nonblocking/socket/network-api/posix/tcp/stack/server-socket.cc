@@ -23,15 +23,30 @@ namespace netty {
             serv_addr.sin_port = htons(m_local_addr.port);
 
             // 讲socket fd绑定到ip:port
-            return 0 == bind(m_fd, (sockaddr *) &serv_addr, sizeof(serv_addr));
+            auto rc = (0 == bind(m_fd, (sockaddr *) &serv_addr, sizeof(serv_addr)));
+            if (!rc) {
+                fprintf(stderr, "Error bind %d - %s\n", errno, strerror(errno));
+            }
+
+            return rc;
         }
 
         bool PosixTcpServerSocket::Listen() {
-            return 0 == listen(m_fd, m_max_listen_conns);
+            auto rc = (0 == listen(m_fd, m_max_listen_conns));
+            if (!rc) {
+                fprintf(stderr, "Error listen %d - %s\n", errno, strerror(errno));
+            }
+
+            return rc;
         }
 
         bool PosixTcpServerSocket::SetPortReuse() {
-            return 0 == setsockopt(m_fd, SOL_SOCKET, SO_REUSEPORT, &m_local_addr.port, sizeof(int));
+            auto rc = (0 == setsockopt(m_fd, SOL_SOCKET, SO_REUSEPORT, &m_local_addr.port, sizeof(int)));
+            if (!rc) {
+                fprintf(stderr, "Error SetPortReuse %d - %s\n", errno, strerror(errno));
+            }
+
+            return rc;
         }
 
         int PosixTcpServerSocket::Accept4(__SOCKADDR_ARG __addr, socklen_t *__addr_len, int __flags) {

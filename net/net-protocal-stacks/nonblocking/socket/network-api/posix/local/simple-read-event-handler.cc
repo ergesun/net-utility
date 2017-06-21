@@ -4,6 +4,8 @@
  */
 
 #include <iostream>
+#include <stdexcept>
+
 #include "simple-read-event-handler.h"
 
 namespace netty {

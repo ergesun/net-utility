@@ -24,6 +24,7 @@ namespace netty {
         bool PosixTcpConnectionSocket::Socket() {
             m_fd = socket(AF_INET, SOCK_STREAM, 0);
             if (-1 == m_fd) {
+                fprintf(stderr, "Error socket %d - %s\n", errno, strerror(errno));
                 return -1;
             } else {
                 return 0;

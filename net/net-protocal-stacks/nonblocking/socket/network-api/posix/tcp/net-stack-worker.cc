@@ -176,6 +176,7 @@ namespace netty {
                     SndMessage *sm;
                     if (m_bqMessages->TryPop(sm)) {
                         m_pSendingBuffer = sm->Encode();
+                        DELETE_PTR(sm);
                     } else {
                         interrupt = true;
                     }

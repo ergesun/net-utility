@@ -9,9 +9,9 @@
 #include "../../../../rcv-message.h"
 
 #include "abstract-file-event-handler.h"
+#include "../../socket/event-drivers/event-worker.h"
 
 #include "net-stack-msg-worker.h"
-
 
 namespace netty {
     namespace net {
@@ -29,16 +29,31 @@ namespace netty {
         }
 
         ANetStackMessageWorker::~ANetStackMessageWorker() {
-            m_bqMessages->Clear();
+            SndMessage *sm = nullptr;
+            while (m_bqMessages->TryPop(sm)) {
+                DELETE_PTR(sm);
+            }
+
             DELETE_PTR(m_bqMessages);
             DELETE_PTR(m_pHeaderBuffer);
         }
 
         bool ANetStackMessageWorker::SendMessage(SndMessage *m) {
-            auto ret = m_bqMessages->TryPush(m);
-            if (!ret) {
-                return ret;
+            auto previousSize = m_bqMessages->Size();
+            auto rc = m_bqMessages->TryPush(m);
+            if (rc && 0 == previousSize) {
+                // 我们无法保证事件管理器会绝对有写事件。比如事件管理器是epoll且为边缘触发，如果没有读事件，并且发送缓冲区未满，
+                // 那么之后epoll是不会返回写事件的，那么这新加入的数据就无法发送出去了，所以此处需要唤醒epoll并添加外部事件。
+                auto ew = m_pEventHandler->GetOwnWorker();
+                NetEvent writeEvent = {
+                    .eh = m_pEventHandler,
+                    .mask = EVENT_WRITE
+                };
+                ew->AddExternalEvent(writeEvent);
+                ew->Wakeup();
             }
+
+            return rc;
         }
 
         void ANetStackMessageWorker::HandleMessage(NotifyMessage *m) {

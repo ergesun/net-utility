@@ -32,7 +32,7 @@ namespace netty {
             }
 
         protected:
-            int               m_fd;
+            int               m_fd = -1;
             net_peer_info_t   m_peer;
         };
     }

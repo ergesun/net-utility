@@ -12,6 +12,7 @@ namespace netty {
     namespace net {
         class GCC_INTERNAL EpollEventDriver : public IEventDriver {
         public:
+            ~EpollEventDriver();
             /**
              * nevent在kernel 2.6.8之后是被忽略的，参考man 2 epoll_create
              * @param max_events

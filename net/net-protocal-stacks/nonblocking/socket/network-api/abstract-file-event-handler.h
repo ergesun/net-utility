@@ -9,11 +9,11 @@
 #include "../../ievent-handler.h"
 #include "file-descriptor.h"
 #include "../../../../../common/common-def.h"
-#include "net-stack-msg-worker.h"
 
 namespace netty {
     namespace net {
         class EventWorker;
+        class ANetStackMessageWorker;
         class AFileEventHandler : public IEventHandler {
         public:
             AFileEventHandler() = default;

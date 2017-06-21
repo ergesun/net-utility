@@ -13,6 +13,11 @@
 
 namespace netty {
     namespace net {
+        EpollEventDriver::~EpollEventDriver() {
+            close(m_epfd);
+            FREE_PTR(m_events);
+        }
+
         int EpollEventDriver::Init(int max_events) {
             assert(max_events > 0);
             m_max_events = max_events;

@@ -12,6 +12,7 @@
 #include "stack/server-socket.h"
 #include "../../../event-drivers/ievent-driver.h"
 #include "../../abstract-event-manager.h"
+#include "../../../../../../notify-message.h"
 
 namespace netty {
     namespace common {
@@ -29,6 +30,9 @@ namespace netty {
             bool HandleWriteEvent() override;
 
             ANetStackMessageWorker *GetStackMsgWorker() override;
+
+        private:
+            inline void handle_message(NotifyMessage* nm);
 
         private:
             PosixTcpServerSocket   *m_pSrvSocket;

@@ -7,23 +7,29 @@
 #define NET_CORE_NB_SOCKET_ED_EVENT_WORKER_H
 
 #include <set>
+#include <mutex>
+#include <list>
+
 #include "ievent-driver.h"
 #include "../../../../common-def.h"
 #include "../../../../../common/spin-lock.h"
 
 namespace netty {
     namespace net {
+        /**
+         * 事件管理器的封装。需要通过GetInternalEvent和GetExternalEvents两个函数才能获取所有事件。
+         */
         class EventWorker {
         public:
             EventWorker(uint32_t maxEvents, NonBlockingEventModel m);
             ~EventWorker();
 
             inline std::vector<NetEvent>* GetEventsContainer() {
-                return &m_vEpollEvents;
+                return &m_vDriverInternalEvents;
             }
 
-            inline IEventDriver* GetDriver() {
-                return m_pEventDriver;
+            inline int32_t GetInternalEvent(std::vector<NetEvent> *events, struct timeval *tp) {
+                return m_pEventDriver->EventWait(events, tp);
             }
 
             inline int32_t AddEvent(AFileEventHandler *socketEventHandler, int32_t cur_mask, int32_t mask) {
@@ -51,13 +57,13 @@ namespace netty {
 
             inline void AddExternalEvent(NetEvent ne) {
                 common::SpinLock l(&m_slEE);
-                m_lExternalEvents.push_back(ne);
+                m_lDriverExternalEvents.push_back(ne);
             }
 
             inline std::list<NetEvent> GetExternalEvents() {
                 common::SpinLock l(&m_slEE);
                 std::list<NetEvent> tmp;
-                tmp.swap(m_lExternalEvents);
+                tmp.swap(m_lDriverExternalEvents);
 
                 return std::move(tmp);
             }
@@ -65,12 +71,12 @@ namespace netty {
             void Wakeup();
 
         private:
-            std::vector<NetEvent>            m_vEpollEvents;
+            std::vector<NetEvent>            m_vDriverInternalEvents;
             IEventDriver                    *m_pEventDriver;
             common::spin_lock_t              m_slDriver = UNLOCKED;
 
             common::spin_lock_t              m_slEE = UNLOCKED;
-            std::list<NetEvent>              m_lExternalEvents;
+            std::list<NetEvent>              m_lDriverExternalEvents;
             int                              m_notifySendFd;
             int                              m_notifyRecvFd;
             AFileEventHandler               *m_pLocalReadEventHandler;

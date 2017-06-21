@@ -35,8 +35,7 @@ namespace netty {
                 m_pServerEventHandler = new PosixTcpServerEventHandler(ew, m_pNat,
                                                                        std::bind(&PosixTcpEventManager::on_connect, this, _1),
                                                                        m_pMemPool, m_msgCallback);
-                // 不需要lock，因为正常只有主线程会add/delete一次
-                ew->GetDriver()->AddEvent(m_pServerEventHandler, EVENT_NONE, EVENT_READ);
+                ew->AddEvent(m_pServerEventHandler, EVENT_NONE, EVENT_READ);
                 m_pListenWorkerEventLoopCtx.second = ew;
                 m_pListenWorkerEventLoopCtx.first = new std::thread(std::bind(&PosixTcpEventManager::worker_loop, this, ew));
             }
@@ -53,7 +52,6 @@ namespace netty {
             m_bStopped = true;
             // 释放listen的worker及其相关资源
             auto listenEW = m_pListenWorkerEventLoopCtx.second;
-            listenEW->GetDriver()->DeleteHandler(m_pServerEventHandler);
             DELETE_PTR(m_pServerEventHandler);
             DELETE_PTR(listenEW);
             m_pListenWorkerEventLoopCtx.first->join();
@@ -86,11 +84,10 @@ namespace netty {
         }
 
         void PosixTcpEventManager::worker_loop(EventWorker *ew) {
-            auto eventDriver = ew->GetDriver();
             auto events = ew->GetEventsContainer();
             memory_barrier(); // 或者给m_bStopped加个volatile关键字
             while (!m_bStopped) {
-                auto nevents = eventDriver->EventWait(events, nullptr);
+                auto nevents = ew->GetInternalEvent(events, nullptr);
                 if (nevents > 0) {
                     for (int i = 0; i < nevents; ++i) {
                         process_event(&(*events)[i]);
