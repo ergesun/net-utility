@@ -7,16 +7,16 @@
 
 namespace netty {
     namespace net {
-        AFileEventHandler *UniqueWorkerManager::GetWorkerEventHandler(net_peer_info_t &npt) {
+        AFileEventHandler *UniqueWorkerManager::GetWorkerEventHandler(net_peer_info_t npt) {
             common::SpinLock l(&m_sl);
             return nullptr;
         }
 
-        bool UniqueWorkerManager::PutWorkerEventHandler(net_peer_info_t npt, AFileEventHandler *workerEventHandler) {
+        bool UniqueWorkerManager::PutWorkerEventHandler(AFileEventHandler *workerEventHandler) {
             common::SpinLock l(&m_sl);
         }
 
-        void UniqueWorkerManager::ReleaseWorkerEventHandler(AFileEventHandler *workerEventHandler) {
+        AFileEventHandler* UniqueWorkerManager::RemoveWorkerEventHandler(net_peer_info_t npt) {
             common::SpinLock l(&m_sl);
         }
 

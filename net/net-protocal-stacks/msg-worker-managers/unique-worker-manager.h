@@ -25,16 +25,21 @@ namespace netty {
              * @param npt
              * @return
              */
-            AFileEventHandler *GetWorkerEventHandler(net_peer_info_t &npt) override;
+            AFileEventHandler *GetWorkerEventHandler(net_peer_info_t npt) override;
 
             /**
              * 放入一个worker。
              * 注意：当前的连接管理策略是两点之间同一个连接，并且保留最早的连接，新的put会失败。
              * @param workerEventHandler
              */
-            bool PutWorkerEventHandler(net_peer_info_t npt, AFileEventHandler *workerEventHandler) override;
+            bool PutWorkerEventHandler(AFileEventHandler *workerEventHandler) override;
 
-            void ReleaseWorkerEventHandler(AFileEventHandler *workerEventHandler) override;
+            /**
+             * 移除一个worker。
+             * @param workerEventHandler
+             * @return 被移除的worker。
+             */
+            AFileEventHandler* RemoveWorkerEventHandler(net_peer_info_t npt) override;
 
         private:
             AFileEventHandler *lookup_worker(net_peer_info_t &npt);

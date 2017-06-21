@@ -20,9 +20,8 @@ namespace netty {
         class GCC_INTERNAL PosixTcpConnectionSocket : public FileDescriptor {
         public:
             PosixTcpConnectionSocket() = default;
-            PosixTcpConnectionSocket(net_addr_t peerAddr, int sfd) {
+            PosixTcpConnectionSocket(net_addr_t peerAddr) {
                 m_peer = net_peer_info_t(peerAddr, SocketProtocal::Tcp);
-                m_fd = sfd;
             }
 
             virtual ~PosixTcpConnectionSocket() {}

@@ -35,7 +35,7 @@ namespace netty {
              */
             NBSocketService(std::shared_ptr<net_local_info_t> nlt, INetStackWorkerManager *cp, common::MemPool *memPool,
                             NotifyMessageCallbackHandler msgCallbackHandler) :
-                ASocketService(nlt), m_netStackWorkerManager(cp), m_pMemPool(memPool), m_bStopped(false) {
+                ASocketService(nlt), m_pNetStackWorkerManager(cp), m_pMemPool(memPool), m_bStopped(false) {
                 assert(memPool);
                 m_msgCallback = msgCallbackHandler;
             }
@@ -61,7 +61,7 @@ namespace netty {
             void on_finish(AFileEventHandler *handler);
 
         private:
-            INetStackWorkerManager *m_netStackWorkerManager = nullptr;
+            INetStackWorkerManager *m_pNetStackWorkerManager = nullptr;
             // 关联关系，外部传入的，根据谁创建谁销毁原则，本类无需释放。
             common::MemPool        *m_pMemPool = nullptr;
             AEventManager          *m_pEventManager = nullptr;
