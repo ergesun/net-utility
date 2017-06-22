@@ -12,6 +12,7 @@
 #include "thread-pool-test-case.h"
 #include "timer-test-case.h"
 #include "mem-pool-test-case.h"
+#include "tcp/client/tcp-client-test-case.h"
 
 using namespace netty::common;
 using namespace netty::net;
@@ -19,9 +20,11 @@ using namespace netty::net;
 using namespace netty::test;
 
 int main() {
-    ThreadPoolTest::Run();
-    MemPoolTest::Run();
-    TimerTest::Run();
+//    ThreadPoolTest::Run();
+//    MemPoolTest::Run();
+//    TimerTest::Run();
+
+    TcpClientTest::Run();
 
     getchar();
 

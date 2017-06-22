@@ -70,6 +70,10 @@ namespace netty {
                 return m_header.id;
             }
 
+            inline net_peer_info_t GetPeerInfo() {
+                return m_peerInfo;
+            }
+
             /**
              * 可能你需要根据这个来设计自己的payload的大小以对齐或如何，当然很可能你不在意，那就无需关注这个功能。
              * @return
@@ -86,9 +90,9 @@ namespace netty {
             static common::Buffer* PutBuffer(common::Buffer *buffer);
 
         protected:
-
             Header              m_header;
             common::MemPool    *m_pMemPool;
+            net_peer_info_t     m_peerInfo;
 
         private:
             static common::spin_lock_t              s_freeBufferLock;

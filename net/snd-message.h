@@ -15,18 +15,14 @@ namespace netty {
             /**
              * 一旦发送，则SndMessage的所有权便属于了框架，user无需再管理此SndMessage。生命周期由框架控制。
              * @param mp
-             * @param socketInfo 标识所走的协议以及本地socket信息
+             * @param peerInfo 标识所走的协议以及本地socket信息
              * @param cb 回复消息回调函数。当前是IO线程同步回调，设计上要求回调函数快速执行、非阻塞。
              * @param cbCtx 回调时带回的ctx
              */
-            SndMessage(common::MemPool *mp, net_peer_info_t socketInfo);
+            SndMessage(common::MemPool *mp, net_peer_info_t peerInfo);
 
         public:
             common::Buffer* Encode() override final;
-
-            inline net_peer_info_t GetSocketInfo() {
-                return m_socketInfo;
-            }
 
         protected:
             /**
@@ -47,8 +43,6 @@ namespace netty {
             static Id get_new_id();
 
         private:
-            net_peer_info_t                         m_socketInfo;
-
             static common::spin_lock_t              s_idLock;
             static Id                               s_lastId;
         };

@@ -14,9 +14,10 @@ namespace netty {
         common::spin_lock_t SndMessage::s_idLock = UNLOCKED;
         Message::Id SndMessage::s_lastId = Id(0, 0);
 
-        SndMessage::SndMessage(common::MemPool *mp, net_peer_info_t socketInfo) :
-            Message(mp), m_socketInfo(socketInfo) {
+        SndMessage::SndMessage(common::MemPool *mp, net_peer_info_t peerInfo) :
+            Message(mp) {
             m_header.id = get_new_id();
+            m_peerInfo = peerInfo;
         }
 
         common::Buffer* SndMessage::Encode() {

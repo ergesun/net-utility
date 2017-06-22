@@ -95,12 +95,12 @@ namespace netty {
         }
 
         bool NBSocketService::SendMessage(SndMessage *m) {
-            if (SocketProtocal::Tcp != m->GetSocketInfo().sp) {
+            if (SocketProtocal::Tcp != m->GetPeerInfo().sp) {
                 throw std::runtime_error("Not support now!");
             }
 
             bool rc = false;
-            auto peer = m->GetSocketInfo();
+            auto peer = m->GetPeerInfo();
             auto handler = m_pNetStackWorkerManager->GetWorkerEventHandler(peer);
             if (!handler) {
                 if (Connect(peer)) {

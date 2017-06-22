@@ -51,7 +51,6 @@ namespace netty {
             Message::Header          m_header;
             common::Buffer          *m_payloadBuffer = nullptr;
             common::Buffer          *m_pSendingBuffer = nullptr;
-            NotifyMessageCallbackHandler       m_msgCallback;
         };
     } // namespace net
 } // namespace netty
