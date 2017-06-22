@@ -8,7 +8,7 @@
 
 #include <unordered_map>
 
-#include "../inet-msg-worker-manager.h"
+#include "../inet-stack-worker-manager.h"
 #include "../../../common/spin-lock.h"
 
 namespace netty {
@@ -16,7 +16,7 @@ namespace netty {
         /**
          * 两个节点间复用同一连接的管理器。
          */
-        class GCC_INTERNAL UniqueWorkerManager : public INetStackWorkerManager {
+        class UniqueWorkerManager : public INetStackWorkerManager {
         public:
             ~UniqueWorkerManager() {}
 

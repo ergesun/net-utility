@@ -4,16 +4,16 @@
  */
 
 #include "net-protocal-stacks/nonblocking/nb-socket-service.h"
+
 #include "socket-service-factory.h"
 
 namespace netty {
     namespace net {
-        ISocketService *
-        SocketServiceFactory::CreateService(std::shared_ptr<net_local_info_t> nlt,
+        ISocketService* SocketServiceFactory::CreateService(SocketProtocal sp, std::shared_ptr<net_addr_t> nlt,
                                             common::MemPool *memPool, NotifyMessageCallbackHandler msgCallbackHandler,
                                             INetStackWorkerManager *cp) {
 #ifdef __linux__
-            return new NBSocketService(nlt, cp, memPool, msgCallbackHandler);
+            return new NBSocketService(sp, nlt, cp, memPool, msgCallbackHandler);
 #else // xio、poll、etc.
             return nullptr;
 #endif

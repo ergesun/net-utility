@@ -11,15 +11,19 @@
 
 namespace netty {
     namespace net {
-        class GCC_INTERNAL ASocketService : public ISocketService {
+        class ASocketService : public ISocketService {
         public:
-            ASocketService(std::shared_ptr<net_local_info_t> nl) : m_nlt(nl) {}
+            ASocketService(SocketProtocal sp, std::shared_ptr<net_addr_t> sspNat) : m_sp(sp), m_nlt(sspNat) {}
 
         protected:
             /**
+             * service的socket类型。
+             */
+            SocketProtocal              m_sp;
+            /**
              * 本地监听的地址协议信息。
              */
-            std::shared_ptr<net_local_info_t> m_nlt;
+            std::shared_ptr<net_addr_t> m_nlt;
         };
     } // namespace net
 } // namespace netty

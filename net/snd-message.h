@@ -19,12 +19,12 @@ namespace netty {
              * @param cb 回复消息回调函数。当前是IO线程同步回调，设计上要求回调函数快速执行、非阻塞。
              * @param cbCtx 回调时带回的ctx
              */
-            SndMessage(common::MemPool *mp, net_local_info_t socketInfo);
+            SndMessage(common::MemPool *mp, net_peer_info_t socketInfo);
 
         public:
             common::Buffer* Encode() override final;
 
-            inline net_local_info_t GetSocketInfo() {
+            inline net_peer_info_t GetSocketInfo() {
                 return m_socketInfo;
             }
 
@@ -47,7 +47,7 @@ namespace netty {
             static Id get_new_id();
 
         private:
-            net_local_info_t                        m_socketInfo;
+            net_peer_info_t                         m_socketInfo;
 
             static common::spin_lock_t              s_idLock;
             static Id                               s_lastId;

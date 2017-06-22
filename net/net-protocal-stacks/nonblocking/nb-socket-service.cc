@@ -5,13 +5,24 @@
 
 #include "nb-socket-service.h"
 #include "socket/network-api/posix/tcp/server-event-handler.h"
-#include "socket/network-api/posix/tcp/event-manager.h"
+#include "socket/network-api/posix/event-manager.h"
 #include "socket/network-api/posix/tcp/connection-event-handler.h"
+#include "../msg-worker-managers/unique-worker-manager.h"
 
 using namespace std::placeholders;
 
 namespace netty {
     namespace net {
+        NBSocketService::NBSocketService(SocketProtocal sp, std::shared_ptr<net_addr_t> sspNat, INetStackWorkerManager *cp,
+                                         common::MemPool *memPool, NotifyMessageCallbackHandler msgCallbackHandler)  :
+            ASocketService(sp, sspNat), m_pNetStackWorkerManager(cp), m_pMemPool(memPool), m_bStopped(false) {
+            assert(memPool);
+            m_msgCallback = msgCallbackHandler;
+            if (!m_pNetStackWorkerManager) {
+                m_pNetStackWorkerManager = new UniqueWorkerManager();
+            }
+        }
+
         NBSocketService::~NBSocketService() {
             memory_barrier();
             if (!m_bStopped) {
@@ -24,17 +35,11 @@ namespace netty {
 
         bool NBSocketService::Start(NonBlockingEventModel m) {
             m_bStopped = false;
-            if (m_nlt.get()) {
-                if (SocketProtocal::Tcp == m_nlt->sp) {
-                    m_pEventManager = new PosixTcpEventManager(&m_nlt->nat, m_pMemPool, MAX_EVENTS, (uint32_t)(common::CPUS_CNT / 2),
-                                                                std::bind(&NBSocketService::on_connect, this, _1),
-                                                               std::bind(&NBSocketService::on_finish, this, _1),
-                                                                m_msgCallback);
-                    m_pEventManager->Start(m);
-                } else {
-                    throw std::runtime_error("Not support now!");
-                }
-            }
+            m_pEventManager = new PosixEventManager(m_sp, m_nlt, m_pMemPool, MAX_EVENTS, (uint32_t)(common::CPUS_CNT / 2),
+                                                    std::bind(&NBSocketService::on_connect, this, _1),
+                                                    std::bind(&NBSocketService::on_finish, this, _1),
+                                                    m_msgCallback);
+            m_pEventManager->Start(m);
 
             return 0;
         }
@@ -90,6 +95,10 @@ namespace netty {
         }
 
         bool NBSocketService::SendMessage(SndMessage *m) {
+            if (SocketProtocal::Tcp != m->GetSocketInfo().sp) {
+                throw std::runtime_error("Not support now!");
+            }
+
             bool rc = false;
             auto peer = m->GetSocketInfo();
             auto handler = m_pNetStackWorkerManager->GetWorkerEventHandler(peer);

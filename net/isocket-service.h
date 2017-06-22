@@ -15,7 +15,7 @@ namespace netty {
         public:
             virtual ~ISocketService() {}
 
-            virtual bool Start(NonBlockingEventModel m) = 0;
+            virtual bool Start(NonBlockingEventModel m = NonBlockingEventModel::Posix) = 0;
 
             virtual bool Stop() = 0;
 

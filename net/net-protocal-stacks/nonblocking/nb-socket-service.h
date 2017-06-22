@@ -9,7 +9,7 @@
 #include <memory>
 #include <cassert>
 
-#include "../inet-msg-worker-manager.h"
+#include "../inet-stack-worker-manager.h"
 #include "../../abstract-socket-service.h"
 #include "socket/event-drivers/ievent-driver.h"
 #include "../../message.h"
@@ -33,20 +33,17 @@ namespace netty {
              * @param cp  worker的管理策略。
              * @param memPool 内存池。
              */
-            NBSocketService(std::shared_ptr<net_local_info_t> nlt, INetStackWorkerManager *cp, common::MemPool *memPool,
-                            NotifyMessageCallbackHandler msgCallbackHandler) :
-                ASocketService(nlt), m_pNetStackWorkerManager(cp), m_pMemPool(memPool), m_bStopped(false) {
-                assert(memPool);
-                m_msgCallback = msgCallbackHandler;
-            }
+            NBSocketService(SocketProtocal sp, std::shared_ptr<net_addr_t> sspNat, INetStackWorkerManager *cp, common::MemPool *memPool,
+                            NotifyMessageCallbackHandler msgCallbackHandler);
 
             ~NBSocketService();
 
             /**
              * 开启服务。
+             * @param m 模式。
              * @return 成功true,失败false.
              */
-            bool Start(NonBlockingEventModel m) override;
+            bool Start(NonBlockingEventModel m = NonBlockingEventModel::Posix) override;
 
             bool Stop() override;
 
@@ -61,13 +58,13 @@ namespace netty {
             void on_finish(AFileEventHandler *handler);
 
         private:
-            INetStackWorkerManager *m_pNetStackWorkerManager = nullptr;
+            INetStackWorkerManager           *m_pNetStackWorkerManager = nullptr;
             // 关联关系，外部传入的，根据谁创建谁销毁原则，本类无需释放。
-            common::MemPool        *m_pMemPool = nullptr;
-            AEventManager          *m_pEventManager = nullptr;
+            common::MemPool                  *m_pMemPool = nullptr;
+            AEventManager                    *m_pEventManager = nullptr;
             NotifyMessageCallbackHandler      m_msgCallback;
 
-            bool                    m_bStopped;
+            bool                              m_bStopped;
         }; // class NBSocketService
     }  // namespace net
 } // namespace netty

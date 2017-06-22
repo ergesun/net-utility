@@ -24,7 +24,7 @@ add_library(net SHARED
         common-def.h
         net-protocal-stacks/nonblocking/socket/network-api/abstract-event-manager.h
         net-protocal-stacks/nonblocking/ievent-handler.h
-        net-protocal-stacks/inet-msg-worker-manager.h
+        net-protocal-stacks/inet-stack-worker-manager.h
         net-protocal-stacks/nonblocking/socket/event-drivers/ievent-driver.h
         net-protocal-stacks/nonblocking/socket/event-drivers/factory.h
         net-protocal-stacks/nonblocking/socket/network-api/file-descriptor.h

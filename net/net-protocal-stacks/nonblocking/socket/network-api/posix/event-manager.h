@@ -8,12 +8,12 @@
 
 #include <thread>
 
-#include "../../../../../../common-def.h"
+#include "../../../../../common-def.h"
 
-#include "../../abstract-event-manager.h"
-#include "../../../event-drivers/ievent-driver.h"
-#include "../../../event-drivers/event-worker.h"
-#include "../../../../../../../common/spin-lock.h"
+#include "../abstract-event-manager.h"
+#include "../../event-drivers/ievent-driver.h"
+#include "../../event-drivers/event-worker.h"
+#include "../../../../../../common/spin-lock.h"
 
 namespace netty {
     namespace net {
@@ -21,13 +21,13 @@ namespace netty {
         /**
          * socket出错了manager检测到后会释放。
          */
-        class GCC_INTERNAL PosixTcpEventManager : public AEventManager {
+        class PosixEventManager : public AEventManager {
         public:
-            PosixTcpEventManager(net_addr_t *nat, common::MemPool *memPool, uint32_t maxEvents,
+            PosixEventManager(SocketProtocal sp, std::shared_ptr<net_addr_t> sspNat, common::MemPool *memPool, uint32_t maxEvents,
                                  uint32_t connWorkersCnt, ConnectHandler connectHandler, FinishHandler finishHandler,
                                  NotifyMessageCallbackHandler msgCallbackHandler);
 
-            ~PosixTcpEventManager();
+            ~PosixEventManager();
 
             bool Start(NonBlockingEventModel m) override;
             bool Stop() override;
@@ -42,7 +42,8 @@ namespace netty {
         private:
             uint32_t                                           m_iConnWorkersCnt;
             int32_t                                            m_iCurWorkerIdx = -1;
-            net_addr_t                                        *m_pNat;
+            SocketProtocal                                     m_sp;
+            std::shared_ptr<net_addr_t>                        m_sspNat;
             bool                                               m_bStopped = true;
             AFileEventHandler                                 *m_pServerEventHandler = nullptr;
             std::pair<std::thread*, EventWorker*>              m_pListenWorkerEventLoopCtx;
@@ -50,7 +51,7 @@ namespace netty {
             common::spin_lock_t                                m_slSelectEvents = UNLOCKED;
             ConnectHandler                                     m_onConnect;
             FinishHandler                                      m_onFinish;
-            NotifyMessageCallbackHandler                                 m_msgCallback;
+            NotifyMessageCallbackHandler                       m_msgCallback;
         };
     } // namespace net
 } // namespace netty

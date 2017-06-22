@@ -16,7 +16,7 @@ namespace netty {
         /**
          * worker管理器。
          */
-        class GCC_INTERNAL INetStackWorkerManager {
+        class INetStackWorkerManager {
         public:
             virtual ~INetStackWorkerManager() = default;
 
