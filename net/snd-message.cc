@@ -20,6 +20,12 @@ namespace netty {
             m_peerInfo = peerInfo;
         }
 
+        SndMessage::SndMessage(common::MemPool *mp, net_peer_info_t peerInfo, Id id) :
+            Message(mp) {
+            m_header.id = id;
+            m_peerInfo = peerInfo;
+        }
+
         common::Buffer* SndMessage::Encode() {
             auto headerBufferSize = Message::HeaderSize();
             auto deriveBufferSize = GetDerivePayloadLength();

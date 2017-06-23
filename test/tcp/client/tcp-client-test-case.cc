@@ -51,7 +51,8 @@ namespace netty {
                     auto rm = mnm->GetContent();
                     if (rm) {
                         auto respBuf = rm->GetBuffer();
-                        std::cout << "response = "  << respBuf->Pos << "." << std::endl;
+                        std::cout << "response = "  << respBuf->Pos << ", " << "message id is { ts = " << rm->GetId().ts
+                                  << ", seq = " << rm->GetId().seq << "}" << std::endl;
                     }
                     break;
                 }

@@ -66,7 +66,7 @@ namespace netty {
              * 获取消息的唯一id。
              * @return
              */
-            inline Id GetId() {
+            inline Id GetId() const {
                 return m_header.id;
             }
 

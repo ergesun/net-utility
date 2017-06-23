@@ -14,6 +14,7 @@ namespace netty {
         class TestSndMessage : public net::SndMessage {
         public:
             TestSndMessage(common::MemPool *mp, net::net_peer_info_t socketInfo, std::string msg);
+            TestSndMessage(common::MemPool *mp, net::net_peer_info_t socketInfo, net::Message::Id id, std::string msg);
 
         protected:
             uint32_t GetDerivePayloadLength() override;

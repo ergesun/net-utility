@@ -11,6 +11,7 @@
 namespace netty {
     namespace net {
         /**
+         * 注：user无需释放。
          * TODO(sunchao)：考虑也做成回收利用？
          */
         class RcvMessage : public Message {
@@ -37,6 +38,11 @@ namespace netty {
              */
             static bool DecodeMsgHeader(common::Buffer *buffer, Header *header);
 
+            /**
+             * 获取消息内容。
+             * 注: user无需释放。
+             * @return
+             */
             inline const common::Buffer* GetBuffer() const {
                 return m_pBuffer;
             }

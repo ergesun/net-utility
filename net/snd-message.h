@@ -14,12 +14,19 @@ namespace netty {
         public:
             /**
              * 一旦发送，则SndMessage的所有权便属于了框架，user无需再管理此SndMessage。生命周期由框架控制。
+             * 调用此构造一般用与发送新消息，其内部会自动产生一个id以便回应时进行区分。
              * @param mp
              * @param peerInfo 标识所走的协议以及本地socket信息
-             * @param cb 回复消息回调函数。当前是IO线程同步回调，设计上要求回调函数快速执行、非阻塞。
-             * @param cbCtx 回调时带回的ctx
              */
             SndMessage(common::MemPool *mp, net_peer_info_t peerInfo);
+
+            /**
+             * 一旦发送，则SndMessage的所有权便属于了框架，user无需再管理此SndMessage。生命周期由框架控制。
+             * @param mp
+             * @param peerInfo 标识所走的协议以及本地socket信息
+             * @param id 作为响应时赋予的接收到的消息的id，以便接受者用其分发。
+             */
+            SndMessage(common::MemPool *mp, net_peer_info_t peerInfo, Id id);
 
         public:
             common::Buffer* Encode() override final;
