@@ -24,8 +24,6 @@ namespace netty {
         void TcpClientTest::Run() {
             std::shared_ptr<net::net_addr_t> ssp_npt(nullptr);
             common::MemPool memPool;
-            auto mpo = memPool.Get(21);
-            mpo->Put();
             auto netService = net::SocketServiceFactory::CreateService(net::SocketProtocal::Tcp, ssp_npt, &memPool,
                                                                        std::bind(&TcpClientTest::recv_msg,
                                                                                  std::placeholders::_1));

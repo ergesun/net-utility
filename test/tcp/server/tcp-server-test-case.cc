@@ -22,8 +22,6 @@ namespace netty {
             auto nat = new net::net_addr_t("127.0.0.1", 2210);
             std::shared_ptr<net::net_addr_t> ssp_npt(nat);
             m_mp = new common::MemPool();
-            auto mpo = m_mp->Get(21);
-            mpo->Put();
             s_ss = net::SocketServiceFactory::CreateService(net::SocketProtocal::Tcp, ssp_npt, m_mp,
                                                                        std::bind(&TcpServerTest::recv_msg,
                                                                                  std::placeholders::_1));

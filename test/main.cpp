@@ -20,6 +20,9 @@ using namespace netty::net;
 using namespace netty::test;
 
 int main() {
+    std::string key = "127.0.0.1:2210-1";
+    size_t hashcode;
+    MurmurHash3_x86_32(key.c_str(), (int) (key.length()), 22, &hashcode);
 //    ThreadPoolTest::Run();
 //    MemPoolTest::Run();
 //    TimerTest::Run();

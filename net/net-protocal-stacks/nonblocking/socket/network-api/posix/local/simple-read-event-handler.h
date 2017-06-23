@@ -12,7 +12,7 @@ namespace netty {
     namespace net {
         class GCC_INTERNAL PosixLocalReadEventHandler : public AFileEventHandler {
         public:
-            PosixLocalReadEventHandler(int fd) : m_fd(fd) {}
+            PosixLocalReadEventHandler(int fd);
             ~PosixLocalReadEventHandler();
 
             bool HandleReadEvent() override;

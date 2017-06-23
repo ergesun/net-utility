@@ -25,9 +25,9 @@ namespace netty {
             m_fd = socket(AF_INET, SOCK_STREAM, 0);
             if (-1 == m_fd) {
                 fprintf(stderr, "Error socket %d - %s\n", errno, strerror(errno));
-                return -1;
+                return false;
             } else {
-                return 0;
+                return true;
             }
         }
 
@@ -40,7 +40,6 @@ namespace netty {
             if (!timeout) {
                 if (0 == connect(m_fd, (struct sockaddr *) &sa, sizeof(sa))) {
                     m_connected = true;
-                    common::CommonUtils::SetNonBlocking(m_fd);
 
                     return true;
                 }

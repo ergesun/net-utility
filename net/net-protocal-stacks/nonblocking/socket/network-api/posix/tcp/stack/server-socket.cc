@@ -12,8 +12,6 @@
 namespace netty {
     namespace net {
         bool PosixTcpServerSocket::Bind() {
-            common::CommonUtils::SetNonBlocking(m_fd);
-
             struct sockaddr_in serv_addr;
             bzero(&serv_addr, sizeof(serv_addr));
             // 协议族ipv4

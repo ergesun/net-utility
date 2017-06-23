@@ -14,7 +14,7 @@ namespace netty {
         PosixEventManager::PosixEventManager(SocketProtocal sp, std::shared_ptr<net_addr_t> sspNat, common::MemPool *memPool, uint32_t maxEvents,
                                                    uint32_t connWorkersCnt, ConnectHandler connectHandler,
                                                    FinishHandler finishHandler, NotifyMessageCallbackHandler msgCallbackHandler)  :
-            AEventManager(memPool, maxEvents), m_sspNat(sspNat), m_iConnWorkersCnt(connWorkersCnt) {
+            AEventManager(memPool, maxEvents), m_sp(sp), m_sspNat(sspNat), m_iConnWorkersCnt(connWorkersCnt) {
             m_onConnect = connectHandler;
             m_onFinish = finishHandler;
             m_msgCallback = msgCallbackHandler;
@@ -31,13 +31,15 @@ namespace netty {
         bool PosixEventManager::Start(NonBlockingEventModel m) {
             m_bStopped = false;
             if (SocketProtocal::Tcp == m_sp) {
-                auto ew = new EventWorker(m_iMaxEvents, m);
-                m_pServerEventHandler = new PosixTcpServerEventHandler(ew, m_sspNat.get(),
-                                                                       std::bind(&PosixEventManager::on_connect, this, _1),
-                                                                       m_pMemPool, m_msgCallback);
-                ew->AddEvent(m_pServerEventHandler, EVENT_NONE, EVENT_READ);
-                m_pListenWorkerEventLoopCtx.second = ew;
-                m_pListenWorkerEventLoopCtx.first = new std::thread(std::bind(&PosixEventManager::worker_loop, this, ew));
+                if (m_sspNat.get()) {
+                    auto ew = new EventWorker(m_iMaxEvents, m);
+                    m_pServerEventHandler = new PosixTcpServerEventHandler(ew, m_sspNat.get(),
+                                                                           std::bind(&PosixEventManager::on_connect, this, _1),
+                                                                           m_pMemPool, m_msgCallback);
+                    ew->AddEvent(m_pServerEventHandler, EVENT_NONE, EVENT_READ);
+                    m_pListenWorkerEventLoopCtx.second = ew;
+                    m_pListenWorkerEventLoopCtx.first = new std::thread(std::bind(&PosixEventManager::worker_loop, this, ew));
+                }
 
                 m_vConnsWorkerEventLoopCtxs.resize(m_iConnWorkersCnt);
                 for (int i = 0; i < m_iConnWorkersCnt; ++i) {

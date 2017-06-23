@@ -88,12 +88,16 @@ namespace netty {
 namespace std {
     template<>
     struct hash<netty::net::net_peer_info_t> {
-        size_t operator()(const netty::net::net_peer_info_t &npit) const {
+        uint32_t operator()(const netty::net::net_peer_info_t &npit) const {
             std::stringstream ss;
+
             ss << npit.nat.addr << ":" << npit.nat.port << "-" << (int) (npit.sp);
             auto key = ss.str();
-            size_t hashcode;
+
+            uint32_t hashcode;
+
             MurmurHash3_x86_32(key.c_str(), (int) (key.length()), 22, &hashcode);
+
             return hashcode;
         }
     };

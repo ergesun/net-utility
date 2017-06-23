@@ -183,6 +183,7 @@ namespace netty {
                 }
             }
 
+            return rc;
 #undef Put_Send_Buffer
         }
 

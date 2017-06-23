@@ -29,11 +29,11 @@ namespace netty {
                 return &m_vDriverInternalEvents;
             }
 
-            inline int32_t GetInternalEvent(std::vector<NetEvent> *events, struct timeval *tp) {
+            int32_t GetInternalEvent(std::vector<NetEvent> *events, struct timeval *tp) {
                 return m_pEventDriver->EventWait(events, tp);
             }
 
-            inline int32_t AddEvent(AFileEventHandler *socketEventHandler, int32_t cur_mask, int32_t mask) {
+            int32_t AddEvent(AFileEventHandler *socketEventHandler, int32_t cur_mask, int32_t mask) {
                 common::SpinLock l(&m_slDriver);
                 m_pEventDriver->AddEvent(socketEventHandler, cur_mask, mask);
             }
@@ -46,7 +46,7 @@ namespace netty {
              * @param socketEventHandler
              * @return
              */
-            inline int32_t DeleteHandler(AFileEventHandler *socketEventHandler) {
+            int32_t DeleteHandler(AFileEventHandler *socketEventHandler) {
                 {
                     common::SpinLock l(&m_slDriver);
                     m_pEventDriver->DeleteHandler(socketEventHandler);
@@ -61,19 +61,19 @@ namespace netty {
              * TODO(sunchao): 优化此处删除逻辑的设计。
              * @return
              */
-            inline std::set<AFileEventHandler*> GetPendingDeleteEventHandlers() {
+            std::set<AFileEventHandler*> GetPendingDeleteEventHandlers() {
                 std::unique_lock<std::mutex> l(m_mtxPendingDeleteEHLock);
                 std::set<AFileEventHandler*> tmp;
                 m_pendingDeleteEventHandlers.swap(tmp);
                 return std::move(tmp);
             }
 
-            inline void AddExternalEvent(NetEvent ne) {
+            void AddExternalEvent(NetEvent ne) {
                 common::SpinLock l(&m_slEE);
                 m_lDriverExternalEvents.push_back(ne);
             }
 
-            inline std::list<NetEvent> GetExternalEvents() {
+            std::list<NetEvent> GetExternalEvents() {
                 common::SpinLock l(&m_slEE);
                 std::list<NetEvent> tmp;
                 tmp.swap(m_lDriverExternalEvents);

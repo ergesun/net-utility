@@ -10,6 +10,7 @@
 #include "connection-event-handler.h"
 
 #include "server-event-handler.h"
+#include "../../../../../../../common/common-utils.h"
 
 namespace netty {
     namespace net {
@@ -19,7 +20,14 @@ namespace netty {
             // TODO(sunchao): backlog改成可配置？
             m_pSrvSocket = new PosixTcpServerSocket(nat, 512);
             if (!m_pSrvSocket->Socket()) {
-                throw std::runtime_error("socket err!");
+                throw std::runtime_error("server socket err!");
+            }
+            if (0 != common::CommonUtils::SetNonBlocking(m_pSrvSocket->GetFd())) {
+                close(m_pSrvSocket->GetFd());
+                throw std::runtime_error("set server socket fd non-blocking err!");
+            }
+            if (!m_pSrvSocket->SetAddrReuse(true)) {
+                throw std::runtime_error("server SetAddrReuse err!");
             }
             if (!m_pSrvSocket->Bind()) {
                 throw std::runtime_error("bind err!");

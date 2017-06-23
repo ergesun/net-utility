@@ -117,29 +117,35 @@ namespace netty {
         int EpollEventDriver::EventWait(std::vector<NetEvent> *events, struct timeval *tp) {
             assert(events);
             events->clear();
-            int nevents = epoll_wait(m_epfd, m_events, m_max_events,
-                                     tp ? (int) ((tp->tv_sec * 1000 + tp->tv_usec / 1000)) : -1);
-            if (nevents > 0) {
-                events->reserve((unsigned long) nevents);
-                for (int i = 0; i < nevents; i++) {
-                    int mask = 0;
-                    int revents = m_events[i].events;
-                    if (revents & EPOLLIN) {
-                        mask |= EVENT_READ;
-                    }
-                    if (revents & EPOLLOUT) {
-                        mask |= EVENT_WRITE;
-                    }
-                    if (revents & EPOLLERR || revents & EPOLLHUP) {
-                        mask |= EVENT_READ;
-                    }
+            while (true) {
+                int nevents = epoll_wait(m_epfd, m_events, m_max_events,
+                                         tp ? (int) ((tp->tv_sec * 1000 + tp->tv_usec / 1000)) : -1);
+                if (nevents > 0) {
+                    events->reserve((unsigned long) nevents);
+                    for (int i = 0; i < nevents; i++) {
+                        int mask = 0;
+                        int revents = m_events[i].events;
+                        if (revents & EPOLLIN) {
+                            mask |= EVENT_READ;
+                        }
+                        if (revents & EPOLLOUT) {
+                            mask |= EVENT_WRITE;
+                        }
+                        if (revents & EPOLLERR || revents & EPOLLHUP) {
+                            mask |= EVENT_READ;
+                        }
 
-                    (*events)[i].eh = reinterpret_cast<AFileEventHandler*>(m_events[i].data.ptr);
-                    (*events)[i].mask = mask;
+                        (*events)[i].eh = reinterpret_cast<AFileEventHandler*>(m_events[i].data.ptr);
+                        (*events)[i].mask = mask;
+                    }
                 }
-            }
 
-            return nevents;
+                if (-1 == nevents && EINTR == errno) {
+                    continue;
+                }
+
+                return nevents;
+            }
         }
     } // namespace net
 } // namespace netty

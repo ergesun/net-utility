@@ -14,7 +14,7 @@
 /**
  * 控制目标不导出，即仅库内部可见。
  */
-#define GCC_INTERNAL                   //__attribute__ ((visibility("hidden")))
+#define GCC_INTERNAL                   __attribute__ ((visibility("hidden")))
 
 #define LIKELY(x)                      __builtin_expect(!!(x), 1)
 #define UNLIKELY(x)                    __builtin_expect(!!(x), 0)

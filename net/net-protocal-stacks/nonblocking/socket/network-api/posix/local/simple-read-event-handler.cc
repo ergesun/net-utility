@@ -10,8 +10,16 @@
 
 namespace netty {
     namespace net {
+        PosixLocalReadEventHandler::PosixLocalReadEventHandler(int fd) : m_fd(fd) {
+            net_peer_info_t peerInfo;
+            auto pFd = new FileDescriptor(fd, peerInfo);
+            SetSocketDescriptor(pFd);
+        }
+
         PosixLocalReadEventHandler::~PosixLocalReadEventHandler() {
+            auto fd = GetSocketDescriptor();
             close(m_fd);
+            DELETE_PTR(fd);
         }
 
         bool PosixLocalReadEventHandler::HandleReadEvent() {
