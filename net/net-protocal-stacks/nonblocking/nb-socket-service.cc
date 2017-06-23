@@ -35,7 +35,7 @@ namespace netty {
 
         bool NBSocketService::Start(NonBlockingEventModel m) {
             m_bStopped = false;
-            m_pEventManager = new PosixEventManager(m_sp, m_nlt, m_pMemPool, MAX_EVENTS, /*(uint32_t)(common::CPUS_CNT / 2)*/1,
+            m_pEventManager = new PosixEventManager(m_sp, m_nlt, m_pMemPool, MAX_EVENTS, (uint32_t)(common::CPUS_CNT / 2),
                                                     std::bind(&NBSocketService::on_connect, this, _1),
                                                     std::bind(&NBSocketService::on_finish, this, _1),
                                                     m_msgCallback);
