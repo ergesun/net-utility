@@ -28,6 +28,9 @@ namespace netty {
             Error
         };
 
+        /**
+         * user不需要释放。
+         */
         class NotifyMessage {
         public:
             NotifyMessage(NotifyMessageType type, std::string &&msg) : m_type(type), m_msg(std::move(msg)) {}

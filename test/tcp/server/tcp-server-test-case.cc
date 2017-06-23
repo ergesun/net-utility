@@ -45,9 +45,17 @@ namespace netty {
                     break;
                 }
                 case net::NotifyMessageType::Worker : {
+                    net::WorkerNotifyMessage *wnm = dynamic_cast<net::WorkerNotifyMessage*>(sspNM.get());
+                    if (wnm) {
+                        std::cout << "worker notify message , rc = " << (int)wnm->GetCode() << ", message = " << wnm->What() << std::endl;
+                    }
                     break;
                 }
                 case net::NotifyMessageType::Server: {
+                    net::ServerNotifyMessage *snm = dynamic_cast<net::ServerNotifyMessage*>(sspNM.get());
+                    if (snm) {
+                        std::cout << "server notify message , rc = " << (int)snm->GetCode() << ", message = " << snm->What() << std::endl;
+                    }
                     break;
                 }
             }
