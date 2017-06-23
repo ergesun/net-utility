@@ -75,7 +75,7 @@ namespace netty {
         class MessageNotifyMessage : public NotifyMessage {
         public:
             MessageNotifyMessage(RcvMessage* rm, std::function<void(RcvMessage*)> releaseHandle) :
-                NotifyMessage(NotifyMessageType::Message, "") {}
+                NotifyMessage(NotifyMessageType::Message, ""), m_ref(rm) {}
 
             ~MessageNotifyMessage() {
                 if (m_releaseHandle) {

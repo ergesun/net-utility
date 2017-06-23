@@ -15,10 +15,12 @@ namespace netty {
          */
         class RcvMessage : public Message {
         public:
-            RcvMessage(common::MemPoolObject *refMpo, common::MemPool *mp, Message::Header h, common::Buffer *buffer) : Message(mp) {
+            RcvMessage(common::MemPoolObject *refMpo, common::MemPool *mp, net_peer_info_t peerInfo,
+                       Message::Header h, common::Buffer *buffer) : Message(mp) {
                 m_header = h;
                 m_pBuffer = buffer;
                 m_refMpo = refMpo;
+                m_peerInfo = peerInfo;
             }
 
             ~RcvMessage() {
@@ -35,7 +37,7 @@ namespace netty {
              */
             static bool DecodeMsgHeader(common::Buffer *buffer, Header *header);
 
-            inline const common::Buffer* GetBuffer() {
+            inline const common::Buffer* GetBuffer() const {
                 return m_pBuffer;
             }
 

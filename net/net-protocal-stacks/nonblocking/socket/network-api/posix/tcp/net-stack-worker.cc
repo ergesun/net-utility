@@ -7,6 +7,7 @@
 
 #include "../../../../../../../common/buffer.h"
 #include "../../../../../../rcv-message.h"
+#include "../../abstract-file-event-handler.h"
 
 #include "net-stack-worker.h"
 
@@ -51,7 +52,8 @@
 #define CheckPayload()                                                                                              \
         if (m_payloadBuffer->AvailableLength() == m_header.len) {                                                   \
             m_rcvState = NetWorkerState::StartToRcvHeader;                                                          \
-            auto rcvMessage = get_new_rcv_message(m_pMemPool, m_header, m_payloadBuffer);                           \
+            auto peer = m_pEventHandler->GetSocketDescriptor()->GetPeerInfo();                                      \
+            auto rcvMessage = get_new_rcv_message(m_pMemPool, peer, m_header, m_payloadBuffer);                     \
             auto mnm = new MessageNotifyMessage(rcvMessage, s_release_rm_handle);                                   \
             HandleMessage(mnm);                                                                                     \
         } else {                                                                                                    \

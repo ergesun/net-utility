@@ -70,7 +70,7 @@ namespace netty {
 
         protected:
             static std::function<void(RcvMessage*)> s_release_rm_handle;
-            static RcvMessage* get_new_rcv_message(common::MemPool *mp, Message::Header h, common::Buffer *buffer);
+            static RcvMessage* get_new_rcv_message(common::MemPool *mp, net_peer_info_t peerInfo, Message::Header h, common::Buffer *buffer);
             static void release_rcv_message(RcvMessage *rm);
 
         protected:

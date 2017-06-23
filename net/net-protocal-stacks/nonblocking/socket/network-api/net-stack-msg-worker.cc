@@ -64,10 +64,10 @@ namespace netty {
             }
         }
 
-        RcvMessage * ANetStackMessageWorker::get_new_rcv_message(common::MemPool *mp, Message::Header h,
-                                                                 common::Buffer *buffer) {
+        RcvMessage * ANetStackMessageWorker::get_new_rcv_message(common::MemPool *mp, net_peer_info_t peerInfo,
+                                                                 Message::Header h, common::Buffer *buffer) {
             auto rmMpo = mp->Get(sizeof(RcvMessage));
-            auto rcvMessage = new(rmMpo->Pointer()) RcvMessage(rmMpo, mp, h, buffer);
+            auto rcvMessage = new(rmMpo->Pointer()) RcvMessage(rmMpo, mp, peerInfo, h, buffer);
             return rcvMessage;
         }
 

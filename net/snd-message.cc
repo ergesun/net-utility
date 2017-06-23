@@ -21,7 +21,7 @@ namespace netty {
         }
 
         common::Buffer* SndMessage::Encode() {
-            auto headerBufferSize = sizeof(Header);
+            auto headerBufferSize = Message::HeaderSize();
             auto deriveBufferSize = GetDerivePayloadLength();
             if (deriveBufferSize > MAX_MSG_PAYLOAD_SIZE) {
                 throw std::runtime_error("message payload cannot more than 64MiB");
@@ -37,11 +37,12 @@ namespace netty {
             SndMessage::encode_header(buf, m_header);
             EncodeDerive(buf);
 
+            buf->Pos = buf->Start;
             return buf;
         }
 
         void SndMessage::encode_header(common::Buffer *b, Header &h) {
-            ByteOrderUtils::WriteUInt64(b->Pos, h.magic);
+            ByteOrderUtils::WriteUInt32(b->Pos, h.magic);
             b->Pos += sizeof(h.magic);
             ByteOrderUtils::WriteUInt64(b->Pos, (uint64_t)(h.id.ts));
             b->Pos += sizeof(uint64_t);

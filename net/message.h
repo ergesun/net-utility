@@ -70,16 +70,17 @@ namespace netty {
                 return m_header.id;
             }
 
-            inline net_peer_info_t GetPeerInfo() {
+            inline net_peer_info_t GetPeerInfo() const {
                 return m_peerInfo;
             }
 
             /**
              * 可能你需要根据这个来设计自己的payload的大小以对齐或如何，当然很可能你不在意，那就无需关注这个功能。
+             * 20 = sizeof(magic) + sizeof(id.ts) + sizeof(id.seq) + sizeof(len)
              * @return
              */
             static uint32_t HeaderSize() {
-                return sizeof(Header);
+                return 20;
             }
 
             static common::Buffer* GetNewBuffer();

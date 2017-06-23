@@ -31,7 +31,8 @@ namespace netty {
         void TcpServerTest::recv_msg(std::shared_ptr<net::NotifyMessage> sspNM) {
             switch (sspNM->GetType()) {
                 case net::NotifyMessageType::Message: {
-                    net::RcvMessage *rm = dynamic_cast<net::RcvMessage*>(sspNM.get());
+                    net::MessageNotifyMessage *mnm = dynamic_cast<net::MessageNotifyMessage*>(sspNM.get());
+                    auto rm = mnm->GetContent();
                     if (rm) {
                         auto respBuf = rm->GetBuffer();
                         std::cout << "response = "  << respBuf->Pos << "." << std::endl;

@@ -47,7 +47,7 @@ namespace netty {
              * 此为弱引用关系，关联关系，外部创建者会释放，本类无需释放。
              */
             PosixTcpClientSocket    *m_pSocket;
-            NetWorkerState           m_rcvState = NetWorkerState::RcvingHeader;
+            NetWorkerState           m_rcvState = NetWorkerState::StartToRcvHeader;
             Message::Header          m_header;
             common::Buffer          *m_payloadBuffer = nullptr;
             common::Buffer          *m_pSendingBuffer = nullptr;
