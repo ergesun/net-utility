@@ -13,7 +13,6 @@ namespace netty {
         class SndMessage : public Message, public IEncoder {
         public:
             /**
-             * 一旦发送，则SndMessage的所有权便属于了框架，user无需再管理此SndMessage。生命周期由框架控制。
              * 调用此构造一般用与发送新消息，其内部会自动产生一个id以便回应时进行区分。
              * @param mp
              * @param peerInfo 标识所走的协议以及本地socket信息

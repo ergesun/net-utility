@@ -24,7 +24,7 @@ namespace netty {
 
         bool PosixLocalReadEventHandler::HandleReadEvent() {
             char buf[1024];
-            int r = 0;
+            ssize_t r = 0;
             while (true) {
                 r = read(m_fd, buf, sizeof(buf));
                 if (r < 0) {
@@ -48,11 +48,11 @@ namespace netty {
         }
 
         bool PosixLocalReadEventHandler::HandleWriteEvent() {
-            throw std::runtime_error("Not support!");
+            throw std::runtime_error("Not support -- PosixLocalReadEventHandler::HandleWriteEvent!");
         }
 
         ANetStackMessageWorker *PosixLocalReadEventHandler::GetStackMsgWorker() {
-            throw std::runtime_error("Not support!");
+            throw std::runtime_error("Not support -- PosixLocalReadEventHandler::GetStackMsgWorker!");
         }
     } // namespace net
 } // namespace netty

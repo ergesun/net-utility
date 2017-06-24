@@ -36,12 +36,20 @@ namespace netty {
                 .sp = net::SocketProtocal::Tcp
             };
 
-            TestSndMessage *tsm = new TestSndMessage(&memPool, peerInfo, "client request: hello server!");
-            bool rc = netService->SendMessage(tsm);
-            if (rc) {
-                std::unique_lock<std::mutex> l(s_mtx);
-                s_cv.wait(l);
+
+
+            for (int i = 0; i < 2; ++i) {
+                TestSndMessage *tsm = new TestSndMessage(&memPool, peerInfo, "client request: hello server!");
+                bool rc = netService->SendMessage(tsm);
+                if (rc) {
+                    std::unique_lock<std::mutex> l(s_mtx);
+                    s_cv.wait(l);
+                    //netService->Disconnect(peerInfo);
+                }
             }
+
+            netService->Stop();
+            DELETE_PTR(netService);
         }
 
         void TcpClientTest::recv_msg(std::shared_ptr<net::NotifyMessage> sspNM) {
@@ -71,6 +79,13 @@ namespace netty {
                     break;
                 }
             }
+
+            std::thread t([](){
+                sleep(2);
+                s_cv.notify_one();
+            });
+
+            t.join();
         }
     }
 }

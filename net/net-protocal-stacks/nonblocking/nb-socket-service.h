@@ -51,6 +51,11 @@ namespace netty {
 
             bool Disconnect(net_peer_info_t &npt) override;
 
+            /**
+             * 一旦发送，则m的所有权便属于了框架，user无需也不可以再管理此SndMessage，m生命周期由框架控制。
+             * @param m
+             * @return
+             */
             bool SendMessage(SndMessage *m) override;
 
         private:

@@ -88,11 +88,11 @@ namespace netty {
         }
 
         bool PosixTcpServerEventHandler::HandleWriteEvent() {
-            throw std::runtime_error("Not support!");
+            throw std::runtime_error("Not support -- PosixTcpServerEventHandler::HandleWriteEvent!");
         }
 
         ANetStackMessageWorker *PosixTcpServerEventHandler::GetStackMsgWorker() {
-            throw std::runtime_error("Not support!");
+            throw std::runtime_error("Not support -- PosixTcpServerEventHandler::GetStackMsgWorker!");
         }
 
         inline void PosixTcpServerEventHandler::handle_message(NotifyMessage *nm) {

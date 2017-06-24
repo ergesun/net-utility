@@ -54,19 +54,25 @@ namespace netty {
 
         bool PosixEventManager::Stop() {
             m_bStopped = true;
-            // 释放listen的worker及其相关资源
-            auto listenEW = m_pListenWorkerEventLoopCtx.second;
-            DELETE_PTR(m_pServerEventHandler);
-            DELETE_PTR(listenEW);
-            m_pListenWorkerEventLoopCtx.first->join();
-            DELETE_PTR(m_pListenWorkerEventLoopCtx.first);
+            if (m_sspNat.get()) {
+                // 释放listen的worker及其相关资源
+                auto listenEW = m_pListenWorkerEventLoopCtx.second;
+                listenEW->Wakeup();
+                m_pListenWorkerEventLoopCtx.first->join();
+                DELETE_PTR(m_pServerEventHandler);
+                DELETE_PTR(listenEW);
+                auto t = m_pListenWorkerEventLoopCtx.first;
+                DELETE_PTR(t);
+            }
 
             // 释放conn worker及其相关资源
             for (int i = 0; i < m_iConnWorkersCnt; ++i) {
                 auto ew = m_vConnsWorkerEventLoopCtxs[i].second;
-                DELETE_PTR(ew);
+                ew->Wakeup();
                 m_vConnsWorkerEventLoopCtxs[i].first->join();
-                DELETE_PTR(m_vConnsWorkerEventLoopCtxs[i].first);
+                DELETE_PTR(ew);
+                auto t = m_vConnsWorkerEventLoopCtxs[i].first;
+                DELETE_PTR(t);
             }
 
             return true;

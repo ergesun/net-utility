@@ -23,6 +23,11 @@ namespace netty {
 
             virtual bool Disconnect(net_peer_info_t &npt) = 0;
 
+            /**
+             * 一旦发送，则m的所有权便属于了框架，user无需也不可以再管理此SndMessage，m生命周期由框架控制。
+             * @param m
+             * @return
+             */
             virtual bool SendMessage(SndMessage *m) = 0;
         }; // interface ISocketService
     } // namespace net

@@ -45,6 +45,7 @@ namespace netty {
         EventWorker::~EventWorker() {
             DELETE_PTR(m_pEventDriver);
             DELETE_PTR(m_pLocalReadEventHandler);
+            close(m_notifySendFd);
         }
 
         void EventWorker::Wakeup() {
@@ -55,6 +56,8 @@ namespace netty {
                 std::cerr << __func__ << " write notify pipe failed: " << strerror(errno) << std::endl;
                 throw std::runtime_error("Write notify pipe failed!");
             }
+
+            fsync(m_notifySendFd);
         }
     }  // namespace net
 }  // namespace netty
