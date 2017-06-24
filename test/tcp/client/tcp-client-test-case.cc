@@ -36,19 +36,17 @@ namespace netty {
                 .sp = net::SocketProtocal::Tcp
             };
 
-
-
             for (int i = 0; i < 2; ++i) {
                 TestSndMessage *tsm = new TestSndMessage(&memPool, peerInfo, "client request: hello server!");
                 bool rc = netService->SendMessage(tsm);
                 if (rc) {
                     std::unique_lock<std::mutex> l(s_mtx);
                     s_cv.wait(l);
-                    //netService->Disconnect(peerInfo);
                 }
             }
 
-            netService->Stop();
+            netService->Disconnect(peerInfo);
+            //netService->Stop();
             DELETE_PTR(netService);
         }
 

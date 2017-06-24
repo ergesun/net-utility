@@ -19,7 +19,7 @@ namespace netty {
         void TimerTest::Run() {
             common::Timer timer;
             timer.Start();
-            int test_cnt = 10;
+            int test_cnt = 5;
             std::atomic<int> backs_cnt{0};
             common::Timer::TimerCallback cb = [&backs_cnt](void *ctx) {
                 std::cout << "timer callback!" << common::CommonUtils::GetCurrentTime().sec << std::endl;
@@ -28,7 +28,7 @@ namespace netty {
 
             for (int i = 0; i < test_cnt; ++i) {
                 common::Timer::Event ev(nullptr, &cb);
-                auto eventId = timer.SubscribeEventAfter(common::uctime_t(3 * (i + 1), 0), ev);
+                auto eventId = timer.SubscribeEventAfter(common::uctime_t(1 * (i + 1), 0), ev);
             }
 
             while (test_cnt != backs_cnt.load()) {

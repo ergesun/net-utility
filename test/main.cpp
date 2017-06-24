@@ -21,12 +21,18 @@ using namespace netty::net;
 using namespace netty::test;
 
 int main() {
-    //ThreadPoolTest::Run();
-    //MemPoolTest::Run();
-    //TimerTest::Run();
+    std::cout << "/*********TESTCASE - 1: -->  thread pool test**********/" << std::endl;
+    ThreadPoolTest::Run();
 
+    std::cout << "\n\n/*********TESTCASE - 2: -->  simple memory pool test**********/" << std::endl;
+    MemPoolTest::Run();
+
+    std::cout << "\n\n/*********TESTCASE - 3: -->  timer test**********/" << std::endl;
+    TimerTest::Run();
+
+    std::cout << "\n\n/*********TESTCASE - 4: -->  simple tcp communication test**********/" << std::endl;
+    TcpServerTest::Run();
     TcpClientTest::Run();
-    //TcpServerTest::Run();
 
     getchar();
 
