@@ -24,7 +24,7 @@ namespace netty {
         }
 
         NBSocketService::~NBSocketService() {
-            memory_barrier();
+            hw_rw_memory_barrier();
             if (!m_bStopped) {
                 Stop();
             }

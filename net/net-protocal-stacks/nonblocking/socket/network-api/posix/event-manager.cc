@@ -95,7 +95,6 @@ namespace netty {
 
         void PosixEventManager::worker_loop(EventWorker *ew) {
             auto events = ew->GetEventsContainer();
-            memory_barrier(); // 或者给m_bStopped加个volatile关键字
             while (!m_bStopped) {
                 auto nevents = ew->GetInternalEvent(events, nullptr);
                 if (nevents > 0) {
@@ -117,6 +116,7 @@ namespace netty {
                 }
 
                 pendingDeleteEventHandlers.clear();
+                hw_rw_memory_barrier(); // 或者给m_bStopped加个volatile关键字
             }
         }
 
