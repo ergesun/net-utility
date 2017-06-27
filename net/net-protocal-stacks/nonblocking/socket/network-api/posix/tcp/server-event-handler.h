@@ -35,12 +35,12 @@ namespace netty {
             inline void handle_message(NotifyMessage* nm);
 
         private:
-            PosixTcpServerSocket   *m_pSrvSocket;
-            ConnectHandler          m_onConnect;
+            PosixTcpServerSocket             *m_pSrvSocket;
+            ConnectHandler                    m_onConnect;
             /**
              * 关联关系，外部创建者会释放，本类无需释放。
              */
-            common::MemPool        *m_pMemPool;
+            common::MemPool                  *m_pMemPool;
             NotifyMessageCallbackHandler      m_msgCallbackHandler;
         };
     } // namespace net

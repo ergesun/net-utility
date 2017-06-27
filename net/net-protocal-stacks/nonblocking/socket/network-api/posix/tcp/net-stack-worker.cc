@@ -16,7 +16,10 @@
         HandleMessage(wnm);
 
 #define NotifyWorkerPeerClosedMessage()                                                                             \
-        auto wnm = get_closed_by_peer_worker_message("closed by peer.");                                            \
+        std::stringstream ss;                                                                                       \
+        ss << "Closed by peer = " << m_pEventHandler->GetSocketDescriptor()->GetPeerInfo().nat.addr << ":"          \
+           << m_pEventHandler->GetSocketDescriptor()->GetPeerInfo().nat.port;                                       \
+        auto wnm = get_closed_by_peer_worker_message(ss.str());                                                     \
         HandleMessage(wnm);
 
 #define ParseHeader()                                                                                               \

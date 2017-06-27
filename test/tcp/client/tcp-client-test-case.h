@@ -6,13 +6,16 @@
 #ifndef NET_TEST_TCP_CLIENT_TEST_CASE_H
 #define NET_TEST_TCP_CLIENT_TEST_CASE_H
 
+#include <mutex>
+#include <condition_variable>
+
 #include "../../../net/notify-message.h"
 
 namespace netty {
     namespace test {
         class TcpClientTest {
         public:
-            static void Run();
+            static void Run(std::string &ip);
 
         private:
             static void recv_msg(std::shared_ptr<net::NotifyMessage> sspNM);

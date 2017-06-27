@@ -20,7 +20,7 @@ using namespace netty::net;
 
 using namespace netty::test;
 
-int main() {
+int main(int argc, char **argv) {
     std::cout << "/*********TESTCASE - 1: -->  thread pool test**********/" << std::endl;
     ThreadPoolTest::Run();
 
@@ -30,9 +30,19 @@ int main() {
     std::cout << "\n\n/*********TESTCASE - 3: -->  timer test**********/" << std::endl;
     TimerTest::Run();
 
-    std::cout << "\n\n/*********TESTCASE - 4: -->  simple tcp communication test**********/" << std::endl;
-    TcpServerTest::Run();
-    TcpClientTest::Run();
+    std::cout << "\n\n/*********TESTCASE - 4: -->  client communication test**********/" << std::endl;
+
+    if (argc == 2) {
+        std::cout << "has ip input, its test client!\n";
+        std::string srvIp = argv[1];
+        TcpClientTest::Run(srvIp);
+
+        exit(EXIT_FAILURE);
+    } else {
+        std::cout << "no ip input, its test server!" << std::endl;
+        TcpServerTest::Run();
+    }
+
 
     getchar();
 

@@ -21,7 +21,7 @@ namespace netty {
     namespace test {
         std::mutex              TcpClientTest::s_mtx;
         std::condition_variable TcpClientTest::s_cv;
-        void TcpClientTest::Run() {
+        void TcpClientTest::Run(std::string &ip) {
             std::shared_ptr<net::net_addr_t> ssp_npt(nullptr);
             common::MemPool memPool;
             auto netService = net::SocketServiceFactory::CreateService(net::SocketProtocal::Tcp, ssp_npt, &memPool,
@@ -30,13 +30,13 @@ namespace netty {
             netService->Start();
             net::net_peer_info_t peerInfo = {
                 {
-                    .addr = "127.0.0.1",
+                    .addr = ip.c_str(),
                     .port = 2210
                 },
                 .sp = net::SocketProtocal::Tcp
             };
 
-            for (int i = 0; i < 2; ++i) {
+            for (;;) {
                 TestSndMessage *tsm = new TestSndMessage(&memPool, peerInfo, "client request: hello server!");
                 bool rc = netService->SendMessage(tsm);
                 if (rc) {
