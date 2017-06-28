@@ -33,9 +33,9 @@ namespace netty {
             DELETE_PTR(m_pEventManager);
         }
 
-        bool NBSocketService::Start(NonBlockingEventModel m) {
+        bool NBSocketService::Start(uint16_t ioThreadsCnt, NonBlockingEventModel m) {
             m_bStopped = false;
-            m_pEventManager = new PosixEventManager(m_sp, m_nlt, m_pMemPool, MAX_EVENTS, (uint32_t)(common::CPUS_CNT / 2),
+            m_pEventManager = new PosixEventManager(m_sp, m_nlt, m_pMemPool, MAX_EVENTS, ioThreadsCnt,
                                                     std::bind(&NBSocketService::on_connect, this, _1),
                                                     std::bind(&NBSocketService::on_finish, this, _1),
                                                     m_msgCallback);
@@ -62,6 +62,7 @@ namespace netty {
                     goto Label_failed;
                 }
                 if (!ptcs->Connect(nullptr)) {
+                    ptcs->Close();
                     goto Label_failed;
                 }
                 eventHandler = new PosixTcpConnectionEventHandler(ptcs, m_pMemPool, m_msgCallback);
@@ -110,6 +111,8 @@ namespace netty {
 
             if (handler) {
                 rc = handler->GetStackMsgWorker()->SendMessage(m);
+            } else {
+                fprintf(stderr, "There is no worker for peer %s:%d\n", peer.nat.addr.c_str(), peer.nat.port);
             }
 
             return rc;

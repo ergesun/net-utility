@@ -45,9 +45,10 @@ namespace netty {
                     m_connected = true;
 
                     return true;
+                } else {
+                    fprintf(stderr, "Error connecting %d - %s\n", errno, strerror(errno));
+                    return false;
                 }
-
-                return false;
             } else {
                 fd_set set;
                 int valopt;

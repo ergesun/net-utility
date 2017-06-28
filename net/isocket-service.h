@@ -15,7 +15,8 @@ namespace netty {
         public:
             virtual ~ISocketService() {}
 
-            virtual bool Start(NonBlockingEventModel m = NonBlockingEventModel::Posix) = 0;
+            virtual bool Start(uint16_t ioThreadsCnt = (uint16_t)(common::CPUS_CNT / 2),
+                               NonBlockingEventModel m = NonBlockingEventModel::Posix) = 0;
 
             virtual bool Stop() = 0;
 

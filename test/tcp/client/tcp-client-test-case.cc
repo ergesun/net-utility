@@ -16,6 +16,7 @@
 #include "../test-snd-message.h"
 
 #include "tcp-client-test-case.h"
+#include "../../../common/thread-pool.h"
 
 namespace netty {
     namespace test {
@@ -42,6 +43,8 @@ namespace netty {
                 if (rc) {
                     std::unique_lock<std::mutex> l(s_mtx);
                     s_cv.wait(l);
+                } else {
+                    sleep(2);
                 }
             }
 
@@ -78,12 +81,11 @@ namespace netty {
                 }
             }
 
-            std::thread t([](){
-                sleep(2);
+            static common::ThreadPool tp;
+            tp.AddTask([](){
+                sleep(1);
                 s_cv.notify_one();
             });
-
-            t.join();
         }
     }
 }
