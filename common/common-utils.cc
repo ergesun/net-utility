@@ -41,7 +41,7 @@ namespace netty {
 
         void* CommonUtils::PosixMemAlign(size_t align, size_t size) {
             void *pln;
-            if (int ret = posix_memalign(&pln, align, size)) {
+            if (posix_memalign(&pln, align, size)) {
                 return nullptr;
             }
 
