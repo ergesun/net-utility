@@ -29,12 +29,14 @@ namespace netty {
         }
 
         void TcpServerTest::recv_msg(std::shared_ptr<net::NotifyMessage> sspNM) {
+            volatile static uint32_t s_idx = 0;
             switch (sspNM->GetType()) {
                 case net::NotifyMessageType::Message: {
                     net::MessageNotifyMessage *mnm = dynamic_cast<net::MessageNotifyMessage*>(sspNM.get());
                     auto rm = mnm->GetContent();
                     if (rm) {
                         auto respBuf = rm->GetBuffer();
+#ifdef WITH_MSG_ID
 #ifdef BIG_MSG_ID
                         std::cout << "request = "  << respBuf->Pos << ", " << "message id is { ts = " << rm->GetId().ts
                                   << ", seq = " << rm->GetId().seq << "}" << std::endl;
@@ -42,6 +44,12 @@ namespace netty {
                         std::cout << "request = "  << respBuf->Pos << ", " << "message id is " << rm->GetId() << "." << std::endl;
 #endif
                         TestSndMessage *tsm = new TestSndMessage(m_mp, rm->GetPeerInfo(),  rm->GetId(), "server response: hello client!");
+#else
+                        std::cout << "request = "  << respBuf->Pos << "." << std::endl;
+                        std::stringstream ss;
+                        ss << "Server response: hello client! Req idx = " << atomic_addone_and_fetch(&s_idx) << ".";
+                        TestSndMessage *tsm = new TestSndMessage(m_mp, rm->GetPeerInfo(), ss.str());
+#endif
                         bool rc = s_ss->SendMessage(tsm);
                         if (rc) {
                         }

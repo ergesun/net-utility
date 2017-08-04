@@ -18,14 +18,23 @@
 #define MAX_MSG_PAYLOAD_SIZE  0x4000000    // 64MiB
 
 /**
+ * 如果你需要为消息分配一个唯一的id(进程全局的)用于分发等目的，则开启此宏。
+ */
+//#define WITH_MSG_ID
+
+/**
  * 如果你的消息交互非常非常频繁，频繁到(假如业务判定一个消息发出后10秒收到不应用层ACK就认为失效)每秒发送429496729个，
  * 那么就要开启这个宏以保证消息序号的正确性。当然这块实现可以改为开启后不加ts而是用uint64_t代替以节省流量。
  */
 //#define BIG_MSG_ID
+#ifdef WITH_MSG_ID
 #ifdef BIG_MSG_ID
-#define MSG_HEADER_SIZE 20
+#define MSG_HEADER_SIZE 20 // 20 = sizeof(magic) + sizeof(id.ts) + sizeof(id.seq) + sizeof(len)
 #else
-#define MSG_HEADER_SIZE 12
+#define MSG_HEADER_SIZE 12 // 12 = sizeof(magic) + sizeof(id) + sizeof(len)
+#endif
+#else
+#define MSG_HEADER_SIZE 8  // 8 = sizeof(magic) + sizeof(len)
 #endif
 
 namespace netty {
@@ -43,6 +52,7 @@ namespace netty {
          */
         class Message {
         public:
+#ifdef WITH_MSG_ID
 #ifdef BIG_MSG_ID
             struct Id {
                 __time_t ts;  /* 时间戳，为了就是id回环了之后防重。 */
@@ -56,17 +66,24 @@ namespace netty {
 #else
             typedef uint32_t Id;
 #endif
+#endif
 
             /**
              * 消息头。
              */
             struct Header {
                 uint32_t  magic; /* 校验的魔法数 */
+#ifdef WITH_MSG_ID
                 Id        id;    /* 序列号 */
+#endif
                 uint32_t  len;   /* 数据部的长度 */
 
                 Header() : magic(0), len(0) {}
+#ifdef WITH_MSG_ID
                 Header(Id i, uint32_t l) : id(i), len(l) {}
+#else
+                Header(uint32_t l) : len(l) {}
+#endif
             };
 
         public:
@@ -77,6 +94,7 @@ namespace netty {
             Message(common::MemPool *mp);
             virtual ~Message() = default;
 
+#ifdef WITH_MSG_ID
             /**
              * 获取消息的唯一id。
              * @return
@@ -84,6 +102,7 @@ namespace netty {
             inline Id GetId() const {
                 return m_header.id;
             }
+#endif
 
             inline net_peer_info_t GetPeerInfo() const {
                 return m_peerInfo;
@@ -91,7 +110,6 @@ namespace netty {
 
             /**
              * 可能你需要根据这个来设计自己的payload的大小以对齐或如何，当然很可能你不在意，那就无需关注这个功能。
-             * 20 = sizeof(magic) + sizeof(id.ts) + sizeof(id.seq) + sizeof(len)
              * @return
              */
             static uint32_t HeaderSize() {
@@ -115,7 +133,7 @@ namespace netty {
             // TODO(sunchao): 做一个个数限制？
             static std::list<common::Buffer*>       s_freeBuffers;
         }; // interface Message
-
+#ifdef WITH_MSG_ID
 #ifdef BIG_MSG_ID
         inline bool operator<(const Message::Id &a, const Message::Id &b) {
             return (a.ts < b.ts) || (a.ts == b.ts && a.seq < b.seq);
@@ -125,9 +143,11 @@ namespace netty {
             return a.ts == b.ts && a.seq == b.seq;
         }
 #endif
+#endif
     } // namespace net
 } // namespace netty
 
+#ifdef WITH_MSG_ID
 #ifdef BIG_MSG_ID
 namespace std {
     template<>
@@ -137,6 +157,7 @@ namespace std {
         }
     };
 }
+#endif
 #endif
 
 #endif //NET_CORE_IMESSAGE_H

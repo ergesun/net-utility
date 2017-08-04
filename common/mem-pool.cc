@@ -232,6 +232,7 @@ namespace netty {
 
             put(memObject->Type(), memObject->SlotIdx(),
                 memObject->ObjectPointerValue(), memObject->ObjectPagePointerValue());
+            SpinLock l(&m_free_mem_objs_lock);
             m_free_mem_objs.push_back(memObject);
         }
 
@@ -378,6 +379,7 @@ namespace netty {
         MemPool::MemObject * MemPool::get_mem_object(MemObjectType type, uint32_t slotSize, uintptr_t objPv,
                                                      uintptr_t slotStartPv) {
             MemObject *memObject = nullptr;
+            SpinLock l(&m_free_mem_objs_lock);
             if (!m_free_mem_objs.empty()) {
                 auto mo_begin = m_free_mem_objs.begin();
                 memObject = *mo_begin;

@@ -13,8 +13,10 @@ namespace netty {
         TestSndMessage::TestSndMessage(common::MemPool *mp, net::net_peer_info_t socketInfo, std::string msg)  :
             net::SndMessage(mp, socketInfo), m_str(msg) {}
 
+#ifdef WITH_MSG_ID
         TestSndMessage::TestSndMessage(common::MemPool *mp, net::net_peer_info_t socketInfo, net::Message::Id id, std::string msg)  :
             net::SndMessage(mp, socketInfo, id), m_str(msg) {}
+#endif
 
         uint32_t TestSndMessage::GetDerivePayloadLength() {
             return m_str.length();

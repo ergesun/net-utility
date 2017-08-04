@@ -24,6 +24,7 @@ namespace netty {
                 return false;
             }
             offset += sizeof(header->magic);
+#ifdef WITH_MSG_ID
 #ifdef BIG_MSG_ID
             header->id.ts = ByteOrderUtils::ReadUInt64(buffer->Pos + offset);
             offset += sizeof(uint64_t);
@@ -32,6 +33,7 @@ namespace netty {
 #else
             header->id = ByteOrderUtils::ReadUInt32(buffer->Pos + offset);
             offset += sizeof(header->id);
+#endif
 #endif
             header->len = ByteOrderUtils::ReadUInt32(buffer->Pos + offset);
 

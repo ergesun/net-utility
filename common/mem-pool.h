@@ -65,7 +65,7 @@
 namespace netty {
     namespace common {
         /**
-         * Thread-safe.
+         * Thread-safe. !注意：本类的析构函数与其他函数的并发使用不是thread-safe的。
          * 将内存按大小分成4种类别来管理。
          * 1. 微小型： <= 16 bytes
          * 2. 小型 ：  > 16 bytes && <= page_size(一般4KiB)
@@ -297,6 +297,7 @@ namespace netty {
             std::map<uint32_t, SlotObjPage*> m_free_bulk_objs;
 
             /****************************free MemObjects********************************************/
+            spin_lock_t m_free_mem_objs_lock = UNLOCKED;
             // TODO(sunchao): 加个回收机制？
             std::list<MemObject*> m_free_mem_objs;
 

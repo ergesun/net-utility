@@ -19,6 +19,7 @@ namespace netty {
              */
             SndMessage(common::MemPool *mp, net_peer_info_t peerInfo);
 
+#ifdef WITH_MSG_ID // 如果开启了这个，可能你回复消息的时候需要保持id不变，就需要用到此构造函数。
             /**
              * 一旦发送，则SndMessage的所有权便属于了框架，user无需再管理此SndMessage。生命周期由框架控制。
              * @param mp
@@ -26,6 +27,7 @@ namespace netty {
              * @param id 作为响应时赋予的接收到的消息的id，以便接受者用其分发。
              */
             SndMessage(common::MemPool *mp, net_peer_info_t peerInfo, Id id);
+#endif
 
         public:
             common::Buffer* Encode() override final;
@@ -46,11 +48,13 @@ namespace netty {
 
         private:
             static void encode_header(common::Buffer *b, Header &h);
+#ifdef WITH_MSG_ID
             static Id get_new_id();
 
         private:
             static common::spin_lock_t              s_idLock;
             static Id                               s_lastId;
+#endif
         };
     } // namespace net
 } // namespace netty

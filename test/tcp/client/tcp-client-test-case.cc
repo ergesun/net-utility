@@ -44,7 +44,7 @@ namespace netty {
                     std::unique_lock<std::mutex> l(s_mtx);
                     s_cv.wait(l);
                 } else {
-                    sleep(2);
+                    usleep(2);
                 }
             }
 
@@ -60,11 +60,15 @@ namespace netty {
                     auto rm = mnm->GetContent();
                     if (rm) {
                         auto respBuf = rm->GetBuffer();
+#ifdef WITH_MSG_ID
 #ifdef BIG_MSG_ID
                         std::cout << "response = "  << respBuf->Pos << ", " << "message id is { ts = " << rm->GetId().ts
                                   << ", seq = " << rm->GetId().seq << "}" << std::endl;
 #else
                         std::cout << "response = "  << respBuf->Pos << ", " << "message id is " << rm->GetId() << "." << std::endl;
+#endif
+#else
+                        std::cout << "response = "  << respBuf->Pos << "." << std::endl;
 #endif
                     }
                     break;
@@ -87,7 +91,7 @@ namespace netty {
 
             static common::ThreadPool tp;
             tp.AddTask([](){
-                sleep(1);
+                usleep(1000 * 10);
                 s_cv.notify_one();
             });
         }

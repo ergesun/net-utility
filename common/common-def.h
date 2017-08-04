@@ -24,6 +24,7 @@
 #define hard_yield_cpu()               sched_yield()
 #define atomic_cas(lock, old, set)     __sync_bool_compare_and_swap(lock, old, set)
 #define atomic_zero(lock)              __sync_fetch_and_and(lock, 0)
+#define atomic_addone_and_fetch(lock)  __sync_add_and_fetch(lock, 1)
 
 #define DELETE_PTR(p) if (p) {delete (p); (p) = nullptr;}
 #define DELETE_ARR_PTR(p) if (p) {delete [](p); (p) = nullptr;}

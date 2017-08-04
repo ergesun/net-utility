@@ -11,24 +11,29 @@
 
 namespace netty {
     namespace net {
+#ifdef WITH_MSG_ID
         common::spin_lock_t SndMessage::s_idLock = UNLOCKED;
 #ifdef BIG_MSG_ID
         Message::Id SndMessage::s_lastId = Id(0, 0);
 #else
         Message::Id SndMessage::s_lastId = 0;
 #endif
-
+#endif
         SndMessage::SndMessage(common::MemPool *mp, net_peer_info_t peerInfo) :
             Message(mp) {
+#ifdef WITH_MSG_ID
             m_header.id = get_new_id();
+#endif
             m_peerInfo = peerInfo;
         }
 
+#ifdef WITH_MSG_ID
         SndMessage::SndMessage(common::MemPool *mp, net_peer_info_t peerInfo, Id id) :
             Message(mp) {
             m_header.id = id;
             m_peerInfo = peerInfo;
         }
+#endif
 
         common::Buffer* SndMessage::Encode() {
             auto headerBufferSize = Message::HeaderSize();
@@ -54,6 +59,7 @@ namespace netty {
         void SndMessage::encode_header(common::Buffer *b, Header &h) {
             ByteOrderUtils::WriteUInt32(b->Pos, h.magic);
             b->Pos += sizeof(h.magic);
+#ifdef WITH_MSG_ID
 #ifdef BIG_MSG_ID
             ByteOrderUtils::WriteUInt64(b->Pos, (uint64_t)(h.id.ts));
             b->Pos += sizeof(uint64_t);
@@ -63,10 +69,12 @@ namespace netty {
             ByteOrderUtils::WriteUInt32(b->Pos, h.id);
             b->Pos += sizeof(h.id);
 #endif
+#endif
             ByteOrderUtils::WriteUInt32(b->Pos, h.len);
             b->Pos += sizeof(h.len);
         }
 
+#ifdef WITH_MSG_ID
         Message::Id SndMessage::get_new_id() {
             common::SpinLock l(&s_idLock);
 #ifdef BIG_MSG_ID
@@ -91,5 +99,6 @@ namespace netty {
             return s_lastId;
 #endif
         }
+#endif
     } // namespace net
 } // namespace netty
