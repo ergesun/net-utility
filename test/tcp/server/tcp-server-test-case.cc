@@ -35,8 +35,12 @@ namespace netty {
                     auto rm = mnm->GetContent();
                     if (rm) {
                         auto respBuf = rm->GetBuffer();
+#ifdef BIG_MSG_ID
                         std::cout << "request = "  << respBuf->Pos << ", " << "message id is { ts = " << rm->GetId().ts
                                   << ", seq = " << rm->GetId().seq << "}" << std::endl;
+#else
+                        std::cout << "request = "  << respBuf->Pos << ", " << "message id is " << rm->GetId() << "." << std::endl;
+#endif
                         TestSndMessage *tsm = new TestSndMessage(m_mp, rm->GetPeerInfo(),  rm->GetId(), "server response: hello client!");
                         bool rc = s_ss->SendMessage(tsm);
                         if (rc) {

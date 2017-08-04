@@ -60,8 +60,12 @@ namespace netty {
                     auto rm = mnm->GetContent();
                     if (rm) {
                         auto respBuf = rm->GetBuffer();
+#ifdef BIG_MSG_ID
                         std::cout << "response = "  << respBuf->Pos << ", " << "message id is { ts = " << rm->GetId().ts
                                   << ", seq = " << rm->GetId().seq << "}" << std::endl;
+#else
+                        std::cout << "response = "  << respBuf->Pos << ", " << "message id is " << rm->GetId() << "." << std::endl;
+#endif
                     }
                     break;
                 }

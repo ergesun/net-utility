@@ -24,10 +24,15 @@ namespace netty {
                 return false;
             }
             offset += sizeof(header->magic);
+#ifdef BIG_MSG_ID
             header->id.ts = ByteOrderUtils::ReadUInt64(buffer->Pos + offset);
             offset += sizeof(uint64_t);
             header->id.seq = ByteOrderUtils::ReadUInt32(buffer->Pos + offset);
             offset += sizeof(header->id.seq);
+#else
+            header->id = ByteOrderUtils::ReadUInt32(buffer->Pos + offset);
+            offset += sizeof(header->id);
+#endif
             header->len = ByteOrderUtils::ReadUInt32(buffer->Pos + offset);
 
             auto rc = header->len <= MAX_MSG_PAYLOAD_SIZE;

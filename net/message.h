@@ -17,6 +17,17 @@
 #define MESSAGE_MAGIC_NO 0xdeadbeef
 #define MAX_MSG_PAYLOAD_SIZE  0x4000000    // 64MiB
 
+/**
+ * 如果你的消息交互非常非常频繁，频繁到(假如业务判定一个消息发出后10秒收到不应用层ACK就认为失效)每秒发送429496729个，
+ * 那么就要开启这个宏以保证消息序号的正确性。当然这块实现可以改为开启后不加ts而是用uint64_t代替以节省流量。
+ */
+//#define BIG_MSG_ID
+#ifdef BIG_MSG_ID
+#define MSG_HEADER_SIZE 20
+#else
+#define MSG_HEADER_SIZE 12
+#endif
+
 namespace netty {
     namespace common {
         class Buffer;
@@ -32,6 +43,7 @@ namespace netty {
          */
         class Message {
         public:
+#ifdef BIG_MSG_ID
             struct Id {
                 __time_t ts;  /* 时间戳，为了就是id回环了之后防重。 */
                 uint32_t seq; /* 消息的唯一标识 */
@@ -41,6 +53,9 @@ namespace netty {
                 Id(const Id &) = default;
                 Id& operator=(const Id &) = default;
             };
+#else
+            typedef uint32_t Id;
+#endif
 
             /**
              * 消息头。
@@ -80,7 +95,7 @@ namespace netty {
              * @return
              */
             static uint32_t HeaderSize() {
-                return 20;
+                return MSG_HEADER_SIZE;
             }
 
             static common::Buffer* GetNewBuffer();
@@ -101,6 +116,7 @@ namespace netty {
             static std::list<common::Buffer*>       s_freeBuffers;
         }; // interface Message
 
+#ifdef BIG_MSG_ID
         inline bool operator<(const Message::Id &a, const Message::Id &b) {
             return (a.ts < b.ts) || (a.ts == b.ts && a.seq < b.seq);
         }
@@ -108,9 +124,11 @@ namespace netty {
         inline bool operator==(const Message::Id &a, const Message::Id &b) {
             return a.ts == b.ts && a.seq == b.seq;
         }
+#endif
     } // namespace net
 } // namespace netty
 
+#ifdef BIG_MSG_ID
 namespace std {
     template<>
     struct hash<netty::net::Message::Id> {
@@ -119,5 +137,6 @@ namespace std {
         }
     };
 }
+#endif
 
 #endif //NET_CORE_IMESSAGE_H

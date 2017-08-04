@@ -198,11 +198,10 @@ namespace netty {
                     return in;
                 } else {
                     uint32_t multiple_base = (uint32_t)2 << (exponent - 1);
-                    uint32_t mask = (0xFFFFFFFF >> exponent) << exponent;
+                    uint32_t mask = (0xFFFFFFFFu >> exponent) << exponent;
 
                     return (in & mask) + multiple_base;
                 }
-
             }
 
             inline uint32_t convert_small_slot_obj_size_to_slot_idx(uint32_t size) {
