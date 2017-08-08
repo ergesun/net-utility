@@ -166,10 +166,6 @@ namespace netty {
             MemObject* Get(uint32_t size);
             void Put(MemObject *memObject);
 
-            /**************复杂相对高性能接口***********************/
-            // TODO(sunchao): 添加复杂高性能接口，最起码会减少很多if-else判断。 eg.
-            // MemObjectRef GetTinyObject(uint32_t size);
-
             /**
              * 仅用于调试信息打印，实际使用不要调用此函数。
              */

@@ -1,7 +1,7 @@
 aux_source_directory(. SRCS)
 add_library(common SHARED ${SRCS}
-        common-def.h
-        thread-pool.h
-        blocking-queue.h
-        buffer.h
+        #common-def.h
+        #thread-pool.h
+        #blocking-queue.h
+        #buffer.h
         )
