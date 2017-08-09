@@ -20,13 +20,13 @@ namespace netty {
         public:
             /**
              *
-             * @param nlt 如果为空，则是为仅仅一个服务于client的服务，否则为server信息，会开启server的服务。
+             * @param sspNat 如果为空，则是为仅仅一个服务于client的服务，否则为server信息，会开启server的服务。
              * @param memPool 内存池对象
-             * @param cp  worker的管理策略，传入nullptr则默认创建UniqueWorkerManager。
+             * @param sspMgr  worker的管理策略，传入nullptr则默认创建UniqueWorkerManager。
              */
-            static ISocketService* CreateService(SocketProtocal sp, std::shared_ptr<net_addr_t> nlt,
+            static ISocketService* CreateService(SocketProtocal sp, std::shared_ptr<net_addr_t> sspNat,
                                                  common::MemPool *memPool, NotifyMessageCallbackHandler msgCallbackHandler,
-                                                 INetStackWorkerManager *cp = nullptr);
+                                                 std::shared_ptr<INetStackWorkerManager> sspMgr);
         }; // class SocketServiceFactory
     } // namespace net
 } // namespace netty

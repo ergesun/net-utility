@@ -11,6 +11,7 @@
 #include "../../../common/buffer.h"
 
 #include "tcp-server-test-case.h"
+#include "../../../net/net-protocal-stacks/msg-worker-managers/unique-worker-manager.h"
 
 
 namespace netty {
@@ -22,10 +23,14 @@ namespace netty {
             auto nat = new net::net_addr_t("127.0.0.1", 2210);
             std::shared_ptr<net::net_addr_t> ssp_npt(nat);
             m_mp = new common::MemPool();
+            std::shared_ptr<net::INetStackWorkerManager> sspMgr = std::shared_ptr<net::INetStackWorkerManager>(new net::UniqueWorkerManager());
             s_ss = net::SocketServiceFactory::CreateService(net::SocketProtocal::Tcp, ssp_npt, m_mp,
                                                                        std::bind(&TcpServerTest::recv_msg,
-                                                                                 std::placeholders::_1));
-            s_ss->Start();
+                                                                                 std::placeholders::_1),
+                                                                        sspMgr);
+            if (!s_ss->Start()) {
+                throw std::runtime_error("cannot start SocketService");
+            }
         }
 
         void TcpServerTest::recv_msg(std::shared_ptr<net::NotifyMessage> sspNM) {

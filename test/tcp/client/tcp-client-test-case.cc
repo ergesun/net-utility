@@ -17,6 +17,7 @@
 
 #include "tcp-client-test-case.h"
 #include "../../../common/thread-pool.h"
+#include "../../../net/net-protocal-stacks/msg-worker-managers/unique-worker-manager.h"
 
 namespace netty {
     namespace test {
@@ -25,10 +26,15 @@ namespace netty {
         void TcpClientTest::Run(std::string &ip) {
             std::shared_ptr<net::net_addr_t> ssp_npt(nullptr);
             common::MemPool memPool;
+            std::shared_ptr<net::INetStackWorkerManager> sspMgr = std::shared_ptr<net::INetStackWorkerManager>(new net::UniqueWorkerManager());
             auto netService = net::SocketServiceFactory::CreateService(net::SocketProtocal::Tcp, ssp_npt, &memPool,
                                                                        std::bind(&TcpClientTest::recv_msg,
-                                                                                 std::placeholders::_1));
-            netService->Start();
+                                                                                 std::placeholders::_1),
+                                                                        sspMgr);
+            if (!netService->Start()) {
+                throw std::runtime_error("cannot start SocketService");
+            }
+
             net::net_peer_info_t peerInfo = {
                 {
                     .addr = ip.c_str(),

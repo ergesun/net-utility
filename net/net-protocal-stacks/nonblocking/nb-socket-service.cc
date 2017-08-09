@@ -13,13 +13,15 @@ using namespace std::placeholders;
 
 namespace netty {
     namespace net {
-        NBSocketService::NBSocketService(SocketProtocal sp, std::shared_ptr<net_addr_t> sspNat, INetStackWorkerManager *cp,
+        NBSocketService::NBSocketService(SocketProtocal sp, std::shared_ptr<net_addr_t> sspNat, std::shared_ptr<INetStackWorkerManager> sspMgr,
                                          common::MemPool *memPool, NotifyMessageCallbackHandler msgCallbackHandler)  :
-            ASocketService(sp, sspNat), m_pNetStackWorkerManager(cp), m_pMemPool(memPool), m_bStopped(false) {
+            ASocketService(sp, sspNat), m_pMemPool(memPool), m_bStopped(false) {
             assert(memPool);
             m_msgCallback = msgCallbackHandler;
-            if (!m_pNetStackWorkerManager) {
-                m_pNetStackWorkerManager = new UniqueWorkerManager();
+            if (sspMgr.get()) {
+                m_pNetStackWorkerManager = sspMgr;
+            } else {
+                m_pNetStackWorkerManager = std::shared_ptr<INetStackWorkerManager>(new UniqueWorkerManager());
             }
         }
 
@@ -29,7 +31,6 @@ namespace netty {
                 Stop();
             }
 
-            DELETE_PTR(m_pNetStackWorkerManager);
             DELETE_PTR(m_pEventManager);
         }
 
@@ -39,9 +40,7 @@ namespace netty {
                                                     std::bind(&NBSocketService::on_connect, this, _1),
                                                     std::bind(&NBSocketService::on_finish, this, _1),
                                                     m_msgCallback);
-            m_pEventManager->Start(m);
-
-            return 0;
+            return m_pEventManager->Start(m);
         }
 
         bool NBSocketService::Stop() {

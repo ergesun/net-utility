@@ -30,11 +30,11 @@ namespace netty {
             /**
              *
              * @param nlt 如果为空，则是为仅仅一个服务于client的服务，否则为server信息，会开启server的服务。
-             * @param cp  worker的管理策略。
+             * @param sspMgr  worker的管理策略。
              * @param memPool 内存池。
              */
-            NBSocketService(SocketProtocal sp, std::shared_ptr<net_addr_t> sspNat, INetStackWorkerManager *cp, common::MemPool *memPool,
-                            NotifyMessageCallbackHandler msgCallbackHandler);
+            NBSocketService(SocketProtocal sp, std::shared_ptr<net_addr_t> sspNat, std::shared_ptr<INetStackWorkerManager> sspMgr,
+                            common::MemPool *memPool, NotifyMessageCallbackHandler msgCallbackHandler);
 
             ~NBSocketService();
 
@@ -63,13 +63,12 @@ namespace netty {
             void on_finish(AFileEventHandler *handler);
 
         private:
-            INetStackWorkerManager           *m_pNetStackWorkerManager = nullptr;
+            std::shared_ptr<INetStackWorkerManager>            m_pNetStackWorkerManager = nullptr;
             // 关联关系，外部传入的，根据谁创建谁销毁原则，本类无需释放。
-            common::MemPool                  *m_pMemPool = nullptr;
-            AEventManager                    *m_pEventManager = nullptr;
-            NotifyMessageCallbackHandler      m_msgCallback;
-
-            bool                              m_bStopped;
+            common::MemPool                                   *m_pMemPool = nullptr;
+            AEventManager                                     *m_pEventManager = nullptr;
+            NotifyMessageCallbackHandler                       m_msgCallback;
+            bool                                               m_bStopped;
         }; // class NBSocketService
     }  // namespace net
 } // namespace netty

@@ -9,11 +9,11 @@
 
 namespace netty {
     namespace net {
-        ISocketService* SocketServiceFactory::CreateService(SocketProtocal sp, std::shared_ptr<net_addr_t> nlt,
-                                            common::MemPool *memPool, NotifyMessageCallbackHandler msgCallbackHandler,
-                                            INetStackWorkerManager *cp) {
+        ISocketService* SocketServiceFactory::CreateService(SocketProtocal sp, std::shared_ptr<net_addr_t> sspNat,
+                                                            common::MemPool *memPool, NotifyMessageCallbackHandler msgCallbackHandler,
+                                                            std::shared_ptr<INetStackWorkerManager> sspMgr) {
 #ifdef __linux__
-            return new NBSocketService(sp, nlt, cp, memPool, msgCallbackHandler);
+            return new NBSocketService(sp, sspNat, sspMgr, memPool, msgCallbackHandler);
 #else // xio、poll、etc.
             return nullptr;
 #endif
