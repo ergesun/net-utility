@@ -69,7 +69,7 @@ namespace netty {
             auto smallSlotCnt = m_big_obj_threshold / m_small_obj_slot_footstep_size;
             m_free_small_objs.reserve(smallSlotCnt);
             m_small_obj_pages.reserve(smallSlotCnt);
-            for (int i = 1; i <= smallSlotCnt; ++i) {
+            for (uint32_t i = 1; i <= smallSlotCnt; ++i) {
                 m_free_small_objs[i] = SlotObjPage();
                 m_small_obj_pages[i] = std::unordered_set<uintptr_t>();
             }
@@ -78,7 +78,7 @@ namespace netty {
             auto bigSlotCnt = m_bulk_obj_threshold / m_sys_page_size;
             m_free_big_objs.reserve(bigSlotCnt);
             m_big_obj_pages.reserve(bigSlotCnt);
-            for (int i = 1; i <= bigSlotCnt; ++i) {
+            for (uint32_t i = 1; i <= bigSlotCnt; ++i) {
                 m_free_big_objs[i] = SlotObjPage();
                 m_big_obj_pages[i] = std::unordered_set<uintptr_t>();
             }
@@ -369,7 +369,7 @@ namespace netty {
         std::list<uintptr_t> MemPool::split_mem_page(uint32_t slotSize, uintptr_t pagePv, uint32_t pageSize) {
             std::list<uintptr_t> res;
             uint32_t cnt = pageSize / slotSize;
-            for (int i = 0; i < cnt; ++i) {
+            for (uint32_t i = 0; i < cnt; ++i) {
                 res.push_back(pagePv + slotSize * i);
             }
 

@@ -20,7 +20,7 @@ namespace netty {
          * 事件管理器的封装 -- 使用者的直接类，不要使用IEventDriver。
          * -> 需要通过GetInternalEvent和GetExternalEvents两个函数才能获取所有事件。
          */
-        class EventWorker {
+        class GCC_INTERNAL EventWorker {
         public:
             EventWorker(uint32_t maxEvents, NonBlockingEventModel m);
             ~EventWorker();
@@ -35,7 +35,7 @@ namespace netty {
 
             int32_t AddEvent(AFileEventHandler *socketEventHandler, int32_t cur_mask, int32_t mask) {
                 common::SpinLock l(&m_slDriver);
-                m_pEventDriver->AddEvent(socketEventHandler, cur_mask, mask);
+                return m_pEventDriver->AddEvent(socketEventHandler, cur_mask, mask);
             }
 
             /**
@@ -47,14 +47,17 @@ namespace netty {
              * @return
              */
             int32_t DeleteHandler(AFileEventHandler *socketEventHandler) {
+                int32_t res;
                 {
                     common::SpinLock l(&m_slDriver);
-                    m_pEventDriver->DeleteHandler(socketEventHandler);
+                    res = m_pEventDriver->DeleteHandler(socketEventHandler);
                 }
                 {
                     std::unique_lock<std::mutex> l(m_mtxPendingDeleteEHLock);
                     m_pendingDeleteEventHandlers.insert(socketEventHandler);
                 }
+
+                return res;
             }
 
             /**

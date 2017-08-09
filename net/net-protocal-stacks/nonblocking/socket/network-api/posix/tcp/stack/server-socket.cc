@@ -48,9 +48,6 @@ namespace netty {
         }
 
         int PosixTcpServerSocket::Accept4(__SOCKADDR_ARG __addr, socklen_t *__addr_len, int __flags) {
-            struct sockaddr_in client_addr;
-            socklen_t sock_len = sizeof(struct sockaddr_in);
-
             return accept4(m_fd, __addr, __addr_len, __flags);
         }
     } // namespace net

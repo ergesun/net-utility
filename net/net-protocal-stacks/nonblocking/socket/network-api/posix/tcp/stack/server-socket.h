@@ -31,8 +31,8 @@ namespace netty {
             }
 
         private:
-            int         m_max_listen_conns;
             net_addr_t  m_local_addr;
+            int         m_max_listen_conns;
         };
     } // namespace net
 } // namespace netty

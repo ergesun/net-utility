@@ -121,7 +121,7 @@ namespace netty {
                                                 common::MemPoolObject *mpo);
             static common::Buffer* GetNewBuffer(common::MemPoolObject *mpo, uint32_t totalBufferSize);
             static common::Buffer* GetNewAvailableBuffer(common::MemPoolObject *mpo, uint32_t totalBufferSize);
-            static common::Buffer* PutBuffer(common::Buffer *buffer);
+            static void            PutBuffer(common::Buffer *buffer);
 
         protected:
             Header              m_header;

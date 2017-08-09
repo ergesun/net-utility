@@ -48,7 +48,7 @@ namespace netty {
             return Message::GetNewBuffer(bufferStart, bufferEnd, bufferStart, bufferEnd, mpo);
         }
 
-        common::Buffer* Message::PutBuffer(common::Buffer *buffer) {
+        void Message::PutBuffer(common::Buffer *buffer) {
             common::SpinLock l(&s_freeBufferLock);
             buffer->Put();
             s_freeBuffers.push_back(buffer);

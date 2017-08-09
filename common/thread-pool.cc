@@ -23,7 +23,7 @@ namespace netty {
             // 添加空的task以防止bq中没有内容无法停止的情况发生。
             Task empty_task;
             auto size = m_vThreadps.size();
-            for (int i = 0; i < size; ++i) {
+            for (size_t i = 0; i < size; ++i) {
                 AddTask(empty_task);
             }
 

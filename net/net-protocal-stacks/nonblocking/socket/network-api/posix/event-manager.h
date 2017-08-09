@@ -21,7 +21,7 @@ namespace netty {
         /**
          * socket出错了manager检测到后会释放。
          */
-        class PosixEventManager : public AEventManager {
+        class GCC_INTERNAL PosixEventManager : public AEventManager {
         public:
             PosixEventManager(SocketProtocal sp, std::shared_ptr<net_addr_t> sspNat, common::MemPool *memPool, uint32_t maxEvents,
                                  uint32_t connWorkersCnt, ConnectHandler connectHandler, FinishHandler finishHandler,
@@ -40,10 +40,10 @@ namespace netty {
             inline void process_event(NetEvent *netEvent);
 
         private:
-            uint32_t                                           m_iConnWorkersCnt;
-            int32_t                                            m_iCurWorkerIdx = -1;
             SocketProtocal                                     m_sp;
             std::shared_ptr<net_addr_t>                        m_sspNat;
+            uint32_t                                           m_iConnWorkersCnt;
+            int32_t                                            m_iCurWorkerIdx = -1;
             bool                                               m_bStopped = true;
             AFileEventHandler                                 *m_pServerEventHandler = nullptr;
             std::pair<std::thread*, EventWorker*>              m_pListenWorkerEventLoopCtx;

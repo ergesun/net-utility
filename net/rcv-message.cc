@@ -12,7 +12,7 @@
 namespace netty {
     namespace net {
         bool RcvMessage::DecodeMsgHeader(common::Buffer *buffer, Header *header) {
-            if (buffer->AvailableLength() < RcvMessage::HeaderSize()) {
+            if ((uint32_t)buffer->AvailableLength() < RcvMessage::HeaderSize()) {
                 return false;
             }
 

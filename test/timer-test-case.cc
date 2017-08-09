@@ -28,7 +28,7 @@ namespace netty {
 
             for (int i = 0; i < test_cnt; ++i) {
                 common::Timer::Event ev(nullptr, &cb);
-                auto eventId = timer.SubscribeEventAfter(common::uctime_t(1 * (i + 1), 0), ev);
+                /*auto eventId = */timer.SubscribeEventAfter(common::uctime_t(1 * (i + 1), 0), ev);
             }
 
             while (test_cnt != backs_cnt.load()) {

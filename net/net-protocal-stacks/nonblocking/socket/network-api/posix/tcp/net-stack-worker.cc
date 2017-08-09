@@ -53,7 +53,7 @@
         }
 
 #define CheckPayload()                                                                                              \
-        if (m_payloadBuffer->AvailableLength() == m_header.len) {                                                   \
+        if ((uint32_t)m_payloadBuffer->AvailableLength() == m_header.len) {                                         \
             m_rcvState = NetWorkerState::StartToRcvHeader;                                                          \
             auto peer = m_pEventHandler->GetSocketDescriptor()->GetPeerInfo();                                      \
             auto rcvMessage = get_new_rcv_message(m_pMemPool, peer, m_header, m_payloadBuffer);                     \

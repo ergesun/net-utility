@@ -36,13 +36,15 @@ namespace netty {
                     m_pServerEventHandler = new PosixTcpServerEventHandler(ew, m_sspNat.get(),
                                                                            std::bind(&PosixEventManager::on_connect, this, _1),
                                                                            m_pMemPool, m_msgCallback);
-                    ew->AddEvent(m_pServerEventHandler, EVENT_NONE, EVENT_READ);
+                    if (0 != ew->AddEvent(m_pServerEventHandler, EVENT_NONE, EVENT_READ)) {
+                        return false;
+                    }
                     m_pListenWorkerEventLoopCtx.second = ew;
                     m_pListenWorkerEventLoopCtx.first = new std::thread(std::bind(&PosixEventManager::worker_loop, this, ew));
                 }
 
                 m_vConnsWorkerEventLoopCtxs.resize(m_iConnWorkersCnt);
-                for (int i = 0; i < m_iConnWorkersCnt; ++i) {
+                for (uint32_t i = 0; i < m_iConnWorkersCnt; ++i) {
                     auto ew = new EventWorker(m_iMaxEvents, m);
                     m_vConnsWorkerEventLoopCtxs[i].second = ew;
                     m_vConnsWorkerEventLoopCtxs[i].first = new std::thread(std::bind(&PosixEventManager::worker_loop, this, ew));
@@ -50,6 +52,8 @@ namespace netty {
             } else {
                 throw std::runtime_error("Not support now!");
             }
+
+            return true;
         }
 
         bool PosixEventManager::Stop() {
@@ -66,7 +70,7 @@ namespace netty {
             }
 
             // 释放conn worker及其相关资源
-            for (int i = 0; i < m_iConnWorkersCnt; ++i) {
+            for (uint32_t i = 0; i < m_iConnWorkersCnt; ++i) {
                 auto ew = m_vConnsWorkerEventLoopCtxs[i].second;
                 ew->Wakeup();
                 m_vConnsWorkerEventLoopCtxs[i].first->join();
@@ -84,7 +88,8 @@ namespace netty {
                 /**
                  * 轮询各个非listen的worker。
                  */
-                m_iCurWorkerIdx = ++m_iCurWorkerIdx % m_iConnWorkersCnt;
+                ++m_iCurWorkerIdx;
+                m_iCurWorkerIdx %= m_iConnWorkersCnt;
             }
 
             auto ew = m_vConnsWorkerEventLoopCtxs[m_iCurWorkerIdx].second;
