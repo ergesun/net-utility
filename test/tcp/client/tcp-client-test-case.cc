@@ -67,7 +67,7 @@ namespace netty {
                     if (rm) {
                         auto respBuf = rm->GetBuffer();
 #ifdef WITH_MSG_ID
-#ifdef BIG_MSG_ID
+#ifdef BULK_MSG_ID
                         std::cout << "response = "  << respBuf->Pos << ", " << "message id is { ts = " << rm->GetId().ts
                                   << ", seq = " << rm->GetId().seq << "}" << std::endl;
 #else
@@ -97,7 +97,7 @@ namespace netty {
 
             static common::ThreadPool tp;
             common::ThreadPool::Task t([](void*){
-                usleep(1000 * 10);
+                usleep(1000 * 100);
                 s_cv.notify_one();
             });
             tp.AddTask(t);

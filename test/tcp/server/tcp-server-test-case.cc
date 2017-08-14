@@ -34,7 +34,6 @@ namespace netty {
         }
 
         void TcpServerTest::recv_msg(std::shared_ptr<net::NotifyMessage> sspNM) {
-            volatile static uint32_t s_idx = 0;
             switch (sspNM->GetType()) {
                 case net::NotifyMessageType::Message: {
                     net::MessageNotifyMessage *mnm = dynamic_cast<net::MessageNotifyMessage*>(sspNM.get());
@@ -42,7 +41,7 @@ namespace netty {
                     if (rm) {
                         auto respBuf = rm->GetBuffer();
 #ifdef WITH_MSG_ID
-#ifdef BIG_MSG_ID
+#ifdef BULK_MSG_ID
                         std::cout << "request = "  << respBuf->Pos << ", " << "message id is { ts = " << rm->GetId().ts
                                   << ", seq = " << rm->GetId().seq << "}" << std::endl;
 #else

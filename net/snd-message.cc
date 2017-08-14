@@ -13,7 +13,7 @@ namespace netty {
     namespace net {
 #ifdef WITH_MSG_ID
         common::spin_lock_t SndMessage::s_idLock = UNLOCKED;
-#ifdef BIG_MSG_ID
+#ifdef BULK_MSG_ID
         Message::Id SndMessage::s_lastId = Id(0, 0);
 #else
         Message::Id SndMessage::s_lastId = 0;
@@ -59,25 +59,28 @@ namespace netty {
         void SndMessage::encode_header(common::Buffer *b, Header &h) {
             ByteOrderUtils::WriteUInt32(b->Pos, h.magic);
             b->Pos += sizeof(h.magic);
-#ifdef WITH_MSG_ID
-#ifdef BIG_MSG_ID
+#if WITH_MSG_ID
+    #if BULK_MSG_ID
             ByteOrderUtils::WriteUInt64(b->Pos, (uint64_t)(h.id.ts));
             b->Pos += sizeof(uint64_t);
             ByteOrderUtils::WriteUInt32(b->Pos, h.id.seq);
             b->Pos += sizeof(h.id.seq);
-#else
+    #elif BIG_MSG_ID
+            ByteOrderUtils::WriteUInt64(b->Pos, h.id);
+            b->Pos += sizeof(h.id);
+    #else
             ByteOrderUtils::WriteUInt32(b->Pos, h.id);
             b->Pos += sizeof(h.id);
-#endif
+    #endif
 #endif
             ByteOrderUtils::WriteUInt32(b->Pos, h.len);
             b->Pos += sizeof(h.len);
         }
 
-#ifdef WITH_MSG_ID
+#if WITH_MSG_ID
         Message::Id SndMessage::get_new_id() {
             common::SpinLock l(&s_idLock);
-#ifdef BIG_MSG_ID
+    #if BULK_MSG_ID
             ++s_lastId.seq;
             if (UNLIKELY(s_lastId.seq == UINT32_MAX)) {
                 s_lastId.seq = 1;
@@ -90,14 +93,19 @@ namespace netty {
             }
 
             return Id(s_lastId.ts, s_lastId.seq);
-#else
+    #else
             ++s_lastId;
+        #ifdef BIG_MSG_ID
+            if (UNLIKELY(s_lastId == UINT64_MAX)) {
+                s_lastId = 1;
+            }
+        #else
             if (UNLIKELY(s_lastId == UINT32_MAX)) {
                 s_lastId = 1;
             }
-
+        #endif
             return s_lastId;
-#endif
+    #endif
         }
 #endif
     } // namespace net
