@@ -121,7 +121,7 @@ namespace netty {
                 }
 
                 pendingDeleteEventHandlers.clear();
-                hw_rw_memory_barrier(); // 或者给m_bStopped加个volatile关键字
+                hw_rw_memory_barrier();
             }
         }
 

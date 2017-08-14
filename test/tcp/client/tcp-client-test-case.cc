@@ -79,7 +79,7 @@ namespace netty {
                     }
                     break;
                 }
-                case net::NotifyMessageType::Worker : {
+                case net::NotifyMessageType::Worker: {
                     net::WorkerNotifyMessage *wnm = dynamic_cast<net::WorkerNotifyMessage*>(sspNM.get());
                     if (wnm) {
                         std::cout << "worker notify message , rc = " << (int)wnm->GetCode() << ", message = " << wnm->What() << std::endl;
@@ -96,10 +96,11 @@ namespace netty {
             }
 
             static common::ThreadPool tp;
-            tp.AddTask([](){
+            common::ThreadPool::Task t([](void*){
                 usleep(1000 * 10);
                 s_cv.notify_one();
             });
+            tp.AddTask(t);
         }
     }
 }

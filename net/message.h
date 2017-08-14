@@ -48,7 +48,6 @@ namespace netty {
         /**
          * 注意：payload上限为64MiB。
          * Derive Message的内存空间你可以选择通过内存池mp分配(这样做性能友好)，然后通过placement new来构建你的Message具体类对象。
-         * 你需要留下Message的Id，它用来唯一标识一个message，你可能需要用它来分发Message。
          */
         class Message {
         public:
@@ -74,7 +73,7 @@ namespace netty {
             struct Header {
                 uint32_t  magic; /* 校验的魔法数 */
 #ifdef WITH_MSG_ID
-                Id        id;    /* 序列号 */
+                Id        id;    /* 序号 */
 #endif
                 uint32_t  len;   /* 数据部的长度 */
 

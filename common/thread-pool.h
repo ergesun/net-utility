@@ -24,7 +24,29 @@ namespace netty {
          */
         class ThreadPool {
         public:
-            typedef std::function<void(void)> Task;
+            struct Task {
+                Task() = default;
+                /**
+                 *
+                 * @param callback 回调函数
+                 */
+                Task(std::function<void(void*)> callback) {
+                    action = callback;
+                }
+
+                /**
+                 *
+                 * @param callback 回调函数
+                 * @param ctx 回调传回的上下文
+                 */
+                Task(std::function<void(void*)> callback, void *ctx) {
+                    action = callback;
+                    this->ctx = ctx;
+                }
+
+                std::function<void(void*)>  action;
+                void                       *ctx = nullptr;
+            };
 
             /**
              *

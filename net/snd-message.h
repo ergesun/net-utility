@@ -10,6 +10,9 @@
 
 namespace netty {
     namespace net {
+        /**
+         * 一旦发送，则SndMessage的所有权便属于了net库，user无需再管理此SndMessage。生命周期由net库控制。
+         */
         class SndMessage : public Message, public IEncoder {
         public:
             /**
@@ -21,7 +24,8 @@ namespace netty {
 
 #ifdef WITH_MSG_ID // 如果开启了这个，可能你回复消息的时候需要保持id不变，就需要用到此构造函数。
             /**
-             * 一旦发送，则SndMessage的所有权便属于了框架，user无需再管理此SndMessage。生命周期由框架控制。
+             * 调用此构造用于发送指定id的消息。比如说你作为某个request的response时可能
+             * 需要保证response的id和request一致以方便业务应用。
              * @param mp
              * @param peerInfo 标识所走的协议以及本地socket信息
              * @param id 作为响应时赋予的接收到的消息的id，以便接受者用其分发。

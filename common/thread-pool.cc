@@ -67,9 +67,9 @@ namespace netty {
                     break;
                 }
 
-                if (task) {
+                if (task.action) {
                     m_iActiveWorkersCnt++;
-                    task();
+                    task.action(task.ctx);
                     m_iActiveWorkersCnt--;
                 }
 
