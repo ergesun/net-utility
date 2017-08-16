@@ -22,6 +22,15 @@ namespace netty {
          */
         class GCC_INTERNAL EventWorker {
         public:
+            struct EpollAddEvent {
+                EpollAddEvent(AFileEventHandler *h, int32_t curMask, int32_t m)
+                    : socketEventHandler(h), cur_mask(curMask), mask(m) {}
+                AFileEventHandler *socketEventHandler = nullptr;
+                int32_t cur_mask;
+                int32_t mask;
+            };
+
+        public:
             EventWorker(uint32_t maxEvents, NonBlockingEventModel m);
             ~EventWorker();
 
@@ -33,53 +42,50 @@ namespace netty {
                 return m_pEventDriver->EventWait(events, tp);
             }
 
-            int32_t AddEvent(AFileEventHandler *socketEventHandler, int32_t cur_mask, int32_t mask) {
-                common::SpinLock l(&m_slDriver);
-                return m_pEventDriver->AddEvent(socketEventHandler, cur_mask, mask);
+            void AddExternalRWOpEvent(NetEvent ne) {
+                common::SpinLock l(&m_slEERWOp);
+                m_lRwOpExtEvents.push_back(ne);
             }
 
-            /**
-             * 由于事件处理是一个线程，用户事件调用是用户线程。那么就存在一种可能：事件管理线程检测到pipe bad或者pipe close或者其他，
-             * 便会发出on_finish事件，这时候回调就会触发移除这个订阅事件及其相关的内存;而与此同时用户线程可能会发送数据，恰巧还推送了外部事件，
-             * 那么就有可能使得事件循环在处理外部时间的时候访问到已经被释放的内存。这里我们通过延迟删除动作，把删除动作放到事件处理线程里执行，
-             * 这样外部事件与内部事件就都在一个线程内处理，就可以避免这样的问题了。
-             * @param socketEventHandler
-             * @return
-             */
-            int32_t DeleteHandler(AFileEventHandler *socketEventHandler) {
-                int32_t res;
-                {
-                    common::SpinLock l(&m_slDriver);
-                    res = m_pEventDriver->DeleteHandler(socketEventHandler);
-                }
-                {
-                    std::unique_lock<std::mutex> l(m_mtxPendingDeleteEHLock);
-                    m_pendingDeleteEventHandlers.insert(socketEventHandler);
-                }
+            std::list<NetEvent> GetExternalRWOpEvents() {
+                common::SpinLock l(&m_slEERWOp);
+                std::list<NetEvent> tmp;
+                tmp.swap(m_lRwOpExtEvents);
 
-                return res;
-            }
-
-            /**
-             * TODO(sunchao): 优化此处删除逻辑的设计。
-             * @return
-             */
-            std::set<AFileEventHandler*> GetPendingDeleteEventHandlers() {
-                std::unique_lock<std::mutex> l(m_mtxPendingDeleteEHLock);
-                std::set<AFileEventHandler*> tmp;
-                m_pendingDeleteEventHandlers.swap(tmp);
                 return std::move(tmp);
             }
 
-            void AddExternalEvent(NetEvent ne) {
-                common::SpinLock l(&m_slEE);
-                m_lDriverExternalEvents.push_back(ne);
+            void AddExternalEpAddEvent(AFileEventHandler *socketEventHandler, int32_t cur_mask, int32_t mask) {
+                common::SpinLock l(&m_slEEAddEpEv);
+                EpollAddEvent eae = {
+                    .socketEventHandler = socketEventHandler,
+                    .cur_mask = cur_mask,
+                    .mask = mask
+                };
+                m_lAddEpExtEvents.push_back(eae);
             }
 
-            std::list<NetEvent> GetExternalEvents() {
-                common::SpinLock l(&m_slEE);
-                std::list<NetEvent> tmp;
-                tmp.swap(m_lDriverExternalEvents);
+            std::list<EventWorker::EpollAddEvent> GetExternalEpAddEvents() {
+                common::SpinLock l(&m_slEEAddEpEv);
+                std::list<EpollAddEvent> tmp;
+                tmp.swap(m_lAddEpExtEvents);
+
+                return std::move(tmp);
+            }
+
+            /**
+             * 释放关于h的一切。
+             * @param h 该方法会释放h
+             */
+            void AddExternalEpDelEvent(AFileEventHandler* h) {
+                common::SpinLock l(&m_slEEDelEpEv);
+                m_lDelEpExtEvents.insert(h);
+            }
+
+            std::set<AFileEventHandler*> GetExternalEpDelEvents() {
+                common::SpinLock l(&m_slEEDelEpEv);
+                std::set<AFileEventHandler*> tmp;
+                tmp.swap(m_lDelEpExtEvents);
 
                 return std::move(tmp);
             }
@@ -87,17 +93,28 @@ namespace netty {
             void Wakeup();
 
         private:
+            friend class PosixEventManager;
+            int32_t AddEvent(AFileEventHandler *socketEventHandler, int32_t cur_mask, int32_t mask) {
+                return m_pEventDriver->AddEvent(socketEventHandler, cur_mask, mask);
+            }
+
+            int32_t DeleteHandler(AFileEventHandler *socketEventHandler) {
+                return m_pEventDriver->DeleteHandler(socketEventHandler);
+            }
+
+        private:
             std::vector<NetEvent>            m_vDriverInternalEvents;
             IEventDriver                    *m_pEventDriver;
-            common::spin_lock_t              m_slDriver = UNLOCKED;
 
-            common::spin_lock_t              m_slEE = UNLOCKED;
-            std::list<NetEvent>              m_lDriverExternalEvents;
+            common::spin_lock_t              m_slEERWOp = UNLOCKED;
+            std::list<NetEvent>              m_lRwOpExtEvents;
+            common::spin_lock_t              m_slEEAddEpEv = UNLOCKED;
+            std::list<EpollAddEvent>         m_lAddEpExtEvents;
+            common::spin_lock_t              m_slEEDelEpEv = UNLOCKED;
+            std::set<AFileEventHandler*>     m_lDelEpExtEvents;
             int                              m_notifySendFd;
             int                              m_notifyRecvFd;
             AFileEventHandler               *m_pLocalReadEventHandler;
-            std::mutex                       m_mtxPendingDeleteEHLock;
-            std::set<AFileEventHandler*>     m_pendingDeleteEventHandlers;
         };
     }  // namespace net
 }  // namespace netty

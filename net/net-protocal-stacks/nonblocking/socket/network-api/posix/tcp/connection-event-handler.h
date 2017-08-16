@@ -20,10 +20,12 @@ namespace netty {
         class GCC_INTERNAL PosixTcpConnectionEventHandler : public AFileEventHandler {
         public:
             PosixTcpConnectionEventHandler(PosixTcpClientSocket *pSocket, common::MemPool *memPool,
-                                           NotifyMessageCallbackHandler msgCallbackHandler);
+                                           NotifyMessageCallbackHandler msgCallbackHandler, uint16_t logicPort);
             PosixTcpConnectionEventHandler(net_addr_t &peerAddr, int sfd, common::MemPool *memPool,
-                                           NotifyMessageCallbackHandler msgCallbackHandler);
-            ~PosixTcpConnectionEventHandler();
+                                           NotifyMessageCallbackHandler msgCallbackHandler, ConnectFunc onLogicConnect);
+            ~PosixTcpConnectionEventHandler() override;
+
+            bool Initialize() override;
 
             bool HandleReadEvent() override;
             bool HandleWriteEvent() override;
@@ -34,6 +36,7 @@ namespace netty {
             PosixTcpClientSocket   *m_pClientSocket = nullptr;
             PosixTcpNetStackWorker *m_pNetStackWorker = nullptr;
             common::MemPool        *m_pMemPool;
+            uint16_t                m_iLogicPort;
         };
     } // namespace net
 } // namespace netty

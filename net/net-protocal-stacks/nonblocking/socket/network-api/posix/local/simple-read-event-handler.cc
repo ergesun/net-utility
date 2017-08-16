@@ -22,6 +22,10 @@ namespace netty {
             DELETE_PTR(fd);
         }
 
+        bool PosixLocalReadEventHandler::Initialize() {
+            return true;
+        }
+
         bool PosixLocalReadEventHandler::HandleReadEvent() {
             char buf[1024];
             ssize_t r = 0;

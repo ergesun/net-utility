@@ -24,7 +24,7 @@ namespace netty {
              * @param memPool 内存池对象
              * @param sspMgr  worker的管理策略，传入nullptr则默认创建UniqueWorkerManager。
              */
-            static ISocketService* CreateService(SocketProtocal sp, std::shared_ptr<net_addr_t> sspNat,
+            static ISocketService* CreateService(SocketProtocal sp, std::shared_ptr<net_addr_t> sspNat, uint16_t logicPort,
                                                  common::MemPool *memPool, NotifyMessageCallbackHandler msgCallbackHandler,
                                                  std::shared_ptr<INetStackWorkerManager> sspMgr);
         }; // class SocketServiceFactory

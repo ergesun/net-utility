@@ -58,13 +58,21 @@ namespace netty {
                 bzero(Start, (uintptr_t)End - (uintptr_t)Start + 1);
             }
 
-            inline void SendN(uint32_t n) {
+            /**
+             * 向后移动有效头指针Pos
+             * @param n
+             */
+            inline void MoveHeadBack(uint32_t n) {
                 if (Pos && Last) {
                     Pos += n;
                 }
             }
 
-            inline void RecvN(uint32_t n) {
+            /**
+             * 向后移动有效尾指针Last
+             * @param n
+             */
+            inline void MoveTailBack(uint32_t n) {
                 if (!Pos) {
                     Pos = Start;
                 }

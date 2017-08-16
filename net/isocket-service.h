@@ -13,10 +13,9 @@ namespace netty {
         class SndMessage;
         class ISocketService {
         public:
-            virtual ~ISocketService() {}
+            virtual ~ISocketService() = default;
 
-            virtual bool Start(uint16_t ioThreadsCnt = (uint16_t)(common::CPUS_CNT / 2),
-                               NonBlockingEventModel m = NonBlockingEventModel::Posix) = 0;
+            virtual bool Start(uint16_t ioThreadsCnt, NonBlockingEventModel m) = 0;
 
             virtual bool Stop() = 0;
 

@@ -15,7 +15,8 @@
 namespace netty {
     namespace net {
         PosixTcpServerEventHandler::PosixTcpServerEventHandler(EventWorker *ew, net_addr_t *nat,
-                                                               ConnectHandler onConnect, common::MemPool *memPool,
+                                                               ConnectHandler onRealConnect, ConnectFunc onLogicConnect,
+                                                               FinishHandler finishHandler, common::MemPool *memPool,
                                                                NotifyMessageCallbackHandler msgCallbackHandler) {
             // TODO(sunchao): backlog改成可配置？
             m_pSrvSocket = new PosixTcpServerSocket(nat, 512);
@@ -37,14 +38,20 @@ namespace netty {
             }
             SetSocketDescriptor(m_pSrvSocket);
             SetOwnWorker(ew);
-            m_onConnect = onConnect;
+            m_onRealConnect = std::move(onRealConnect);
+            m_onLogicConnect = std::move(onLogicConnect);
+            m_onFinish = std::move(finishHandler);
             m_pMemPool = memPool;
-            m_msgCallbackHandler = msgCallbackHandler;
+            m_msgCallbackHandler = std::move(msgCallbackHandler);
         }
 
         PosixTcpServerEventHandler::~PosixTcpServerEventHandler() {
             m_pSrvSocket->Close();
             DELETE_PTR(m_pSrvSocket);
+        }
+
+        bool PosixTcpServerEventHandler::Initialize() {
+            return true;
         }
 
         bool PosixTcpServerEventHandler::HandleReadEvent() {
@@ -77,9 +84,12 @@ namespace netty {
                     net_addr_t peerAddr(std::move(addrStr), port);
                     // 连接失效的时候再释放。
                     PosixTcpConnectionEventHandler *connEventHandler =
-                        new PosixTcpConnectionEventHandler(peerAddr, conn_fd, m_pMemPool, m_msgCallbackHandler);
-                    if (m_onConnect) {
-                        m_onConnect(connEventHandler);
+                        new PosixTcpConnectionEventHandler(peerAddr, conn_fd, m_pMemPool, m_msgCallbackHandler, m_onLogicConnect);
+                    m_onRealConnect(connEventHandler);
+                    if (!connEventHandler->Initialize()) {
+                        fprintf(stderr, "connection %s:%d initialize failed!\n", peerAddr.addr.c_str(), port);
+                        // 本端当前不回收，等待对端关闭/断开时回收。否则会有二次回收的问题。
+                        //m_onFinish(connEventHandler);
                     }
                 }
             }

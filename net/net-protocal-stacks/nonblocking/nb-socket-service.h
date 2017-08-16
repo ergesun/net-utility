@@ -33,17 +33,18 @@ namespace netty {
              * @param sspMgr  worker的管理策略。
              * @param memPool 内存池。
              */
-            NBSocketService(SocketProtocal sp, std::shared_ptr<net_addr_t> sspNat, std::shared_ptr<INetStackWorkerManager> sspMgr,
+            NBSocketService(SocketProtocal sp, std::shared_ptr<net_addr_t> sspNat, uint16_t logicPort,
+                            std::shared_ptr<INetStackWorkerManager> sspMgr,
                             common::MemPool *memPool, NotifyMessageCallbackHandler msgCallbackHandler);
 
-            ~NBSocketService();
+            ~NBSocketService() override;
 
             /**
              * 开启服务。
              * @param m 模式。
              * @return 成功true,失败false.
              */
-            bool Start(uint16_t ioThreadsCnt = (uint16_t)(common::CPUS_CNT / 2), NonBlockingEventModel m = NonBlockingEventModel::Posix) override;
+            bool Start(uint16_t ioThreadsCnt, NonBlockingEventModel m) override;
 
             bool Stop() override;
 
@@ -52,23 +53,28 @@ namespace netty {
             bool Disconnect(net_peer_info_t &npt) override;
 
             /**
-             * 一旦发送，则m的所有权便属于了框架，user无需也不可以再管理此SndMessage，m生命周期由框架控制。
+             * 一旦发送成功，则m的所有权便属于了框架，user无需也不可以再管理此SndMessage，m生命周期由框架控制。
+             * 如果发送失败，则m的生命周期由调用者控制。
              * @param m
              * @return
              */
             bool SendMessage(SndMessage *m) override;
 
         private:
-            void on_connect(AFileEventHandler *handler);
+            void on_real_connect(AFileEventHandler *handler);
+            bool on_logic_connect(AFileEventHandler *handler);
             void on_finish(AFileEventHandler *handler);
 
         private:
+            uint16_t                                           m_iLogicPort = 0;
             std::shared_ptr<INetStackWorkerManager>            m_pNetStackWorkerManager = nullptr;
             // 关联关系，外部传入的，根据谁创建谁销毁原则，本类无需释放。
             common::MemPool                                   *m_pMemPool = nullptr;
             AEventManager                                     *m_pEventManager = nullptr;
             NotifyMessageCallbackHandler                       m_msgCallback;
             bool                                               m_bStopped;
+
+
         }; // class NBSocketService
     }  // namespace net
 } // namespace netty

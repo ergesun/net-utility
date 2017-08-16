@@ -27,11 +27,11 @@ namespace netty {
             std::shared_ptr<net::net_addr_t> ssp_npt(nullptr);
             common::MemPool memPool;
             std::shared_ptr<net::INetStackWorkerManager> sspMgr = std::shared_ptr<net::INetStackWorkerManager>(new net::UniqueWorkerManager());
-            auto netService = net::SocketServiceFactory::CreateService(net::SocketProtocal::Tcp, ssp_npt, &memPool,
+            auto netService = net::SocketServiceFactory::CreateService(net::SocketProtocal::Tcp, ssp_npt, 2210, &memPool,
                                                                        std::bind(&TcpClientTest::recv_msg,
                                                                                  std::placeholders::_1),
                                                                         sspMgr);
-            if (!netService->Start()) {
+            if (!netService->Start(2, netty::net::NonBlockingEventModel::Posix)) {
                 throw std::runtime_error("cannot start SocketService");
             }
 
@@ -44,7 +44,7 @@ namespace netty {
             };
 
             for (;;) {
-                TestSndMessage *tsm = new TestSndMessage(&memPool, peerInfo, "client request: hello server!");
+                TestSndMessage *tsm = new TestSndMessage(&memPool, net::net_peer_info_t(peerInfo), "client request: hello server!");
                 bool rc = netService->SendMessage(tsm);
                 if (rc) {
                     std::unique_lock<std::mutex> l(s_mtx);
@@ -65,7 +65,7 @@ namespace netty {
                     net::MessageNotifyMessage *mnm = dynamic_cast<net::MessageNotifyMessage*>(sspNM.get());
                     auto rm = mnm->GetContent();
                     if (rm) {
-                        auto respBuf = rm->GetBuffer();
+                        auto respBuf = rm->GetDataBuffer();
 #ifdef WITH_MSG_ID
 #ifdef BULK_MSG_ID
                         std::cout << "response = "  << respBuf->Pos << ", " << "message id is { ts = " << rm->GetId().ts
@@ -97,7 +97,7 @@ namespace netty {
 
             static common::ThreadPool tp;
             common::ThreadPool::Task t([](void*){
-                usleep(1000 * 100);
+                usleep(1000 * 1000);
                 s_cv.notify_one();
             });
             tp.AddTask(t);

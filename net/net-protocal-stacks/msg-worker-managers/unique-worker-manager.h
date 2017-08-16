@@ -7,6 +7,7 @@
 #define NET_CORE_NETSTACKWORKERPOLICY_H
 
 #include <unordered_map>
+#include <unordered_set>
 
 #include "../inet-stack-worker-manager.h"
 #include "../../../common/spin-lock.h"
@@ -18,14 +19,14 @@ namespace netty {
          */
         class UniqueWorkerManager : public INetStackWorkerManager {
         public:
-            ~UniqueWorkerManager() {}
+            ~UniqueWorkerManager() = default;
 
             /**
              * 获取一个worker。
-             * @param npt
+             * @param logicNpt
              * @return 查找到的worker。如果不存在则为nullptr。
              */
-            AFileEventHandler *GetWorkerEventHandler(net_peer_info_t npt) override;
+            AFileEventHandler *GetWorkerEventHandler(net_peer_info_t logicNpt) override;
 
             /**
              * 放入一个worker。如果已经存在了会失败。
@@ -36,17 +37,22 @@ namespace netty {
 
             /**
              * 移除一个worker。
-             * @param workerEventHandler
+             * @param realNpt
              * @return 被移除的worker。如果不存在则为nullptr。
              */
-            AFileEventHandler* RemoveWorkerEventHandler(net_peer_info_t npt) override;
+            AFileEventHandler* RemoveWorkerEventHandler(net_peer_info_t realNpt) override;
 
         private:
-            inline AFileEventHandler *lookup_worker(net_peer_info_t &npt);
+            inline AFileEventHandler *lookup_worker(net_peer_info_t &logicNpt);
 
         private:
-            common::spin_lock_t                                     m_sl = UNLOCKED;
-            std::unordered_map<net_peer_info_t, AFileEventHandler*> m_hmap_workers;
+            common::spin_lock_t                                              m_sl = UNLOCKED;
+            std::unordered_map<net_peer_info_t, AFileEventHandler*>          m_hmap_workers;
+            std::unordered_map<net_peer_info_t, net_peer_info_t>             m_hmap_real_logic;
+            /**
+             * logic peer -> set<real peers>
+             */
+            std::unordered_map<net_peer_info_t, std::unordered_set<net_peer_info_t>>   m_hmap_lp_rp;
         }; // class UniqueWorkerManager
     }  // namespace net
 }  // namespace netty

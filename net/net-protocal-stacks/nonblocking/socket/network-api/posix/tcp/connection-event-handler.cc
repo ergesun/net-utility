@@ -9,20 +9,24 @@ namespace netty {
     namespace net {
         PosixTcpConnectionEventHandler::PosixTcpConnectionEventHandler(PosixTcpClientSocket *pSocket,
                                                                        common::MemPool *memPool,
-                                                                       NotifyMessageCallbackHandler msgCallbackHandler) {
+                                                                       NotifyMessageCallbackHandler msgCallbackHandler,
+                                                                       uint16_t logicPort) : m_iLogicPort(logicPort) {
             m_pClientSocket = pSocket;
             SetSocketDescriptor(m_pClientSocket);
 
-            m_pNetStackWorker = new PosixTcpNetStackWorker(this, memPool, m_pClientSocket, msgCallbackHandler);
+            m_pNetStackWorker = new PosixTcpNetStackWorker(PosixTcpNetStackWorker::CreatorType::Client,
+                this, memPool, m_pClientSocket, std::move(msgCallbackHandler), m_iLogicPort);
             m_pMemPool = memPool;
         }
 
         PosixTcpConnectionEventHandler::PosixTcpConnectionEventHandler(net_addr_t &peerAddr, int sfd, common::MemPool *memPool,
-                                                                       NotifyMessageCallbackHandler msgCallbackHandler) {
+                                                                       NotifyMessageCallbackHandler msgCallbackHandler,
+                                                                       ConnectFunc onLogicConnect) {
             m_pClientSocket = new PosixTcpClientSocket(peerAddr, sfd);
             SetSocketDescriptor(m_pClientSocket);
 
-            m_pNetStackWorker = new PosixTcpNetStackWorker(this, memPool, m_pClientSocket, msgCallbackHandler);
+            m_pNetStackWorker = new PosixTcpNetStackWorker(PosixTcpNetStackWorker::CreatorType::Server,
+                this, memPool, m_pClientSocket, std::move(msgCallbackHandler), std::move(onLogicConnect));
             m_pMemPool = memPool;
         }
 
@@ -30,6 +34,10 @@ namespace netty {
             m_pClientSocket->Close();
             DELETE_PTR(m_pClientSocket);
             DELETE_PTR(m_pNetStackWorker);
+        }
+
+        bool PosixTcpConnectionEventHandler::Initialize() {
+            return m_pNetStackWorker->Initialize();
         }
 
         bool PosixTcpConnectionEventHandler::HandleReadEvent() {

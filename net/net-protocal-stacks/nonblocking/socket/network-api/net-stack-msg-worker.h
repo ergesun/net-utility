@@ -45,6 +45,11 @@ namespace netty {
             virtual ~ANetStackMessageWorker();
 
             /**
+             * 必须先调用此函数进行初始化。
+             * @return
+             */
+            virtual bool Initialize() = 0;
+            /**
              *
              */
             bool SendMessage(SndMessage *m);

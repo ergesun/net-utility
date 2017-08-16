@@ -16,12 +16,12 @@ namespace netty {
          */
         class RcvMessage : public Message {
         public:
-            RcvMessage(common::MemPoolObject *refMpo, common::MemPool *mp, net_peer_info_t peerInfo,
+            RcvMessage(common::MemPoolObject *refMpo, common::MemPool *mp, net_peer_info_t &&peerInfo,
                        Message::Header h, common::Buffer *buffer) : Message(mp) {
                 m_header = h;
                 m_pBuffer = buffer;
                 m_refMpo = refMpo;
-                m_peerInfo = peerInfo;
+                m_peerInfo = std::move(peerInfo);
             }
 
             ~RcvMessage() {
@@ -43,7 +43,7 @@ namespace netty {
              * 注: user无需释放。
              * @return
              */
-            inline const common::Buffer* GetBuffer() const {
+            inline common::Buffer* GetDataBuffer() const {
                 return m_pBuffer;
             }
 

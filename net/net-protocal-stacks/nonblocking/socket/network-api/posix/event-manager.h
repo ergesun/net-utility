@@ -24,19 +24,18 @@ namespace netty {
         class GCC_INTERNAL PosixEventManager : public AEventManager {
         public:
             PosixEventManager(SocketProtocal sp, std::shared_ptr<net_addr_t> sspNat, common::MemPool *memPool, uint32_t maxEvents,
-                                 uint32_t connWorkersCnt, ConnectHandler connectHandler, FinishHandler finishHandler,
-                                 NotifyMessageCallbackHandler msgCallbackHandler);
+                              uint32_t connWorkersCnt, ConnectHandler realConnectHandler, ConnectFunc logicConnectHandler,
+                              FinishHandler finishHandler, NotifyMessageCallbackHandler msgCallbackHandler);
 
-            ~PosixEventManager();
+            ~PosixEventManager() override;
 
             bool Start(NonBlockingEventModel m) override;
             bool Stop() override;
 
-            int AddEvent(AFileEventHandler *socketEventHandler, int cur_mask, int mask) override;
+            void AddEvent(AFileEventHandler *socketEventHandler, int cur_mask, int mask) override;
 
         private:
             void worker_loop(EventWorker *ew);
-            void on_connect(AFileEventHandler *handler);
             inline void process_event(NetEvent *netEvent);
 
         private:
@@ -49,7 +48,8 @@ namespace netty {
             std::pair<std::thread*, EventWorker*>              m_pListenWorkerEventLoopCtx;
             std::vector<std::pair<std::thread*, EventWorker*>> m_vConnsWorkerEventLoopCtxs;
             common::spin_lock_t                                m_slSelectEvents = UNLOCKED;
-            ConnectHandler                                     m_onConnect;
+            ConnectHandler                                     m_onRealConnect;
+            ConnectFunc                                        m_onLogicConnect;
             FinishHandler                                      m_onFinish;
             NotifyMessageCallbackHandler                       m_msgCallback;
         };

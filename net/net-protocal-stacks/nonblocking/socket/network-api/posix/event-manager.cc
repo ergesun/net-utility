@@ -12,12 +12,13 @@ using namespace std::placeholders;
 namespace netty {
     namespace net {
         PosixEventManager::PosixEventManager(SocketProtocal sp, std::shared_ptr<net_addr_t> sspNat, common::MemPool *memPool, uint32_t maxEvents,
-                                                   uint32_t connWorkersCnt, ConnectHandler connectHandler,
-                                                   FinishHandler finishHandler, NotifyMessageCallbackHandler msgCallbackHandler)  :
-            AEventManager(memPool, maxEvents), m_sp(sp), m_sspNat(sspNat), m_iConnWorkersCnt(connWorkersCnt) {
-            m_onConnect = connectHandler;
-            m_onFinish = finishHandler;
-            m_msgCallback = msgCallbackHandler;
+                                             uint32_t connWorkersCnt, ConnectHandler realConnectHandler, ConnectFunc logicConnectHandler,
+                                             FinishHandler finishHandler, NotifyMessageCallbackHandler msgCallbackHandler)  :
+            AEventManager(memPool, maxEvents), m_sp(sp), m_sspNat(std::move(sspNat)), m_iConnWorkersCnt(connWorkersCnt) {
+            m_onRealConnect = std::move(realConnectHandler);
+            m_onLogicConnect = std::move(logicConnectHandler);
+            m_onFinish = std::move(finishHandler);
+            m_msgCallback = std::move(msgCallbackHandler);
         }
 
         PosixEventManager::~PosixEventManager() {
@@ -33,14 +34,13 @@ namespace netty {
             if (SocketProtocal::Tcp == m_sp) {
                 if (m_sspNat.get()) {
                     auto ew = new EventWorker(m_iMaxEvents, m);
-                    m_pServerEventHandler = new PosixTcpServerEventHandler(ew, m_sspNat.get(),
-                                                                           std::bind(&PosixEventManager::on_connect, this, _1),
+                    m_pServerEventHandler = new PosixTcpServerEventHandler(ew, m_sspNat.get(), m_onRealConnect,
+                                                                           m_onLogicConnect, m_onFinish,
                                                                            m_pMemPool, m_msgCallback);
-                    if (0 != ew->AddEvent(m_pServerEventHandler, EVENT_NONE, EVENT_READ)) {
-                        return false;
-                    }
                     m_pListenWorkerEventLoopCtx.second = ew;
                     m_pListenWorkerEventLoopCtx.first = new std::thread(std::bind(&PosixEventManager::worker_loop, this, ew));
+                    ew->AddExternalEpAddEvent(m_pServerEventHandler, EVENT_NONE, EVENT_READ);
+                    ew->Wakeup();
                 }
 
                 m_vConnsWorkerEventLoopCtxs.resize(m_iConnWorkersCnt);
@@ -50,7 +50,9 @@ namespace netty {
                     m_vConnsWorkerEventLoopCtxs[i].first = new std::thread(std::bind(&PosixEventManager::worker_loop, this, ew));
                 }
             } else {
-                throw std::runtime_error("Not support now!");
+                std::stringstream ss;
+                ss << "Not support now!" << __FILE__ << ":" << __LINE__;
+                throw std::runtime_error(ss.str());
             }
 
             return true;
@@ -82,7 +84,7 @@ namespace netty {
             return true;
         }
 
-        int PosixEventManager::AddEvent(AFileEventHandler *socketEventHandler, int cur_mask, int mask) {
+        void PosixEventManager::AddEvent(AFileEventHandler *socketEventHandler, int cur_mask, int mask) {
             {
                 common::SpinLock l(&m_slSelectEvents);
                 /**
@@ -93,23 +95,30 @@ namespace netty {
             }
 
             auto ew = m_vConnsWorkerEventLoopCtxs[m_iCurWorkerIdx].second;
-
             socketEventHandler->SetOwnWorker(ew);
-            return ew->AddEvent(socketEventHandler, cur_mask, mask);
+            ew->AddExternalEpAddEvent(socketEventHandler, cur_mask, mask);
+            ew->Wakeup();
         }
 
         void PosixEventManager::worker_loop(EventWorker *ew) {
             auto events = ew->GetEventsContainer();
             while (!m_bStopped) {
                 auto nevents = ew->GetInternalEvent(events, nullptr);
+                auto pendingDeleteEventHandlers = ew->GetExternalEpDelEvents();
+
+                for (auto de : pendingDeleteEventHandlers) {
+                    ew->DeleteHandler(de);
+                }
+
                 if (nevents > 0) {
                     for (int i = 0; i < nevents; ++i) {
-                        process_event(&(*events)[i]);
+                        if (pendingDeleteEventHandlers.find((*events)[i].eh) == pendingDeleteEventHandlers.end()) {
+                            process_event(&(*events)[i]);
+                        }
                     }
                 }
 
-                auto pendingDeleteEventHandlers = ew->GetPendingDeleteEventHandlers();
-                auto externalEvents = ew->GetExternalEvents();
+                auto externalEvents = ew->GetExternalRWOpEvents();
                 for (auto &eev : externalEvents) {
                     if (pendingDeleteEventHandlers.find(eev.eh) == pendingDeleteEventHandlers.end()) {
                         process_event(&eev);
@@ -121,13 +130,14 @@ namespace netty {
                 }
 
                 pendingDeleteEventHandlers.clear();
-                hw_rw_memory_barrier();
-            }
-        }
 
-        void PosixEventManager::on_connect(AFileEventHandler *handler) {
-            if (m_onConnect) {
-                m_onConnect(handler);
+                auto addEvs = ew->GetExternalEpAddEvents();
+                for (auto addEv : addEvs) {
+                    ew->AddEvent(addEv.socketEventHandler, addEv.cur_mask, addEv.mask);
+                }
+                addEvs.clear();
+
+                hw_rw_memory_barrier();
             }
         }
 

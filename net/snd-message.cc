@@ -11,38 +11,46 @@
 
 namespace netty {
     namespace net {
-#ifdef WITH_MSG_ID
+#if WITH_MSG_ID
         common::spin_lock_t SndMessage::s_idLock = UNLOCKED;
-#ifdef BULK_MSG_ID
+    #if BULK_MSG_ID
         Message::Id SndMessage::s_lastId = Id(0, 0);
-#else
+    #else
         Message::Id SndMessage::s_lastId = 0;
+    #endif
 #endif
-#endif
-        SndMessage::SndMessage(common::MemPool *mp, net_peer_info_t peerInfo) :
-            Message(mp) {
+
+        SndMessage::SndMessage() {
 #ifdef WITH_MSG_ID
             m_header.id = get_new_id();
 #endif
-            m_peerInfo = peerInfo;
+        }
+
+        SndMessage::SndMessage(common::MemPool *mp, net_peer_info_t &&peerInfo) : Message(mp) {
+#ifdef WITH_MSG_ID
+            m_header.id = get_new_id();
+#endif
+            m_peerInfo = std::move(peerInfo);
         }
 
 #ifdef WITH_MSG_ID
-        SndMessage::SndMessage(common::MemPool *mp, net_peer_info_t peerInfo, Id id) :
-            Message(mp) {
+        SndMessage::SndMessage(common::MemPool *mp, net_peer_info_t &&peerInfo, Id id) : Message(mp) {
             m_header.id = id;
-            m_peerInfo = peerInfo;
+            m_peerInfo = std::move(peerInfo);
         }
 #endif
 
         common::Buffer* SndMessage::Encode() {
-            auto headerBufferSize = Message::HeaderSize();
             auto deriveBufferSize = GetDerivePayloadLength();
-            if (deriveBufferSize > MAX_MSG_PAYLOAD_SIZE) {
+            if (UNLIKELY(deriveBufferSize <= 0)) {
+                throw std::runtime_error("message payload cannot less than 0 bytes");
+            }
+
+            if (UNLIKELY(deriveBufferSize > MAX_MSG_PAYLOAD_SIZE)) {
                 throw std::runtime_error("message payload cannot more than 64MiB");
             }
 
-            auto totalBufferSize = headerBufferSize + deriveBufferSize;
+            auto totalBufferSize = Message::HeaderSize() + deriveBufferSize;
 
             m_header.magic = MESSAGE_MAGIC_NO;
             m_header.len = deriveBufferSize;

@@ -20,18 +20,20 @@ add_library(net SHARED
         ${NPS_NB_SA_POSIX_TCP_SK_SRCS}
         ${NPS_NB_SA_ED_SRCS}
         ${NPS_NB_SA_ED_EP_SRCS}
-        #notify-message.h
-        #common-def.h
-        #net-protocal-stacks/nonblocking/socket/network-api/abstract-event-manager.h
-        #net-protocal-stacks/nonblocking/ievent-handler.h
-        #net-protocal-stacks/inet-stack-worker-manager.h
-        #net-protocal-stacks/nonblocking/socket/event-drivers/ievent-driver.h
-        #net-protocal-stacks/nonblocking/socket/event-drivers/factory.h
-        #net-protocal-stacks/nonblocking/socket/network-api/file-descriptor.h
-        #net-protocal-stacks/nonblocking/socket/network-api/abstract-file-event-handler.h
-        #message.h
-        #isocket-service.h
-        #abstract-socket-service.h
-        #iencoder.h
+        notify-message.h
+        common-def.h
+        net-protocal-stacks/nonblocking/socket/network-api/abstract-event-manager.h
+        net-protocal-stacks/nonblocking/ievent-handler.h
+        net-protocal-stacks/inet-stack-worker-manager.h
+        net-protocal-stacks/nonblocking/socket/event-drivers/ievent-driver.h
+        net-protocal-stacks/nonblocking/socket/event-drivers/factory.h
+        net-protocal-stacks/nonblocking/socket/network-api/file-descriptor.h
+        net-protocal-stacks/nonblocking/socket/network-api/abstract-file-event-handler.h
+        message.h
+        isocket-service.h
+        abstract-socket-service.h
+        iencoder.h
+        net-protocal-stacks/nonblocking/socket/network-api/posix/tcp/connect-messages/connect-request-message.h
+        net-protocal-stacks/nonblocking/socket/network-api/posix/tcp/connect-messages/connect-response-message.h
         )
 

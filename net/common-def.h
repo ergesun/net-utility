@@ -64,9 +64,7 @@ namespace netty {
             }
 
             net_peer_info_s(net_addr_t &n, SocketProtocal s) : nat(n), sp(s) {}
-
             net_peer_info_s(net_addr_t &&n, SocketProtocal s) : nat(std::move(n)), sp(s) {}
-
             net_peer_info_s(std::string &&addr, uint16_t port, SocketProtocal s) {
                 nat = net_addr_t(std::move(addr), port);
                 sp = s;
@@ -76,6 +74,26 @@ namespace netty {
                 nat = npis.nat;
                 sp = npis.sp;
             }
+
+            net_peer_info_s(const net_peer_info_s &&npis) {
+                nat = std::move(npis.nat);
+                sp = npis.sp;
+            }
+
+            net_peer_info_s& operator=(const net_peer_info_s &npis) {
+                nat = npis.nat;
+                sp = npis.sp;
+
+                return *this;
+            }
+
+            net_peer_info_s& operator=(const net_peer_info_s &&npis) {
+                nat = std::move(npis.nat);
+                sp = npis.sp;
+
+                return *this;
+            }
+
         } net_peer_info_t, net_local_info_t;
 
         inline bool operator==(const net_peer_info_t &a, const net_peer_info_t &b) {

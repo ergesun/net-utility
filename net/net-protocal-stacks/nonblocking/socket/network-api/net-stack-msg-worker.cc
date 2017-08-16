@@ -25,7 +25,7 @@ namespace netty {
             auto size = RcvMessage::HeaderSize();
             auto headerMemObj = m_pMemPool->Get(size);
             m_pHeaderBuffer = common::CommonUtils::GetNewBuffer(headerMemObj, size);
-            m_msgCallback = msgCallbackHandler;
+            m_msgCallback = std::move(msgCallbackHandler);
         }
 
         ANetStackMessageWorker::~ANetStackMessageWorker() {
@@ -49,7 +49,7 @@ namespace netty {
                     .eh = m_pEventHandler,
                     .mask = EVENT_WRITE
                 };
-                ew->AddExternalEvent(writeEvent);
+                ew->AddExternalRWOpEvent(writeEvent);
                 ew->Wakeup();
             }
 
@@ -64,10 +64,10 @@ namespace netty {
             }
         }
 
-        RcvMessage * ANetStackMessageWorker::get_new_rcv_message(common::MemPool *mp, net_peer_info_t peerInfo,
+        RcvMessage* ANetStackMessageWorker::get_new_rcv_message(common::MemPool *mp, net_peer_info_t peerInfo,
                                                                  Message::Header h, common::Buffer *buffer) {
             auto rmMpo = mp->Get(sizeof(RcvMessage));
-            auto rcvMessage = new(rmMpo->Pointer()) RcvMessage(rmMpo, mp, peerInfo, h, buffer);
+            auto rcvMessage = new(rmMpo->Pointer()) RcvMessage(rmMpo, mp, std::move(peerInfo), h, buffer);
             return rcvMessage;
         }
 

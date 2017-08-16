@@ -15,6 +15,8 @@ namespace netty {
             PosixLocalReadEventHandler(int fd);
             ~PosixLocalReadEventHandler();
 
+            bool Initialize() override;
+
             bool HandleReadEvent() override;
             bool HandleWriteEvent() override;
 

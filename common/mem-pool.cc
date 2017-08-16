@@ -222,6 +222,9 @@ namespace netty {
             }
 
             // 组装到MemObjectRef中
+            if (!memObject) {
+                fprintf(stderr, "fail to alloc mem object.\n");
+            }
             return memObject;
         }
 

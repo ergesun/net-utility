@@ -13,9 +13,10 @@ using namespace std::placeholders;
 
 namespace netty {
     namespace net {
-        NBSocketService::NBSocketService(SocketProtocal sp, std::shared_ptr<net_addr_t> sspNat, std::shared_ptr<INetStackWorkerManager> sspMgr,
-                                         common::MemPool *memPool, NotifyMessageCallbackHandler msgCallbackHandler)  :
-            ASocketService(sp, sspNat), m_pMemPool(memPool), m_bStopped(false) {
+        NBSocketService::NBSocketService(SocketProtocal sp, std::shared_ptr<net_addr_t> sspNat, uint16_t logicPort,
+                                         std::shared_ptr<INetStackWorkerManager> sspMgr,
+                                         common::MemPool *memPool, NotifyMessageCallbackHandler msgCallbackHandler) :
+            ASocketService(sp, sspNat), m_iLogicPort(logicPort), m_pMemPool(memPool), m_bStopped(false) {
             assert(memPool);
             m_msgCallback = msgCallbackHandler;
             if (sspMgr.get()) {
@@ -37,7 +38,8 @@ namespace netty {
         bool NBSocketService::Start(uint16_t ioThreadsCnt, NonBlockingEventModel m) {
             m_bStopped = false;
             m_pEventManager = new PosixEventManager(m_sp, m_nlt, m_pMemPool, MAX_EVENTS, ioThreadsCnt,
-                                                    std::bind(&NBSocketService::on_connect, this, _1),
+                                                    std::bind(&NBSocketService::on_real_connect, this, _1),
+                                                    std::bind(&NBSocketService::on_logic_connect, this, _1),
                                                     std::bind(&NBSocketService::on_finish, this, _1),
                                                     m_msgCallback);
             return m_pEventManager->Start(m);
@@ -64,12 +66,23 @@ namespace netty {
                     ptcs->Close();
                     goto Label_failed;
                 }
-                eventHandler = new PosixTcpConnectionEventHandler(ptcs, m_pMemPool, m_msgCallback);
+                eventHandler = new PosixTcpConnectionEventHandler(ptcs, m_pMemPool, m_msgCallback, m_iLogicPort);
+                eventHandler->GetStackMsgWorker()->GetEventHandler()->GetSocketDescriptor()->SetLogicPeerInfo(net_peer_info_t(npt));
+                m_pEventManager->AddEvent(eventHandler, EVENT_NONE, EVENT_READ|EVENT_WRITE);
+                if (!eventHandler->Initialize()) {
+                    auto ew = eventHandler->GetOwnWorker();
+                    ew->AddExternalEpDelEvent(eventHandler);
+                    ew->Wakeup();
+                    // ptcs由event handler释放。
+                    return false;
+                }
                 if (!m_pNetStackWorkerManager->PutWorkerEventHandler(eventHandler)) {
-                    // put失败代表已经有了。
-                    DELETE_PTR(eventHandler);
-                } else {
-                    m_pEventManager->AddEvent(eventHandler, EVENT_NONE, EVENT_READ|EVENT_WRITE);
+                    // put失败代表已经有了，就删除当前的。
+                    auto ew = eventHandler->GetOwnWorker();
+                    ew->AddExternalEpDelEvent(eventHandler);
+                    ew->Wakeup();
+                    // ptcs由event handler释放。
+                    return false;
                 }
 
                 return true;
@@ -78,7 +91,9 @@ namespace netty {
                 DELETE_PTR(ptcs);
                 return false;
             } else {
-                throw std::runtime_error("Not support now!");
+                std::stringstream ss;
+                ss << "Not support now!" << __FILE__ << ":" << __LINE__;
+                throw std::runtime_error(ss.str());
             }
         }
 
@@ -86,7 +101,10 @@ namespace netty {
             auto handler = m_pNetStackWorkerManager->RemoveWorkerEventHandler(npt);
             if (handler) {
                 auto ew = handler->GetOwnWorker();
-                ew->DeleteHandler(handler);
+                if (LIKELY(ew)) {
+                    ew->AddExternalEpDelEvent(handler);
+                    ew->Wakeup();
+                }
 
                 return true;
             }
@@ -96,7 +114,9 @@ namespace netty {
 
         bool NBSocketService::SendMessage(SndMessage *m) {
             if (SocketProtocal::Tcp != m->GetPeerInfo().sp) {
-                throw std::runtime_error("Not support now!");
+                std::stringstream ss;
+                ss << "Not support now!" << __FILE__ << ":" << __LINE__;
+                throw std::runtime_error(ss.str());
             }
 
             bool rc = false;
@@ -117,18 +137,21 @@ namespace netty {
             return rc;
         }
 
-        void NBSocketService::on_connect(AFileEventHandler *handler) {
-            if (m_pNetStackWorkerManager->PutWorkerEventHandler(handler)) {
-                m_pEventManager->AddEvent(handler, EVENT_NONE, EVENT_READ|EVENT_WRITE);
-            } else {
-                DELETE_PTR(handler);
-            }
+        void NBSocketService::on_real_connect(AFileEventHandler *handler) {
+            m_pEventManager->AddEvent(handler, EVENT_NONE, EVENT_READ|EVENT_WRITE);
+        }
+
+        bool NBSocketService::on_logic_connect(AFileEventHandler *handler) {
+            return m_pNetStackWorkerManager->PutWorkerEventHandler(handler);
         }
 
         void NBSocketService::on_finish(AFileEventHandler *handler) {
+            m_pNetStackWorkerManager->RemoveWorkerEventHandler(handler->GetSocketDescriptor()->GetRealPeerInfo());
             auto ew = handler->GetOwnWorker();
-            m_pNetStackWorkerManager->RemoveWorkerEventHandler(handler->GetSocketDescriptor()->GetPeerInfo());
-            ew->DeleteHandler(handler);
+            if (LIKELY(ew)) {
+                ew->AddExternalEpDelEvent(handler);
+                ew->Wakeup();
+            }
         }
     } // namespace net
 } // namespace netty

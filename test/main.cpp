@@ -22,13 +22,13 @@ using namespace netty::test;
 
 int main(int argc, char **argv) {
     std::cout << "/*********TESTCASE - 1: -->  thread pool test**********/" << std::endl;
-    ThreadPoolTest::Run();
+    //ThreadPoolTest::Run();
 
     std::cout << "\n\n/*********TESTCASE - 2: -->  simple memory pool test**********/" << std::endl;
-    MemPoolTest::Run();
+    //MemPoolTest::Run();
 
     std::cout << "\n\n/*********TESTCASE - 3: -->  timer test**********/" << std::endl;
-    TimerTest::Run();
+    //TimerTest::Run();
 
     std::cout << "\n\n/*********TESTCASE - 4: -->  client communication test**********/" << std::endl;
 

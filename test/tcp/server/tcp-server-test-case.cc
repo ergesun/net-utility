@@ -24,11 +24,11 @@ namespace netty {
             std::shared_ptr<net::net_addr_t> ssp_npt(nat);
             m_mp = new common::MemPool();
             std::shared_ptr<net::INetStackWorkerManager> sspMgr = std::shared_ptr<net::INetStackWorkerManager>(new net::UniqueWorkerManager());
-            s_ss = net::SocketServiceFactory::CreateService(net::SocketProtocal::Tcp, ssp_npt, m_mp,
+            s_ss = net::SocketServiceFactory::CreateService(net::SocketProtocal::Tcp, ssp_npt, 2210, m_mp,
                                                                        std::bind(&TcpServerTest::recv_msg,
                                                                                  std::placeholders::_1),
                                                                         sspMgr);
-            if (!s_ss->Start()) {
+            if (!s_ss->Start(2, netty::net::NonBlockingEventModel::Posix)) {
                 throw std::runtime_error("cannot start SocketService");
             }
         }
@@ -39,7 +39,7 @@ namespace netty {
                     net::MessageNotifyMessage *mnm = dynamic_cast<net::MessageNotifyMessage*>(sspNM.get());
                     auto rm = mnm->GetContent();
                     if (rm) {
-                        auto respBuf = rm->GetBuffer();
+                        auto respBuf = rm->GetDataBuffer();
 #ifdef WITH_MSG_ID
 #ifdef BULK_MSG_ID
                         std::cout << "request = "  << respBuf->Pos << ", " << "message id is { ts = " << rm->GetId().ts
@@ -61,14 +61,14 @@ namespace netty {
                     break;
                 }
                 case net::NotifyMessageType::Worker : {
-                    net::WorkerNotifyMessage *wnm = dynamic_cast<net::WorkerNotifyMessage*>(sspNM.get());
+                    auto *wnm = dynamic_cast<net::WorkerNotifyMessage*>(sspNM.get());
                     if (wnm) {
                         std::cout << "worker notify message , rc = " << (int)wnm->GetCode() << ", message = " << wnm->What() << std::endl;
                     }
                     break;
                 }
                 case net::NotifyMessageType::Server: {
-                    net::ServerNotifyMessage *snm = dynamic_cast<net::ServerNotifyMessage*>(sspNM.get());
+                    auto *snm = dynamic_cast<net::ServerNotifyMessage*>(sspNM.get());
                     if (snm) {
                         std::cout << "server notify message , rc = " << (int)snm->GetCode() << ", message = " << snm->What() << std::endl;
                     }

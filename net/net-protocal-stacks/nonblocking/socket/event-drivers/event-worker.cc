@@ -39,6 +39,9 @@ namespace netty {
             }
 
             m_pLocalReadEventHandler = new PosixLocalReadEventHandler(m_notifyRecvFd);
+            if (!m_pLocalReadEventHandler->Initialize()) {
+                throw std::runtime_error("cannot initialize PosixLocalReadEventHandler.");
+            }
             m_pEventDriver->AddEvent(m_pLocalReadEventHandler, EVENT_NONE, EVENT_READ);
         }
 

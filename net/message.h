@@ -93,6 +93,10 @@ namespace netty {
 
         public:
             /**
+             * 之后你需要设置mem pool。
+             */
+            Message() = default;
+            /**
              *
              * @param mp 内存池，以供缓冲buffer。
              */

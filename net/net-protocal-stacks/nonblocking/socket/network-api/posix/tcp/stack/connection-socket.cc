@@ -35,8 +35,8 @@ namespace netty {
             struct sockaddr_in sa;
             bzero(&sa, sizeof(sa));
             sa.sin_family = AF_INET;
-            sa.sin_port = htons(m_peer.nat.port);
-            inet_pton(AF_INET, m_peer.nat.addr.c_str(), &sa.sin_addr);
+            sa.sin_port = htons(m_real_peer.nat.port);
+            inet_pton(AF_INET, m_real_peer.nat.addr.c_str(), &sa.sin_addr);
             if (!timeout) {
                 if (0 == connect(m_fd, (struct sockaddr *) &sa, sizeof(sa))) {
                     if (0 != common::CommonUtils::SetNonBlocking(m_fd)) {
