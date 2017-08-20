@@ -262,10 +262,11 @@ namespace netty {
                         for (auto iter = m_free_tiny_objs.begin(); iter != m_free_tiny_objs.end(); ++iter) {
                             if (onePageObjsCnt == iter->second.size()) {
                                 // 找到了满闲的page，移除之
-                                free(reinterpret_cast<char*>(iter->first));
-                                m_tiny_obj_pages.erase(iter->first);
+                                auto freePtr = iter->first;
+                                m_tiny_obj_pages.erase(freePtr);
                                 m_free_tiny_objs.erase(iter);
                                 m_free_tiny_objs_cnt -= onePageObjsCnt;
+                                free(reinterpret_cast<char*>(freePtr));
                                 break;
                             }
                         }
@@ -273,7 +274,7 @@ namespace netty {
                     break;
                 }
                 case MemObjectType::Small: {
-                    auto slotIdx = convert_small_slot_obj_size_to_slot_idx(slotSize);
+                    auto slotIdx = convert_slot_obj_size_to_slot_idx(slotSize, m_small_obj_slot_footstep_size);
                     auto slotIter = m_free_small_objs.find(slotIdx);
                     SpinLock l(&slotIter->second.sl);
                     auto pagePvIter = slotIter->second.objs.find(objPagePv);
@@ -289,10 +290,11 @@ namespace netty {
                         for (auto iter = slotIter->second.objs.begin(); iter != slotIter->second.objs.end(); ++iter) {
                             // 找到了满闲的page，移除之
                             if (onePageObjsCnt == iter->second.size()) {
-                                free(reinterpret_cast<char*>(iter->first));
-                                m_small_obj_pages[slotIdx].erase(iter->first);
+                                auto freePtr = iter->first;
+                                m_small_obj_pages[slotIdx].erase(freePtr);
                                 slotIter->second.objs.erase(iter);
                                 slotIter->second.cnt -= onePageObjsCnt;
+                                free(reinterpret_cast<char*>(freePtr));
                                 break;
                             }
                         }
@@ -300,7 +302,8 @@ namespace netty {
                     break;
                 }
                 case MemObjectType::Big: {
-                    auto slotIdx = convert_big_slot_obj_size_to_slot_idx(slotSize);
+                    auto slotIdx = convert_slot_obj_size_to_slot_idx(slotSize, m_sys_page_size);
+
                     auto slotIter = m_free_big_objs.find(slotIdx);
                     SpinLock l(&slotIter->second.sl);
                     auto pagePvIter = slotIter->second.objs.find(objPagePv);
@@ -314,10 +317,11 @@ namespace netty {
                     if (++(slotIter->second.cnt) >= m_one_slot_big_obj_resident_cnts + onePageObjsCnt) {
                         for (auto iter = slotIter->second.objs.begin(); iter != slotIter->second.objs.end(); ++iter) {
                             if (onePageObjsCnt == iter->second.size()) {
-                                free(reinterpret_cast<char*>(iter->first));
-                                m_big_obj_pages[slotIdx].erase(iter->first);
+                                auto freePtr = iter->first;
+                                m_big_obj_pages[slotIdx].erase(freePtr);
                                 slotIter->second.objs.erase(iter);
                                 slotIter->second.cnt -= onePageObjsCnt;
+                                free(reinterpret_cast<char*>(freePtr));
                                 break;
                             }
                         }
@@ -326,7 +330,7 @@ namespace netty {
                 }
                 case MemObjectType::Bulk: {
                     SpinLock l(&m_bulk_obj_pages_lock);
-                    auto slotIdx = convert_bulk_slot_obj_size_to_slot_idx(slotSize);
+                    auto slotIdx = convert_slot_obj_size_to_slot_idx(slotSize, m_sys_page_size);
                     if (slotSize > m_available_reserve_bulk_obj_max_size) {
                         auto dropObjSlotIter = m_bulk_obj_pages.find(slotIdx);
                         dropObjSlotIter->second.erase(objPagePv);
@@ -352,9 +356,11 @@ namespace netty {
                     if (++(m_free_hash_bulk_objs[slotIdx].cnt) >= m_one_slot_bulk_obj_resident_cnts + onePageObjsCnt) {
                         for (auto iter = m_free_hash_bulk_objs[slotIdx].objs.begin(); iter != m_free_hash_bulk_objs[slotIdx].objs.end(); ++iter) {
                             if (onePageObjsCnt == iter->second.size()) {
-                                free(reinterpret_cast<char*>(iter->first));
-                                m_bulk_obj_pages[slotIdx].erase(iter->first);
+                                //free(reinterpret_cast<char*>(iter->first));
+                                auto freePtr = iter->first;
+                                m_bulk_obj_pages[slotIdx].erase(freePtr);
                                 m_free_hash_bulk_objs[slotIdx].objs.erase(iter);
+                                free(reinterpret_cast<char*>(freePtr));
                                 m_free_hash_bulk_objs[slotIdx].cnt -= onePageObjsCnt;
                                 if (0 == m_free_hash_bulk_objs[slotIdx].cnt) {
                                     m_free_hash_bulk_objs.erase(slotIdx);

@@ -24,7 +24,7 @@ namespace netty {
         class GCC_INTERNAL PosixEventManager : public AEventManager {
         public:
             PosixEventManager(SocketProtocal sp, std::shared_ptr<net_addr_t> sspNat, common::MemPool *memPool, uint32_t maxEvents,
-                              uint32_t connWorkersCnt, ConnectHandler realConnectHandler, ConnectFunc logicConnectHandler,
+                              uint32_t connWorkersCnt, ConnectHandler stackConnectHandler, ConnectFunc logicConnectHandler,
                               FinishHandler finishHandler, NotifyMessageCallbackHandler msgCallbackHandler);
 
             ~PosixEventManager() override;
@@ -48,7 +48,7 @@ namespace netty {
             std::pair<std::thread*, EventWorker*>              m_pListenWorkerEventLoopCtx;
             std::vector<std::pair<std::thread*, EventWorker*>> m_vConnsWorkerEventLoopCtxs;
             common::spin_lock_t                                m_slSelectEvents = UNLOCKED;
-            ConnectHandler                                     m_onRealConnect;
+            ConnectHandler                                     m_onStackConnect;
             ConnectFunc                                        m_onLogicConnect;
             FinishHandler                                      m_onFinish;
             NotifyMessageCallbackHandler                       m_msgCallback;

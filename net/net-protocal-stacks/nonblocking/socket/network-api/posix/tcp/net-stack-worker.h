@@ -29,7 +29,7 @@ namespace netty {
         public:
             PosixTcpNetStackWorker(CreatorType ct, AFileEventHandler *eventHandler, common::MemPool *memPool,
                                    PosixTcpClientSocket *socket, NotifyMessageCallbackHandler msgCallbackHandler,
-                                   uint16_t logicPort);
+                                   uint16_t logicPort, ConnectFunc logicConnect);
             PosixTcpNetStackWorker(CreatorType ct, AFileEventHandler *eventHandler, common::MemPool *memPool,
                                    PosixTcpClientSocket *socket, NotifyMessageCallbackHandler msgCallbackHandler,
                                    ConnectFunc logicConnect);

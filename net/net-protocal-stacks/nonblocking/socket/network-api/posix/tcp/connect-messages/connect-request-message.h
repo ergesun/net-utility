@@ -17,7 +17,7 @@ namespace netty {
             ConnectRequestMessage(common::MemPool *mp, net_local_info_t &&logicLocalInfo) :
                 SndMessage(mp, net_peer_info_s()), m_logicLocalInfo(std::move(logicLocalInfo)) {}
 
-        //protected:
+        protected:
             uint32_t GetDerivePayloadLength() override {
                 return sizeof(uint16_t)/*protocol*/ + sizeof(uint16_t)/*port*/ + m_logicLocalInfo.nat.addr.length()/*addr*/;
             }

@@ -15,7 +15,7 @@
 namespace netty {
     namespace net {
         PosixTcpServerEventHandler::PosixTcpServerEventHandler(EventWorker *ew, net_addr_t *nat,
-                                                               ConnectHandler onRealConnect, ConnectFunc onLogicConnect,
+                                                               ConnectHandler stackConnectHandler, ConnectFunc onLogicConnect,
                                                                FinishHandler finishHandler, common::MemPool *memPool,
                                                                NotifyMessageCallbackHandler msgCallbackHandler) {
             // TODO(sunchao): backlog改成可配置？
@@ -38,7 +38,7 @@ namespace netty {
             }
             SetSocketDescriptor(m_pSrvSocket);
             SetOwnWorker(ew);
-            m_onRealConnect = std::move(onRealConnect);
+            m_onStackConnect = std::move(stackConnectHandler);
             m_onLogicConnect = std::move(onLogicConnect);
             m_onFinish = std::move(finishHandler);
             m_pMemPool = memPool;
@@ -85,10 +85,10 @@ namespace netty {
                     // 连接失效的时候再释放。
                     PosixTcpConnectionEventHandler *connEventHandler =
                         new PosixTcpConnectionEventHandler(peerAddr, conn_fd, m_pMemPool, m_msgCallbackHandler, m_onLogicConnect);
-                    m_onRealConnect(connEventHandler);
+                    m_onStackConnect(connEventHandler);
                     if (!connEventHandler->Initialize()) {
                         fprintf(stderr, "connection %s:%d initialize failed!\n", peerAddr.addr.c_str(), port);
-                        // 本端当前不回收，等待对端关闭/断开时回收。否则会有二次回收的问题。
+                        // 本端当前不回收，等待对端关闭/断开(open keep-alive opt)时回收。否则会有二次回收的问题。
                         //m_onFinish(connEventHandler);
                     }
                 }

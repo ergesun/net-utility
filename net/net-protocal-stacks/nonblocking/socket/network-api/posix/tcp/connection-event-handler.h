@@ -20,7 +20,8 @@ namespace netty {
         class GCC_INTERNAL PosixTcpConnectionEventHandler : public AFileEventHandler {
         public:
             PosixTcpConnectionEventHandler(PosixTcpClientSocket *pSocket, common::MemPool *memPool,
-                                           NotifyMessageCallbackHandler msgCallbackHandler, uint16_t logicPort);
+                                           NotifyMessageCallbackHandler msgCallbackHandler, uint16_t logicPort,
+                                           ConnectFunc onLogicConnect);
             PosixTcpConnectionEventHandler(net_addr_t &peerAddr, int sfd, common::MemPool *memPool,
                                            NotifyMessageCallbackHandler msgCallbackHandler, ConnectFunc onLogicConnect);
             ~PosixTcpConnectionEventHandler() override;

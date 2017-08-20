@@ -199,18 +199,6 @@ namespace netty {
                 }
             }
 
-            inline uint32_t convert_small_slot_obj_size_to_slot_idx(uint32_t size) {
-                return size / m_small_obj_slot_footstep_size;
-            }
-
-            inline uint32_t convert_big_slot_obj_size_to_slot_idx(uint32_t size) {
-                return size / m_sys_page_size;
-            }
-
-            inline uint32_t convert_bulk_slot_obj_size_to_slot_idx(uint32_t size) {
-                return size / m_sys_page_size;
-            }
-
             inline uint32_t convert_slot_obj_size_to_slot_idx(uint32_t size, uint32_t footstep) {
                 return size / footstep;
             }

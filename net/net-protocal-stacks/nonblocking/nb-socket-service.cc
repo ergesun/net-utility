@@ -38,7 +38,7 @@ namespace netty {
         bool NBSocketService::Start(uint16_t ioThreadsCnt, NonBlockingEventModel m) {
             m_bStopped = false;
             m_pEventManager = new PosixEventManager(m_sp, m_nlt, m_pMemPool, MAX_EVENTS, ioThreadsCnt,
-                                                    std::bind(&NBSocketService::on_real_connect, this, _1),
+                                                    std::bind(&NBSocketService::on_stack_connect, this, _1),
                                                     std::bind(&NBSocketService::on_logic_connect, this, _1),
                                                     std::bind(&NBSocketService::on_finish, this, _1),
                                                     m_msgCallback);
@@ -66,18 +66,13 @@ namespace netty {
                     ptcs->Close();
                     goto Label_failed;
                 }
-                eventHandler = new PosixTcpConnectionEventHandler(ptcs, m_pMemPool, m_msgCallback, m_iLogicPort);
+                // m_iLogicPort： self logic port(for logic service id)
+                eventHandler = new PosixTcpConnectionEventHandler(ptcs, m_pMemPool, m_msgCallback, m_iLogicPort,
+                                                                  std::bind(&NBSocketService::on_logic_connect, this, _1));
+                // logic peer info： peer ip:port。
                 eventHandler->GetStackMsgWorker()->GetEventHandler()->GetSocketDescriptor()->SetLogicPeerInfo(net_peer_info_t(npt));
                 m_pEventManager->AddEvent(eventHandler, EVENT_NONE, EVENT_READ|EVENT_WRITE);
                 if (!eventHandler->Initialize()) {
-                    auto ew = eventHandler->GetOwnWorker();
-                    ew->AddExternalEpDelEvent(eventHandler);
-                    ew->Wakeup();
-                    // ptcs由event handler释放。
-                    return false;
-                }
-                if (!m_pNetStackWorkerManager->PutWorkerEventHandler(eventHandler)) {
-                    // put失败代表已经有了，就删除当前的。
                     auto ew = eventHandler->GetOwnWorker();
                     ew->AddExternalEpDelEvent(eventHandler);
                     ew->Wakeup();
@@ -137,7 +132,7 @@ namespace netty {
             return rc;
         }
 
-        void NBSocketService::on_real_connect(AFileEventHandler *handler) {
+        void NBSocketService::on_stack_connect(AFileEventHandler *handler) {
             m_pEventManager->AddEvent(handler, EVENT_NONE, EVENT_READ|EVENT_WRITE);
         }
 

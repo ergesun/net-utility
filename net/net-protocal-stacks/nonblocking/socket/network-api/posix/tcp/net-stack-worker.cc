@@ -89,15 +89,17 @@ namespace netty {
     namespace net {
         PosixTcpNetStackWorker::PosixTcpNetStackWorker(CreatorType ct, AFileEventHandler *eventHandler,
                                                        common::MemPool *memPool, PosixTcpClientSocket *socket,
-                                                       NotifyMessageCallbackHandler msgCallbackHandler, uint16_t logicPort)
-            : ANetStackMessageWorker(eventHandler, memPool, msgCallbackHandler), m_ct(ct), m_pSocket(socket), m_iLogicPort(logicPort) {}
+                                                       NotifyMessageCallbackHandler msgCallbackHandler, uint16_t logicPort,
+                                                       ConnectFunc logicConnect)
+            : ANetStackMessageWorker(eventHandler, memPool, std::move(msgCallbackHandler)), m_ct(ct),
+              m_pSocket(socket), m_iLogicPort(logicPort), m_onLogicConnect(std::move(logicConnect)) {}
 
         PosixTcpNetStackWorker::PosixTcpNetStackWorker(CreatorType ct, AFileEventHandler *eventHandler,
                                                        common::MemPool *memPool, PosixTcpClientSocket *socket,
                                                        NotifyMessageCallbackHandler msgCallbackHandler,
                                                        ConnectFunc logicConnect)
-            : ANetStackMessageWorker(eventHandler, memPool, msgCallbackHandler), m_ct(ct), m_pSocket(socket),
-              m_iLogicPort(0), m_onLogicConnect(logicConnect) {}
+            : ANetStackMessageWorker(eventHandler, memPool, std::move(msgCallbackHandler)),
+              m_ct(ct), m_pSocket(socket), m_iLogicPort(0), m_onLogicConnect(std::move(logicConnect)) {}
 
         PosixTcpNetStackWorker::~PosixTcpNetStackWorker() {
             m_bConnHandShakeCompleted = true;
@@ -263,7 +265,10 @@ namespace netty {
                     auto res = ByteOrderUtils::ReadUInt16(buffer->Pos);
                     s_release_rm_handle(rm);
                     if (ConnectResponseMessage::Status::OK == (ConnectResponseMessage::Status)res) {
-                        m_connState = ConnectionState::Connected;
+                        if (m_onLogicConnect(m_pEventHandler)) {
+                            // 如果服务端返回的不是成功，则这里不会赋值，那么client的initialize就会失败，进而收回handler及fd。
+                            m_connState = ConnectionState::Connected;
+                        }
                     }
 
                     m_bConnHandShakeCompleted = true;
@@ -314,7 +319,7 @@ namespace netty {
                     // just server
                     ConnectResponseMessage *crm = nullptr;
                     s_release_rm_handle(rm);
-                    if (m_onLogicConnect && m_onLogicConnect(m_pEventHandler)) {
+                    if (m_onLogicConnect(m_pEventHandler)) {
                         m_connState = ConnectionState::Connected;
                         crm = new ConnectResponseMessage(m_pMemPool, ConnectResponseMessage::Status::OK, "");
                     } else {
@@ -327,7 +332,7 @@ namespace netty {
                     break;
                 }
                 default: {
-                    fprintf(stderr, "handshake recv unexpected state %d\n", m_connState);
+                    fprintf(stderr, "handshake recv unexpected state %d\n", (int)m_connState);
                     auto crm = new ConnectResponseMessage(m_pMemPool, ConnectResponseMessage::Status::ERROR,
                                                           "handshake recv unexpected state.");
                     this->SendMessage(crm);

@@ -23,7 +23,7 @@ namespace netty {
         class GCC_INTERNAL PosixTcpServerEventHandler : public AFileEventHandler {
         public:
             PosixTcpServerEventHandler(EventWorker *ew, net_addr_t *nat,
-                                       ConnectHandler onRealConnect, ConnectFunc onLogicConnect,
+                                       ConnectHandler stackConnectHandler, ConnectFunc onLogicConnect,
                                        FinishHandler finishHandler, common::MemPool *memPool,
                                        NotifyMessageCallbackHandler msgCallbackHandler);
             ~PosixTcpServerEventHandler() override;
@@ -39,7 +39,7 @@ namespace netty {
 
         private:
             PosixTcpServerSocket             *m_pSrvSocket;
-            ConnectHandler                    m_onRealConnect;
+            ConnectHandler                    m_onStackConnect;
             ConnectFunc                       m_onLogicConnect;
             FinishHandler                     m_onFinish;
             /**

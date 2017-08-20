@@ -10,12 +10,13 @@ namespace netty {
         PosixTcpConnectionEventHandler::PosixTcpConnectionEventHandler(PosixTcpClientSocket *pSocket,
                                                                        common::MemPool *memPool,
                                                                        NotifyMessageCallbackHandler msgCallbackHandler,
-                                                                       uint16_t logicPort) : m_iLogicPort(logicPort) {
+                                                                       uint16_t logicPort, ConnectFunc onLogicConnect) :
+                                                                        m_iLogicPort(logicPort) {
             m_pClientSocket = pSocket;
             SetSocketDescriptor(m_pClientSocket);
 
             m_pNetStackWorker = new PosixTcpNetStackWorker(PosixTcpNetStackWorker::CreatorType::Client,
-                this, memPool, m_pClientSocket, std::move(msgCallbackHandler), m_iLogicPort);
+                this, memPool, m_pClientSocket, std::move(msgCallbackHandler), m_iLogicPort, std::move(onLogicConnect));
             m_pMemPool = memPool;
         }
 

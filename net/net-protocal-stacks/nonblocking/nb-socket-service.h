@@ -61,7 +61,7 @@ namespace netty {
             bool SendMessage(SndMessage *m) override;
 
         private:
-            void on_real_connect(AFileEventHandler *handler);
+            void on_stack_connect(AFileEventHandler *handler);
             bool on_logic_connect(AFileEventHandler *handler);
             void on_finish(AFileEventHandler *handler);
 

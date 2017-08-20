@@ -12,10 +12,10 @@ using namespace std::placeholders;
 namespace netty {
     namespace net {
         PosixEventManager::PosixEventManager(SocketProtocal sp, std::shared_ptr<net_addr_t> sspNat, common::MemPool *memPool, uint32_t maxEvents,
-                                             uint32_t connWorkersCnt, ConnectHandler realConnectHandler, ConnectFunc logicConnectHandler,
+                                             uint32_t connWorkersCnt, ConnectHandler stackConnectHandler, ConnectFunc logicConnectHandler,
                                              FinishHandler finishHandler, NotifyMessageCallbackHandler msgCallbackHandler)  :
             AEventManager(memPool, maxEvents), m_sp(sp), m_sspNat(std::move(sspNat)), m_iConnWorkersCnt(connWorkersCnt) {
-            m_onRealConnect = std::move(realConnectHandler);
+            m_onStackConnect = std::move(stackConnectHandler);
             m_onLogicConnect = std::move(logicConnectHandler);
             m_onFinish = std::move(finishHandler);
             m_msgCallback = std::move(msgCallbackHandler);
@@ -34,7 +34,7 @@ namespace netty {
             if (SocketProtocal::Tcp == m_sp) {
                 if (m_sspNat.get()) {
                     auto ew = new EventWorker(m_iMaxEvents, m);
-                    m_pServerEventHandler = new PosixTcpServerEventHandler(ew, m_sspNat.get(), m_onRealConnect,
+                    m_pServerEventHandler = new PosixTcpServerEventHandler(ew, m_sspNat.get(), m_onStackConnect,
                                                                            m_onLogicConnect, m_onFinish,
                                                                            m_pMemPool, m_msgCallback);
                     m_pListenWorkerEventLoopCtx.second = ew;
@@ -128,7 +128,6 @@ namespace netty {
                 for (auto deleteEventHandler : pendingDeleteEventHandlers) {
                     DELETE_PTR(deleteEventHandler);
                 }
-
                 pendingDeleteEventHandlers.clear();
 
                 auto addEvs = ew->GetExternalEpAddEvents();
