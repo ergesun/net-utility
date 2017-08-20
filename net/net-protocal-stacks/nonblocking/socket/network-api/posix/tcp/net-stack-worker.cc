@@ -65,6 +65,7 @@
             } else {                                                                                                \
                 handshake(rcvMessage);                                                                              \
             }                                                                                                       \
+            m_payloadBuffer = nullptr;                                                                              \
         } else {                                                                                                    \
             m_rcvState = NetWorkerState::RcvingPayload;                                                             \
             interrupt = true;                                                                                       \
