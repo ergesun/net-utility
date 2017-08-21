@@ -11,6 +11,7 @@
 
 #include "server-event-handler.h"
 #include "../../../../../../../common/common-utils.h"
+#include "../../../../../../../common/thread-pool.h"
 
 namespace netty {
     namespace net {
@@ -43,11 +44,13 @@ namespace netty {
             m_onFinish = std::move(finishHandler);
             m_pMemPool = memPool;
             m_msgCallbackHandler = std::move(msgCallbackHandler);
+            m_tp = new common::ThreadPool(common::CPUS_CNT * 2);
         }
 
         PosixTcpServerEventHandler::~PosixTcpServerEventHandler() {
             m_pSrvSocket->Close();
             DELETE_PTR(m_pSrvSocket);
+            DELETE_PTR(m_tp);
         }
 
         bool PosixTcpServerEventHandler::Initialize() {
@@ -61,7 +64,8 @@ namespace netty {
             for (;;) {
                 bzero(&client_addr, sock_len);
                 // 如果用accept，那么就需要把得到的fd通过set_nonblocking设置为non-blocking
-                auto conn_fd = m_pSrvSocket->Accept4((struct sockaddr*)&client_addr, &sock_len, SOCK_NONBLOCK);
+                //auto conn_fd = m_pSrvSocket->Accept4((struct sockaddr*)&client_addr, &sock_len, SOCK_NONBLOCK);
+                auto conn_fd = m_pSrvSocket->Accept((struct sockaddr*)&client_addr, &sock_len);
                 if (-1 == conn_fd) {
                     auto err = errno;
                     if (EAGAIN == err) {
@@ -75,22 +79,29 @@ namespace netty {
                         return false;
                     }
                 } else {
-                    // just IPv4 now
                     char addrBuf[20];
                     bzero(addrBuf, sizeof(addrBuf));
                     inet_ntop(AF_INET, &client_addr.sin_addr, addrBuf, sizeof(addrBuf));
                     auto port = ntohs(client_addr.sin_port);
                     std::string addrStr(addrBuf);
                     net_addr_t peerAddr(std::move(addrStr), port);
+                    // just IPv4 now
+                    // TODO(sunchao): 1. 此处起线程？ 2. fd设置一个发送超时？
                     // 连接失效的时候再释放。
                     PosixTcpConnectionEventHandler *connEventHandler =
                         new PosixTcpConnectionEventHandler(peerAddr, conn_fd, m_pMemPool, m_msgCallbackHandler, m_onLogicConnect);
-                    m_onStackConnect(connEventHandler);
-                    if (!connEventHandler->Initialize()) {
-                        fprintf(stderr, "connection %s:%d initialize failed!\n", peerAddr.addr.c_str(), port);
-                        // 本端当前不回收，等待对端关闭/断开(open keep-alive opt)时回收。否则会有二次回收的问题。
-                        //m_onFinish(connEventHandler);
-                    }
+                    common::ThreadPool::Task t([=](void*){
+                        //m_onStackConnect(connEventHandler);
+                        if (connEventHandler->Initialize() && connEventHandler->GetSocket()->SetNonBlocking(true)) {
+                            m_onStackConnect(connEventHandler);
+                        } else {
+                            delete connEventHandler;
+                            fprintf(stderr, "connection %s:%d initialize failed!\n", peerAddr.addr.c_str(), port);
+                            // 本端当前不回收，等待对端关闭/断开(open keep-alive opt)时回收。否则会有二次回收的问题。
+                            //m_onFinish(connEventHandler);
+                        }
+                    });
+                    m_tp->AddTask(t);
                 }
             }
 

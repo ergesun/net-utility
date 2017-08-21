@@ -28,6 +28,13 @@ namespace netty {
             static int SetNonBlocking(int fd);
 
             /**
+             * 设置fd为阻塞。
+             * @param fd
+             * @return
+             */
+            static int SetBlocking(int fd);
+
+            /**
              * posix_memalign的封装
              * @param align 对齐大小
              * @param size 申请的内存大小

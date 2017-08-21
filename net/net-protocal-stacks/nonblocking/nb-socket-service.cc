@@ -71,15 +71,13 @@ namespace netty {
                                                                   std::bind(&NBSocketService::on_logic_connect, this, _1));
                 // logic peer info： peer ip:port。
                 eventHandler->GetStackMsgWorker()->GetEventHandler()->GetSocketDescriptor()->SetLogicPeerInfo(net_peer_info_t(npt));
-                m_pEventManager->AddEvent(eventHandler, EVENT_NONE, EVENT_READ|EVENT_WRITE);
-                if (!eventHandler->Initialize()) {
-                    auto ew = eventHandler->GetOwnWorker();
-                    ew->AddExternalEpDelEvent(eventHandler);
-                    ew->Wakeup();
-                    // ptcs由event handler释放。
+                //m_pEventManager->AddEvent(eventHandler, EVENT_NONE, EVENT_READ|EVENT_WRITE);
+                if (!eventHandler->Initialize() || !ptcs->SetNonBlocking(true)) {
+                    DELETE_PTR(eventHandler);
                     return false;
                 }
 
+                m_pEventManager->AddEvent(eventHandler, EVENT_NONE, EVENT_READ|EVENT_WRITE);
                 return true;
 
             Label_failed:
@@ -141,7 +139,7 @@ namespace netty {
         }
 
         void NBSocketService::on_finish(AFileEventHandler *handler) {
-            m_pNetStackWorkerManager->RemoveWorkerEventHandler(handler->GetSocketDescriptor()->GetRealPeerInfo());
+            m_pNetStackWorkerManager->RemoveWorkerEventHandler(handler->GetSocketDescriptor()->GetLogicPeerInfo());
             auto ew = handler->GetOwnWorker();
             if (LIKELY(ew)) {
                 ew->AddExternalEpDelEvent(handler);

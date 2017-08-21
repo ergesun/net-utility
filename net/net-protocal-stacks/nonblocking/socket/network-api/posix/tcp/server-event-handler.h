@@ -17,6 +17,7 @@
 namespace netty {
     namespace common {
         class MemPool;
+        class ThreadPool;
     }
 
     namespace net {
@@ -47,6 +48,7 @@ namespace netty {
              */
             common::MemPool                  *m_pMemPool;
             NotifyMessageCallbackHandler      m_msgCallbackHandler;
+            common::ThreadPool               *m_tp;
         };
     } // namespace net
 } // namespace netty

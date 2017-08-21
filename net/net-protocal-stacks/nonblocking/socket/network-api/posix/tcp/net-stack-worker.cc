@@ -56,9 +56,13 @@
 
 #define CheckPayload()                                                                                              \
         if ((uint32_t)m_payloadBuffer->AvailableLength() == m_header.len) {                                         \
+            if (breakWhenRecvOne) {                                                                                 \
+                interrupt = true;                                                                                   \
+            }                                                                                                       \
             m_rcvState = NetWorkerState::StartToRcvHeader;                                                          \
             auto peer = m_pEventHandler->GetSocketDescriptor()->GetLogicPeerInfo();                                 \
             auto rcvMessage = get_new_rcv_message(m_pMemPool, peer, m_header, m_payloadBuffer);                     \
+            /* TODO(sunchao): 此指针需要加锁以防止析够后还会被handle message使用而导致崩溃。*/                            \
             if (LIKELY(ConnectionState::Connected == m_connState)) {                                                \
                 auto mnm = new MessageNotifyMessage(rcvMessage, s_release_rm_handle);                               \
                 HandleMessage(mnm);                                                                                 \
@@ -118,17 +122,20 @@ namespace netty {
         bool PosixTcpNetStackWorker::Initialize() {
             m_connState = ConnectionState::Connecting;
             if (CreatorType::Client == m_ct) {
-                net_local_info_t nlt = {
-                    {
-                        .addr = m_pEventHandler->GetSocketDescriptor()->GetRealPeerInfo().nat.addr.c_str(),
-                        .port = m_iLogicPort
-                    },
-                    .sp = SocketProtocal::Tcp
-                };
-                auto crm = new ConnectRequestMessage(m_pMemPool, std::move(nlt));
-                //fprintf(stderr, "connect msg len = %d\n", crm->GetDerivePayloadLength());
-                this->SendMessage(crm);
+                auto crm = new ConnectRequestMessage(m_pMemPool, m_iLogicPort);
+                if (UNLIKELY(!InsertMessage(crm))) {
+                    return false;
+                }
+
+                if (!Send()) {
+                    return false;
+                }
+
                 m_connState = ConnectionState::ConnectSe;
+            }
+
+            if (!Recv(true)) {
+                return false;
             }
 
             std::unique_lock<std::mutex> l(m_initWaitMtx);
@@ -139,7 +146,7 @@ namespace netty {
             return ConnectionState::Connected == m_connState;
         }
 
-        bool PosixTcpNetStackWorker::Recv() {
+        bool PosixTcpNetStackWorker::Recv(bool breakWhenRecvOne) {
             int err;
             bool rc = true;
             bool interrupt = false;
@@ -234,6 +241,10 @@ namespace netty {
         }
 
         void PosixTcpNetStackWorker::handshake(RcvMessage *rm) {
+#define COMPLETE_AND_FIRE()                   \
+        m_bConnHandShakeCompleted = true;     \
+        m_initWaitCv.notify_one();
+
             switch (m_connState) {
                 case ConnectionState::ConnectSe: {
                     // just client
@@ -248,13 +259,22 @@ namespace netty {
                         *(whatPtr + whatLen) = 0;
                         whatMpo->Put();
                         fprintf(stderr, "%s", whatPtr);
-                        m_bConnHandShakeCompleted = true;
-                        m_initWaitCv.notify_one();
-
+                        COMPLETE_AND_FIRE();
                     } else {
                         auto crm = new ConnectResponseMessage(m_pMemPool, ConnectResponseMessage::Status::OK, "");
-                        this->SendMessage(crm);
-                        m_connState = ConnectionState::WaitLastACK;
+                        bool ok;
+                        if (UNLIKELY(!(ok = InsertMessage(crm)))) {
+                            COMPLETE_AND_FIRE();
+                        } else if (!(ok = Send())) {
+                            COMPLETE_AND_FIRE();
+                        }
+
+                        if (ok) {
+                            m_connState = ConnectionState::WaitLastACK;
+                            if (!Recv(true)) {
+                                COMPLETE_AND_FIRE();
+                            }
+                        }
                     }
 
                     s_release_rm_handle(rm);
@@ -272,45 +292,46 @@ namespace netty {
                         }
                     }
 
-                    m_bConnHandShakeCompleted = true;
-                    m_initWaitCv.notify_one();
+                    COMPLETE_AND_FIRE();
                     break;
                 }
                 case ConnectionState::Connecting: {
                     // just server
                     auto buffer = rm->GetDataBuffer();
-                    if (UNLIKELY(11 >= buffer->AvailableLength())) { // 长度有问题至少也的2 + 2 + 7(0:0:0:0);
+                    if (UNLIKELY(2 != buffer->AvailableLength())) { // 长度有问题至少也的2;
                         fprintf(stderr, "client connecting buffer is corrupt.\n");
                         auto crm = new ConnectResponseMessage(m_pMemPool, ConnectResponseMessage::Status::ERROR, "");
-                        this->SendMessage(crm);
-                        m_bConnHandShakeCompleted = true;
+                        InsertMessage(crm);
+                        Send();
                         s_release_rm_handle(rm);
-                        m_initWaitCv.notify_one();
+                        COMPLETE_AND_FIRE();
                     } else {
-                        auto sp = ByteOrderUtils::ReadUInt16(buffer->Pos);
-                        buffer->Pos += sizeof(uint16_t);
                         auto port = ByteOrderUtils::ReadUInt16(buffer->Pos);
-                        buffer->Pos += sizeof(uint16_t);
-                        auto addrLen = buffer->AvailableLength();
-                        auto addrMpo = m_pMemPool->Get((uint32_t)(addrLen + 1));
-                        auto addrPtr = addrMpo->Pointer();
-                        memcpy(addrPtr, buffer->Pos, (size_t)addrLen);
-                        *(addrPtr + addrLen) = 0;
-                        std::string addrStr = addrPtr;
+                        std::string addrStr = GetEventHandler()->GetSocketDescriptor()->GetRealPeerInfo().nat.addr;
                         net_peer_info_t npt = {
                             {
                                 .addr = std::move(addrStr),
                                 .port = port
                             },
-                            .sp = (SocketProtocal)sp
+                            .sp = SocketProtocal::Tcp
                         };
 
-                        addrMpo->Put();
                         // set peer info to logic info.
                         this->GetEventHandler()->GetSocketDescriptor()->SetLogicPeerInfo(std::move(npt));
                         auto crm = new ConnectResponseMessage(m_pMemPool, ConnectResponseMessage::Status::OK, "");
-                        this->SendMessage(crm);
-                        m_connState = ConnectionState::ConnectingRe;
+                        bool ok;
+                        if (UNLIKELY(!(ok = InsertMessage(crm)))) {
+                            COMPLETE_AND_FIRE();
+                        } else if (!(ok = Send())) {
+                            COMPLETE_AND_FIRE();
+                        }
+                        if (ok) {
+                            m_connState = ConnectionState::ConnectingRe;
+                            if (!Recv(true)) {
+                                COMPLETE_AND_FIRE();
+                            }
+                        }
+
                         s_release_rm_handle(rm);
                     }
 
@@ -320,26 +341,40 @@ namespace netty {
                     // just server
                     ConnectResponseMessage *crm = nullptr;
                     s_release_rm_handle(rm);
+                    bool ok = false;
                     if (m_onLogicConnect(m_pEventHandler)) {
-                        m_connState = ConnectionState::Connected;
+                        ok = true;
                         crm = new ConnectResponseMessage(m_pMemPool, ConnectResponseMessage::Status::OK, "");
                     } else {
                         crm = new ConnectResponseMessage(m_pMemPool, ConnectResponseMessage::Status::ERROR, "");
                     }
 
-                    this->SendMessage(crm);
-                    m_bConnHandShakeCompleted = true;
-                    m_initWaitCv.notify_one();
+                    if (!InsertMessage(crm)) {
+                        ok = false;
+                    } else if (!Send()) {
+                        ok = false;
+                    }
+
+                    if (ok) {
+                        m_connState = ConnectionState::Connected;
+                    }
+
+                    COMPLETE_AND_FIRE();
                     break;
                 }
                 default: {
                     fprintf(stderr, "handshake recv unexpected state %d\n", (int)m_connState);
                     auto crm = new ConnectResponseMessage(m_pMemPool, ConnectResponseMessage::Status::ERROR,
                                                           "handshake recv unexpected state.");
-                    this->SendMessage(crm);
+                    if (InsertMessage(crm)) {
+                        Send();
+                    }
+
+                    COMPLETE_AND_FIRE();
                     s_release_rm_handle(rm);
                 }
             }
+#undef COMPLETE_AND_FIRE
         }
 
         WorkerNotifyMessage* PosixTcpNetStackWorker::get_closed_by_peer_worker_message(std::string &&msg) {

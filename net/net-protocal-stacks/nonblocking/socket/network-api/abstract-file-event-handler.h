@@ -17,8 +17,7 @@ namespace netty {
         class AFileEventHandler : public IEventHandler {
         public:
             AFileEventHandler() = default;
-            AFileEventHandler(uint16_t serverPort, FileDescriptor *socketDesc) :
-                m_iServerServPort(serverPort), m_socketDesc(socketDesc) {}
+            explicit AFileEventHandler(FileDescriptor *socketDesc) : m_socketDesc(socketDesc) {}
 
             virtual ~AFileEventHandler() = default;
             /**
@@ -45,9 +44,6 @@ namespace netty {
             inline void SetSocketDescriptor(FileDescriptor *psd) {
                 m_socketDesc = psd;
             }
-
-        protected:
-            uint16_t         m_iServerServPort;
 
         private:
             FileDescriptor *m_socketDesc = nullptr;

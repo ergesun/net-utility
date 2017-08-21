@@ -64,6 +64,10 @@ namespace netty {
             }
         }
 
+        bool ANetStackMessageWorker::InsertMessage(SndMessage *m) {
+            return m_bqMessages->TryPush(m);
+        }
+
         RcvMessage* ANetStackMessageWorker::get_new_rcv_message(common::MemPool *mp, net_peer_info_t peerInfo,
                                                                  Message::Header h, common::Buffer *buffer) {
             auto rmMpo = mp->Get(sizeof(RcvMessage));

@@ -20,9 +20,9 @@ namespace netty {
         public:
             virtual ~INetStackWorkerManager() = default;
 
-            virtual AFileEventHandler *GetWorkerEventHandler(net_peer_info_t npt) = 0;
+            virtual AFileEventHandler *GetWorkerEventHandler(net_peer_info_t logicNpt) = 0;
             virtual bool PutWorkerEventHandler(AFileEventHandler *handler) = 0;
-            virtual AFileEventHandler* RemoveWorkerEventHandler(net_peer_info_t npt) = 0;
+            virtual AFileEventHandler* RemoveWorkerEventHandler(net_peer_info_t logicNpt) = 0;
         }; // interface INetStackWorkerManager
     }  // namespace net
 } // namespace netty

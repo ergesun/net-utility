@@ -14,24 +14,20 @@ namespace netty {
     namespace net {
         class ConnectRequestMessage : public SndMessage {
         public:
-            ConnectRequestMessage(common::MemPool *mp, net_local_info_t &&logicLocalInfo) :
-                SndMessage(mp, net_peer_info_s()), m_logicLocalInfo(std::move(logicLocalInfo)) {}
+            ConnectRequestMessage(common::MemPool *mp, int16_t logicPort) :
+                SndMessage(mp, net_peer_info_s()), m_logicPort(std::move(logicPort)) {}
 
         protected:
             uint32_t GetDerivePayloadLength() override {
-                return sizeof(uint16_t)/*protocol*/ + sizeof(uint16_t)/*port*/ + m_logicLocalInfo.nat.addr.length()/*addr*/;
+                return sizeof(uint16_t)/*logic port*/;
             }
 
             void EncodeDerive(common::Buffer *b) override {
-                ByteOrderUtils::WriteUInt16(b->Pos, (uint16_t)m_logicLocalInfo.sp);
-                b->Pos += sizeof(uint16_t);
-                ByteOrderUtils::WriteUInt16(b->Pos, (uint16_t)m_logicLocalInfo.nat.port);
-                b->Pos += sizeof(uint16_t);
-                memcpy(b->Pos, m_logicLocalInfo.nat.addr.c_str(), m_logicLocalInfo.nat.addr.length());
+                ByteOrderUtils::WriteUInt16(b->Pos, (uint16_t)m_logicPort);
             }
 
         private:
-            net_local_info_t          m_logicLocalInfo;
+            int16_t          m_logicPort;
         };
     }
 }

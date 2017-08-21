@@ -42,7 +42,7 @@ namespace netty {
         }
 
         bool PosixTcpConnectionEventHandler::HandleReadEvent() {
-            return m_pNetStackWorker->Recv();
+            return m_pNetStackWorker->Recv(false);
         }
 
         bool PosixTcpConnectionEventHandler::HandleWriteEvent() {

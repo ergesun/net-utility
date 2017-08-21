@@ -39,9 +39,6 @@ namespace netty {
             inet_pton(AF_INET, m_real_peer.nat.addr.c_str(), &sa.sin_addr);
             if (!timeout) {
                 if (0 == connect(m_fd, (struct sockaddr *) &sa, sizeof(sa))) {
-                    if (0 != common::CommonUtils::SetNonBlocking(m_fd)) {
-                        return false;
-                    }
                     m_connected = true;
 
                     return true;
@@ -54,7 +51,7 @@ namespace netty {
                 int valopt;
                 socklen_t lon;
 
-                if (0 != common::CommonUtils::SetNonBlocking(m_fd)) {
+                if (!SetNonBlocking(true)) {
                     return false;
                 }
 
@@ -92,7 +89,7 @@ namespace netty {
                     }
                 }
 
-                return true;
+                return SetNonBlocking(false);
             }
         }
 
@@ -160,6 +157,14 @@ namespace netty {
             }
 
             return 0;
+        }
+
+        bool PosixTcpConnectionSocket::SetNonBlocking(bool val) {
+            if (val) {
+                return 0 == common::CommonUtils::SetNonBlocking(m_fd);
+            } else {
+                return 0 == common::CommonUtils::SetBlocking(m_fd);
+            }
         }
     } // namespace net
 } // namespace netty

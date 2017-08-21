@@ -47,6 +47,10 @@ namespace netty {
             return rc;
         }
 
+        int PosixTcpServerSocket::Accept(__SOCKADDR_ARG __addr, socklen_t *__addr_len) {
+            return accept(m_fd, __addr, __addr_len);
+        }
+
         int PosixTcpServerSocket::Accept4(__SOCKADDR_ARG __addr, socklen_t *__addr_len, int __flags) {
             return accept4(m_fd, __addr, __addr_len, __flags);
         }

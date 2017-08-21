@@ -97,7 +97,7 @@ namespace netty {
 
             static common::ThreadPool tp;
             common::ThreadPool::Task t([](void*){
-                usleep(1000 * 1000);
+                usleep(1000 * 100);
                 s_cv.notify_one();
             });
             tp.AddTask(t);

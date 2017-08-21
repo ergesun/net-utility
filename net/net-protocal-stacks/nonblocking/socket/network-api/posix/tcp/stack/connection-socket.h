@@ -77,6 +77,13 @@ namespace netty {
 
             int Close();
 
+            /**
+             * 设置为阻塞或非阻塞
+             * @param val
+             * @return
+             */
+            bool SetNonBlocking(bool val);
+
         private:
             volatile bool m_connected = false;
         };

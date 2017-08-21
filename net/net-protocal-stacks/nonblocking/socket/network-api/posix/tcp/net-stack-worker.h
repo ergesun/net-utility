@@ -10,6 +10,7 @@
 #include "../../net-stack-msg-worker.h"
 #include "stack/connection-socket.h"
 #include "../../abstract-event-manager.h"
+#include "../../../../../../../common/thread-pool.h"
 
 namespace netty {
     namespace common {
@@ -41,7 +42,7 @@ namespace netty {
              * 正常: 返回true(即便是遇到了EAGAIN，只要没有发生错误)
              * @return
              */
-            bool Recv() override;
+            bool Recv(bool breakWhenRecvOne = false) override;
 
             /**
              * 发送缓冲队列里面的数据。

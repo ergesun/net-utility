@@ -55,13 +55,18 @@ namespace netty {
             bool SendMessage(SndMessage *m);
 
             void HandleMessage(NotifyMessage *m);
-
+            /**
+             *
+             */
+            bool InsertMessage(SndMessage *m);
             /**
              * 错误: 返回false(无论是[socket错误或对端关闭]还是[codec校验错误])
              * 正常: 返回true(即便是遇到了EAGAIN，只要没有发生错误)
+             *
+             * !注意: 基类默认参数值会覆盖派生类的默认值。
              * @return
              */
-            virtual bool Recv() = 0;
+            virtual bool Recv(bool breakWhenRecvOne = false) = 0;
 
             /**
              * 发送缓冲队列里面的数据。

@@ -30,9 +30,29 @@ namespace netty {
             }
 
             opts = opts | O_NONBLOCK;
-            if ((err = fcntl(fd, F_SETFL, opts)) == -1) {
+            if (fcntl(fd, F_SETFL, opts) == -1) {
                 err = errno;
                 std::cerr << "set fd O_NONBLOCK err = " << err << std::endl;
+                return -1;
+            }
+
+            return 0;
+        }
+
+        int CommonUtils::SetBlocking(int fd) {
+            int opts;
+            int err;
+            if ((opts = fcntl(fd, F_GETFL)) == -1) {
+                err = errno;
+                std::cerr << "get fd opts err = " << err << std::endl;
+
+                return -1;
+            }
+
+            opts = opts & ~O_NONBLOCK;
+            if (fcntl(fd, F_SETFL, opts) == -1) {
+                err = errno;
+                std::cerr << "set fd BLOCKing err = " << err << std::endl;
                 return -1;
             }
 

@@ -32,6 +32,9 @@ namespace netty {
             bool HandleWriteEvent() override;
 
             ANetStackMessageWorker *GetStackMsgWorker() override;
+            PosixTcpClientSocket* GetSocket() const {
+                return m_pClientSocket;
+            }
 
         private:
             PosixTcpClientSocket   *m_pClientSocket = nullptr;

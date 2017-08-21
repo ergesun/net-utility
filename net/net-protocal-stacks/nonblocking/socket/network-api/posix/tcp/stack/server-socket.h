@@ -21,6 +21,7 @@ namespace netty {
             /* basic interfaces */
             bool Bind();
             bool Listen();
+            int Accept(__SOCKADDR_ARG __addr, socklen_t *__addr_len);
             int Accept4(__SOCKADDR_ARG __addr, socklen_t *__addr_len, int __flags = SOCK_NONBLOCK);
             /* sock opts interfaces */
             bool SetPortReuse();

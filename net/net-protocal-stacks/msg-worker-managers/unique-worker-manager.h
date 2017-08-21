@@ -37,22 +37,20 @@ namespace netty {
 
             /**
              * 移除一个worker。
-             * @param realNpt
+             * @param logicNpt
              * @return 被移除的worker。如果不存在则为nullptr。
              */
-            AFileEventHandler* RemoveWorkerEventHandler(net_peer_info_t realNpt) override;
+            AFileEventHandler* RemoveWorkerEventHandler(net_peer_info_t logicNpt) override;
 
         private:
             inline AFileEventHandler *lookup_worker(net_peer_info_t &logicNpt);
 
         private:
             common::spin_lock_t                                              m_sl = UNLOCKED;
-            std::unordered_map<net_peer_info_t, AFileEventHandler*>          m_hmap_workers;
-            std::unordered_map<net_peer_info_t, net_peer_info_t>             m_hmap_real_logic;
             /**
-             * logic peer -> set<real peers>
+             * logic peer -> handler
              */
-            std::unordered_map<net_peer_info_t, std::unordered_set<net_peer_info_t>>   m_hmap_lp_rp;
+            std::unordered_map<net_peer_info_t, AFileEventHandler*>          m_hmap_workers;
         }; // class UniqueWorkerManager
     }  // namespace net
 }  // namespace netty
