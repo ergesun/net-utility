@@ -42,14 +42,14 @@ namespace netty {
                         auto respBuf = rm->GetDataBuffer();
 #ifdef WITH_MSG_ID
 #ifdef BULK_MSG_ID
-                        std::cout << "request = "  << respBuf->Pos << ", " << "message id is { ts = " << rm->GetId().ts
+                        std::cout << "request = "  << respBuf->GetPos() << ", " << "message id is { ts = " << rm->GetId().ts
                                   << ", seq = " << rm->GetId().seq << "}" << std::endl;
 #else
-                        std::cout << "request = "  << respBuf->Pos << ", " << "message id is " << rm->GetId() << "." << std::endl;
+                        std::cout << "request = "  << respBuf->GetPos() << ", " << "message id is " << rm->GetId() << "." << std::endl;
 #endif
                         TestSndMessage *tsm = new TestSndMessage(m_mp, rm->GetPeerInfo(),  rm->GetId(), "server response: hello client!");
 #else
-                        std::cout << "request = "  << respBuf->Pos << "." << std::endl;
+                        std::cout << "request = "  << respBuf->GetPos() << "." << std::endl;
                         std::stringstream ss;
                         ss << "Server response: hello client! Req idx = " << atomic_addone_and_fetch(&s_idx) << ".";
                         TestSndMessage *tsm = new TestSndMessage(m_mp, rm->GetPeerInfo(), ss.str());

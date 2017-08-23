@@ -23,7 +23,7 @@ namespace netty {
         }
 
         void TestSndMessage::EncodeDerive(common::Buffer *b) {
-            memcpy(b->Pos, m_str.c_str(), m_str.length());
+            memcpy(b->GetPos(), m_str.c_str(), m_str.length());
         }
     }
 }

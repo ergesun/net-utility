@@ -23,7 +23,7 @@ namespace netty {
             }
 
             void EncodeDerive(common::Buffer *b) override {
-                ByteOrderUtils::WriteUInt16(b->Pos, (uint16_t)m_logicPort);
+                ByteOrderUtils::WriteUInt16(b->GetPos(), (uint16_t)m_logicPort);
             }
 
         private:

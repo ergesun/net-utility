@@ -67,13 +67,13 @@ namespace netty {
                         auto respBuf = rm->GetDataBuffer();
 #ifdef WITH_MSG_ID
 #ifdef BULK_MSG_ID
-                        std::cout << "response = "  << respBuf->Pos << ", " << "message id is { ts = " << rm->GetId().ts
+                        std::cout << "response = "  << respBuf->GetPos() << ", " << "message id is { ts = " << rm->GetId().ts
                                   << ", seq = " << rm->GetId().seq << "}" << std::endl;
 #else
-                        std::cout << "response = "  << respBuf->Pos << ", " << "message id is " << rm->GetId() << "." << std::endl;
+                        std::cout << "response = "  << respBuf->GetPos() << ", " << "message id is " << rm->GetId() << "." << std::endl;
 #endif
 #else
-                        std::cout << "response = "  << respBuf->Pos << "." << std::endl;
+                        std::cout << "response = "  << respBuf->GetPos() << "." << std::endl;
 #endif
                     }
                     break;

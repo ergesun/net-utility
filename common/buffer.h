@@ -12,6 +12,7 @@
 namespace netty {
     namespace common {
         /**
+         * Not thread-safe.
          * [约定] 本buffer的使用规则需要统一如下：
          *   - last为空格，last最大到end为止
          *   - 总长度为  ：[start, end] --> 闭区间
@@ -21,7 +22,9 @@ namespace netty {
         public:
             Buffer() = default;
             Buffer(uchar *pos, uchar *last, uchar *start, uchar *end, MemPoolObject *mpo) :
-                Pos(pos), Last(last), Start(start), End(end), MpObject(mpo) {}
+                m_pPos(pos), m_pLast(last), m_pStart(start), m_pEnd(end), m_pMpObject(mpo) {
+                check_available();
+            }
             ~Buffer() {
                 Put();
             }
@@ -31,31 +34,33 @@ namespace netty {
             Buffer& operator=(Buffer&) = delete;
 
             inline void Put() {
-                if (MpObject) {
-                    MpObject->Put();
-                } else {
-                    DELETE_ARR_PTR(this->Start);
-                }
-
                 Refresh(nullptr, nullptr, nullptr, nullptr, nullptr);
             }
 
             inline void Refresh(uchar *pos, uchar *last, uchar *start, uchar *end, MemPoolObject *mpo) {
-                Pos = pos;
-                Last = last;
-                Start = start;
-                End = end;
-                MpObject = mpo;
+                if (m_pMpObject) {
+                    m_pMpObject->Put();
+                } else {
+                    DELETE_ARR_PTR(m_pStart);
+                }
+
+                m_pMpObject = mpo;
+                m_pPos = pos;
+                m_pLast = last;
+                m_pStart = start;
+                m_pEnd = end;
+                check_available();
             }
 
             inline bool Valid() {
-                return Pos && Last && (uintptr_t)Last >= (uintptr_t)Pos;
+                return m_bAvailable;
             }
 
             inline void BZero() {
-                Pos = nullptr;
-                Last = nullptr;
-                bzero(Start, (uintptr_t)End - (uintptr_t)Start + 1);
+                m_pPos = nullptr;
+                m_pLast = nullptr;
+                bzero(m_pStart, m_pEnd - m_pStart + 1);
+                m_bAvailable = false;
             }
 
             /**
@@ -63,9 +68,12 @@ namespace netty {
              * @param n
              */
             inline void MoveHeadBack(uint32_t n) {
-                if (Pos && Last) {
-                    Pos += n;
+                if (UNLIKELY(!m_pPos || !m_pLast)) {
+                    m_bAvailable = false;
+                    return;
                 }
+                m_bAvailable = ((m_pLast - m_pPos) > (n - 1));
+                m_pPos += n;
             }
 
             /**
@@ -73,46 +81,100 @@ namespace netty {
              * @param n
              */
             inline void MoveTailBack(uint32_t n) {
-                if (!Pos) {
-                    Pos = Start;
-                }
-
-                if (Last) {
-                    Last += n;
+                if (m_pLast) {
+                    m_pLast += n;
                 } else {
-                    Last = Start + n - 1;
+                    m_pLast = m_pStart + n - 1;
+                    check_available();
                 }
             }
 
-            inline int32_t TotalLength() {
-                if (!Start || !End) {
+            inline int32_t TotalLength() const {
+                if (UNLIKELY(!m_pStart || !m_pEnd)) {
                     return 0;
                 }
 
-                return (int32_t)((uintptr_t)End - (uintptr_t)Start) + 1;
+                return (int32_t)(m_pEnd - m_pStart) + 1;
             }
 
-            inline int32_t AvailableLength() {
-                if (!Last || !Pos) {
+            inline int32_t AvailableLength() const {
+                if (!m_bAvailable) {
+                    return 0;
+                }
+                if (UNLIKELY(!m_pLast || !m_pPos)) {
                     return 0;
                 }
 
-                return (int32_t)((int64_t)(uintptr_t)Last - (int64_t)(uintptr_t)Pos) + 1;
+                return (int32_t)(m_pLast - m_pPos) + 1;
             }
 
-            inline size_t UnusedSize() {
-                if (Last) {
-                    return (size_t)(End - Last);
+            inline size_t UnusedSize() const {
+                if (!m_bAvailable) {
+                    return 0;
+                }
+
+                if (LIKELY(m_pLast)) {
+                    return (size_t)(m_pEnd - m_pLast);
                 } else {
-                    return (size_t)(End - Start) + 1;
+                    return (size_t)(m_pEnd - m_pStart) + 1;
                 }
             }
 
-            uchar *Pos              = nullptr;
-            uchar *Last             = nullptr;
-            uchar *Start            = nullptr;
-            uchar *End              = nullptr;
-            MemPoolObject *MpObject = nullptr;
+            inline void Reset() {
+                Refresh(nullptr, nullptr, nullptr, nullptr, nullptr);
+            }
+
+            inline void SetPos(uchar *p) {
+                m_pPos = p;
+                check_available();
+            }
+
+            inline void SetLast(uchar *l) {
+                m_pLast = l;
+                check_available();
+            }
+
+            inline void SetStart(uchar *s) {
+                m_pStart = s;
+            }
+
+            inline void SetEnd(uchar *e) {
+                m_pEnd = e;
+            }
+
+            inline uchar* GetPos() const {
+                return m_pPos;
+            }
+
+            inline uchar* GetLast() const {
+                return m_pLast;
+            }
+
+            inline uchar* GetStart() const {
+                return m_pStart;
+            }
+
+            inline uchar* GetEnd() const {
+                return m_pEnd;
+            }
+
+        private:
+            inline void check_available() {
+                if (!m_pStart || !m_pEnd || !m_pPos || !m_pLast) {
+                    m_bAvailable = false;
+                    return;
+                }
+
+                m_bAvailable = (uintptr_t)m_pPos <= (uintptr_t)m_pLast;
+            }
+
+        private:
+            uchar             *m_pPos              = nullptr;
+            uchar             *m_pLast             = nullptr;
+            uchar             *m_pStart            = nullptr;
+            uchar             *m_pEnd              = nullptr;
+            MemPoolObject     *m_pMpObject         = nullptr;
+            bool               m_bAvailable        = false;
         };
     }  // namespace common
 }  // namespace netty

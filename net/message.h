@@ -28,8 +28,8 @@
  */
 #if WITH_MSG_ID
     //#define BULK_MSG_ID 1 // 开启此宏则会使用无论如何都不可能重复的id机制，但是相对的效率最差。
-    #define BIG_MSG_ID 1    // 开启此宏则会使用uint64_t作为id，用户超时机制的作用下极为不可能重复。
-    //#define NORMAL_MSG_ID 1 // 默认为此种形式。只要上面两个xxx_xxx_ID的宏是关闭的，则为此uint32_t作为id，用户超时机制下基本不可能重复。
+    //#define BIG_MSG_ID 1    // 开启此宏则会使用uint64_t作为id，用户超时机制的作用下极为不可能重复。
+    #define NORMAL_MSG_ID 1 // 默认为此种形式。只要上面两个xxx_xxx_ID的宏是关闭的，则为此uint32_t作为id，用户超时机制下基本不可能重复。
     #if BULK_MSG_ID
         #define MSG_HEADER_SIZE 20 // 20 = sizeof(magic) + sizeof(id.ts) + sizeof(id.seq) + sizeof(len)
     #elif BIG_MSG_ID

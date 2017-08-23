@@ -18,7 +18,7 @@ namespace netty {
 
             // 只简单校验MAGIC NO和payload size
             uint32_t offset = 0;
-            header->magic = ByteOrderUtils::ReadUInt32(buffer->Pos + offset);
+            header->magic = ByteOrderUtils::ReadUInt32(buffer->GetPos() + offset);
             if (header->magic != MESSAGE_MAGIC_NO) {
                 std::cerr << "message magic no is invalid!" << std::endl;
                 return false;
@@ -26,19 +26,19 @@ namespace netty {
             offset += sizeof(header->magic);
 #if WITH_MSG_ID
 #if BULK_MSG_ID
-            header->id.ts = ByteOrderUtils::ReadUInt64(buffer->Pos + offset);
+            header->id.ts = ByteOrderUtils::ReadUInt64(buffer->GetPos() + offset);
             offset += sizeof(uint64_t);
-            header->id.seq = ByteOrderUtils::ReadUInt32(buffer->Pos + offset);
+            header->id.seq = ByteOrderUtils::ReadUInt32(buffer->GetPos() + offset);
             offset += sizeof(header->id.seq);
 #elif BIG_MSG_ID
-            header->id = ByteOrderUtils::ReadUInt64(buffer->Pos + offset);
+            header->id = ByteOrderUtils::ReadUInt64(buffer->GetPos() + offset);
             offset += sizeof(header->id);
 #else
-            header->id = ByteOrderUtils::ReadUInt32(buffer->Pos + offset);
+            header->id = ByteOrderUtils::ReadUInt32(buffer->GetPos() + offset);
             offset += sizeof(header->id);
 #endif
 #endif
-            header->len = ByteOrderUtils::ReadUInt32(buffer->Pos + offset);
+            header->len = ByteOrderUtils::ReadUInt32(buffer->GetPos() + offset);
 
             auto rc = header->len <= MAX_MSG_PAYLOAD_SIZE;
             if (!rc) {
