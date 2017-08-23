@@ -46,11 +46,11 @@ namespace netty {
              */
             bool Start(uint16_t ioThreadsCnt, NonBlockingEventModel m) override;
 
+            /**
+             * 一旦stop，就不能再用了(不可以重新start再用)。
+             * @return
+             */
             bool Stop() override;
-
-            bool Connect(net_peer_info_t &npt) override;
-
-            bool Disconnect(net_peer_info_t &npt) override;
 
             /**
              * 一旦发送成功，则m的所有权便属于了框架，user无需也不可以再管理此SndMessage，m生命周期由框架控制。
@@ -61,6 +61,7 @@ namespace netty {
             bool SendMessage(SndMessage *m) override;
 
         private:
+            bool connect(net_peer_info_t &npt);
             void on_stack_connect(AFileEventHandler *handler);
             bool on_logic_connect(AFileEventHandler *handler);
             void on_finish(AFileEventHandler *handler);
@@ -73,8 +74,6 @@ namespace netty {
             AEventManager                                     *m_pEventManager = nullptr;
             NotifyMessageCallbackHandler                       m_msgCallback;
             bool                                               m_bStopped;
-
-
         }; // class NBSocketService
     }  // namespace net
 } // namespace netty

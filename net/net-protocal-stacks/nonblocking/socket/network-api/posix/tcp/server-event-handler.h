@@ -25,7 +25,7 @@ namespace netty {
         public:
             PosixTcpServerEventHandler(EventWorker *ew, net_addr_t *nat,
                                        ConnectHandler stackConnectHandler, ConnectFunc onLogicConnect,
-                                       FinishHandler finishHandler, common::MemPool *memPool,
+                                       common::MemPool *memPool,
                                        NotifyMessageCallbackHandler msgCallbackHandler);
             ~PosixTcpServerEventHandler() override;
 
@@ -42,7 +42,6 @@ namespace netty {
             PosixTcpServerSocket             *m_pSrvSocket;
             ConnectHandler                    m_onStackConnect;
             ConnectFunc                       m_onLogicConnect;
-            FinishHandler                     m_onFinish;
             /**
              * 关联关系，外部创建者会释放，本类无需释放。
              */

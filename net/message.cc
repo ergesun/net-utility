@@ -53,8 +53,6 @@ namespace netty {
             buffer->Put();
             s_freeBuffers.push_back(buffer);
         }
-
-
     } // namespace net
 } // namespace netty
 

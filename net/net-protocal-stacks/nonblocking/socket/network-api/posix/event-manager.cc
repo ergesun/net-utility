@@ -35,7 +35,7 @@ namespace netty {
                 if (m_sspNat.get()) {
                     auto ew = new EventWorker(m_iMaxEvents, m);
                     m_pServerEventHandler = new PosixTcpServerEventHandler(ew, m_sspNat.get(), m_onStackConnect,
-                                                                           m_onLogicConnect, m_onFinish,
+                                                                           m_onLogicConnect,
                                                                            m_pMemPool, m_msgCallback);
                     m_pListenWorkerEventLoopCtx.second = ew;
                     m_pListenWorkerEventLoopCtx.first = new std::thread(std::bind(&PosixEventManager::worker_loop, this, ew));

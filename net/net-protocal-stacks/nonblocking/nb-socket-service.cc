@@ -47,10 +47,36 @@ namespace netty {
 
         bool NBSocketService::Stop() {
             m_bStopped = true;
+            m_pNetStackWorkerManager.reset();
             return m_pEventManager->Stop();
         }
 
-        bool NBSocketService::Connect(net_peer_info_t &npt) {
+        bool NBSocketService::SendMessage(SndMessage *m) {
+            if (SocketProtocal::Tcp != m->GetPeerInfo().sp) {
+                std::stringstream ss;
+                ss << "Not support now!" << __FILE__ << ":" << __LINE__;
+                throw std::runtime_error(ss.str());
+            }
+
+            bool rc = false;
+            auto peer = m->GetPeerInfo();
+            auto handler = m_pNetStackWorkerManager->GetWorkerEventHandler(peer);
+            if (!handler) {
+                if (connect(peer)) {
+                    handler = m_pNetStackWorkerManager->GetWorkerEventHandler(peer);
+                }
+            }
+
+            if (handler) {
+                rc = handler->GetStackMsgWorker()->SendMessage(m);
+            } else {
+                fprintf(stderr, "There is no worker for peer %s:%d\n", peer.nat.addr.c_str(), peer.nat.port);
+            }
+
+            return rc;
+        }
+
+        bool NBSocketService::connect(net_peer_info_t &npt) {
             if (m_pNetStackWorkerManager->GetWorkerEventHandler(npt)) {
                 return true;
             }
@@ -80,7 +106,7 @@ namespace netty {
                 m_pEventManager->AddEvent(eventHandler, EVENT_NONE, EVENT_READ|EVENT_WRITE);
                 return true;
 
-            Label_failed:
+                Label_failed:
                 DELETE_PTR(ptcs);
                 return false;
             } else {
@@ -88,46 +114,6 @@ namespace netty {
                 ss << "Not support now!" << __FILE__ << ":" << __LINE__;
                 throw std::runtime_error(ss.str());
             }
-        }
-
-        bool NBSocketService::Disconnect(net_peer_info_t &npt) {
-            auto handler = m_pNetStackWorkerManager->RemoveWorkerEventHandler(npt);
-            if (handler) {
-                auto ew = handler->GetOwnWorker();
-                if (LIKELY(ew)) {
-                    ew->AddExternalEpDelEvent(handler);
-                    ew->Wakeup();
-                }
-
-                return true;
-            }
-
-            return false;
-        }
-
-        bool NBSocketService::SendMessage(SndMessage *m) {
-            if (SocketProtocal::Tcp != m->GetPeerInfo().sp) {
-                std::stringstream ss;
-                ss << "Not support now!" << __FILE__ << ":" << __LINE__;
-                throw std::runtime_error(ss.str());
-            }
-
-            bool rc = false;
-            auto peer = m->GetPeerInfo();
-            auto handler = m_pNetStackWorkerManager->GetWorkerEventHandler(peer);
-            if (!handler) {
-                if (Connect(peer)) {
-                    handler = m_pNetStackWorkerManager->GetWorkerEventHandler(peer);
-                }
-            }
-
-            if (handler) {
-                rc = handler->GetStackMsgWorker()->SendMessage(m);
-            } else {
-                fprintf(stderr, "There is no worker for peer %s:%d\n", peer.nat.addr.c_str(), peer.nat.port);
-            }
-
-            return rc;
         }
 
         void NBSocketService::on_stack_connect(AFileEventHandler *handler) {
@@ -139,7 +125,9 @@ namespace netty {
         }
 
         void NBSocketService::on_finish(AFileEventHandler *handler) {
-            m_pNetStackWorkerManager->RemoveWorkerEventHandler(handler->GetSocketDescriptor()->GetLogicPeerInfo());
+            auto lnpt = handler->GetSocketDescriptor()->GetLogicPeerInfo();
+            auto rnpt = handler->GetSocketDescriptor()->GetRealPeerInfo();
+            m_pNetStackWorkerManager->RemoveWorkerEventHandler(lnpt, rnpt);
             auto ew = handler->GetOwnWorker();
             if (LIKELY(ew)) {
                 ew->AddExternalEpDelEvent(handler);

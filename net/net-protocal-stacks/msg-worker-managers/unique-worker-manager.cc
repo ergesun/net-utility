@@ -9,6 +9,14 @@
 
 namespace netty {
     namespace net {
+        UniqueWorkerManager::~UniqueWorkerManager() {
+            for (auto p : m_hmap_workers) {
+                DELETE_PTR(p.second);
+            }
+            m_hmap_workers.clear();
+            m_hmap_rp_lp.clear();
+        }
+
         AFileEventHandler* UniqueWorkerManager::GetWorkerEventHandler(net_peer_info_t logicNpt) {
             common::SpinLock l(&m_sl);
             return lookup_worker(logicNpt);
@@ -17,20 +25,27 @@ namespace netty {
         bool UniqueWorkerManager::PutWorkerEventHandler(AFileEventHandler *workerEventHandler) {
             common::SpinLock l(&m_sl);
             auto lnpt = workerEventHandler->GetSocketDescriptor()->GetLogicPeerInfo();
+            auto rnpt = workerEventHandler->GetSocketDescriptor()->GetRealPeerInfo();
             auto handler = lookup_worker(lnpt);
             bool res;
             if (handler) {
                 res = false;
             } else {
                 m_hmap_workers[lnpt] = workerEventHandler;
+                m_hmap_rp_lp[rnpt] = lnpt;
                 res = true;
             }
 
             return res;
         }
 
-        AFileEventHandler* UniqueWorkerManager::RemoveWorkerEventHandler(net_peer_info_t logicNpt) {
+        AFileEventHandler* UniqueWorkerManager::RemoveWorkerEventHandler(net_peer_info_t logicNpt, net_peer_info_t realNpt) {
             common::SpinLock l(&m_sl);
+            if (m_hmap_rp_lp.find(realNpt) == m_hmap_rp_lp.end()) {
+                return nullptr;
+            }
+
+            m_hmap_rp_lp.erase(realNpt);
             auto handler = lookup_worker(logicNpt);
             if (handler) {
                 m_hmap_workers.erase(logicNpt);

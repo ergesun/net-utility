@@ -53,7 +53,7 @@ namespace netty {
                 m_header.id = id;
             }
 
-        //protected:
+        protected:
             /**
              * 获取派生类的消息encode之后待发送字节的长度。
              * 负载的最大长度为MAX_MSG_PAYLOAD_SIZE。

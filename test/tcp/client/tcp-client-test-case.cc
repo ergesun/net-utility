@@ -54,8 +54,7 @@ namespace netty {
                 }
             }
 
-            netService->Disconnect(peerInfo);
-            //netService->Stop();
+            netService->Stop();
             DELETE_PTR(netService);
         }
 

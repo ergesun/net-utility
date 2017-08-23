@@ -93,7 +93,6 @@ namespace netty {
 
                 return *this;
             }
-
         } net_peer_info_t, net_local_info_t;
 
         inline bool operator==(const net_peer_info_t &a, const net_peer_info_t &b) {
