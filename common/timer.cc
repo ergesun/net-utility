@@ -46,6 +46,8 @@ namespace netty {
             auto findPos = m_mapSubscribedEvents.find(when);
             for (; findPos != m_mapSubscribedEvents.end(); ++findPos) {
                 if (findPos->second.callback == ev.callback) {
+                    evId.when.nsec = 0;
+                    evId.when.sec = 0;
                     return evId;
                 }
             }
@@ -70,7 +72,10 @@ namespace netty {
         }
 
         bool Timer::UnsubscribeEvent(EventId eventId) {
-            assert(eventId.how);
+            if (0 == eventId.when || nullptr == eventId.how) {
+                return false;
+            }
+
             SpinLock l(&m_thread_safe_sl);
             auto ev = m_mapEventsEntry.find(eventId);
             if (m_mapEventsEntry.end() != ev) {

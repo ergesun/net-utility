@@ -73,7 +73,7 @@ namespace netty {
             common::MemPool                                   *m_pMemPool = nullptr;
             AEventManager                                     *m_pEventManager = nullptr;
             NotifyMessageCallbackHandler                       m_msgCallback;
-            bool                                               m_bStopped;
+            bool                                               m_bStopped = true;
         }; // class NBSocketService
     }  // namespace net
 } // namespace netty

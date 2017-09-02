@@ -96,6 +96,14 @@ namespace netty {
             return a.sec == b.sec && a.nsec == b.nsec;
         }
 
+        inline bool operator==(long tick, const uctime_t &b) {
+            return tick == b.get_total_nsecs();
+        }
+
+        inline bool operator==(const uctime_t &b, long tick) {
+            return tick == b.get_total_nsecs();
+        }
+
         inline bool operator!=(const uctime_t &a, const uctime_t &b) {
             return a.sec != b.sec || a.nsec != b.nsec;
         }
