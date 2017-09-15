@@ -87,7 +87,6 @@ namespace netty {
             class MemObject {
             public:
                 MemObject(const MemObject&) = default;
-                ~MemObject() = default;
 
                 char* Pointer() const;
                 uint32_t Size() const;
@@ -96,6 +95,7 @@ namespace netty {
             private:
                 friend class MemPool;
                 MemObject() = default;
+                ~MemObject() = default;
                 /**
                  *
                  * @param type

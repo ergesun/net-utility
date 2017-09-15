@@ -112,7 +112,7 @@ namespace netty {
             }
 
             for (auto iter = m_free_mem_objs.begin(); iter != m_free_mem_objs.end(); ++iter) {
-                free(reinterpret_cast<char*>(*iter));
+                delete *iter;
             }
         }
 
