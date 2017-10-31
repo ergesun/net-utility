@@ -23,7 +23,7 @@ namespace netty {
          */
         class GCC_INTERNAL PosixEventManager : public AEventManager {
         public:
-            PosixEventManager(SocketProtocal sp, std::shared_ptr<net_addr_t> sspNat, common::MemPool *memPool, uint32_t maxEvents,
+            PosixEventManager(SocketProtocol sp, std::shared_ptr<net_addr_t> sspNat, common::MemPool *memPool, uint32_t maxEvents,
                               uint32_t connWorkersCnt, ConnectHandler stackConnectHandler, ConnectFunc logicConnectHandler,
                               FinishHandler finishHandler, NotifyMessageCallbackHandler msgCallbackHandler);
 
@@ -39,7 +39,7 @@ namespace netty {
             inline void process_event(NetEvent *netEvent);
 
         private:
-            SocketProtocal                                     m_sp;
+            SocketProtocol                                     m_sp;
             std::shared_ptr<net_addr_t>                        m_sspNat;
             uint32_t                                           m_iConnWorkersCnt;
             int32_t                                            m_iCurWorkerIdx = -1;

@@ -13,13 +13,13 @@ namespace netty {
     namespace net {
         class ASocketService : public ISocketService {
         public:
-            ASocketService(SocketProtocal sp, std::shared_ptr<net_addr_t> sspNat) : m_sp(sp), m_nlt(sspNat) {}
+            ASocketService(SocketProtocol sp, std::shared_ptr<net_addr_t> sspNat) : m_sp(sp), m_nlt(sspNat) {}
 
         protected:
             /**
              * service的socket类型。
              */
-            SocketProtocal              m_sp;
+            SocketProtocol              m_sp;
             /**
              * 本地监听的地址协议信息。
              */

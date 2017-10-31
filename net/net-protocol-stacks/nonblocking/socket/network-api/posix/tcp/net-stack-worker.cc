@@ -320,7 +320,7 @@ namespace netty {
                                 .addr = std::move(addrStr),
                                 .port = port
                             },
-                            .sp = SocketProtocal::Tcp
+                            .sp = SocketProtocol::Tcp
                         };
 
                         // set peer info to logic info.

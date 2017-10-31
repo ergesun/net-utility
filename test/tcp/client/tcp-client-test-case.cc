@@ -9,7 +9,7 @@
 #include "../../../net/common-def.h"
 #include "../../../common/mem-pool.h"
 #include "../../../net/socket-service-factory.h"
-#include "../../../net/net-protocal-stacks/inet-stack-worker-manager.h"
+#include "../../../net/net-protocol-stacks/inet-stack-worker-manager.h"
 #include "../../../net/rcv-message.h"
 #include "../../../common/buffer.h"
 
@@ -17,7 +17,7 @@
 
 #include "tcp-client-test-case.h"
 #include "../../../common/thread-pool.h"
-#include "../../../net/net-protocal-stacks/msg-worker-managers/unique-worker-manager.h"
+#include "../../../net/net-protocol-stacks/msg-worker-managers/unique-worker-manager.h"
 
 namespace netty {
     namespace test {
@@ -32,7 +32,7 @@ namespace netty {
             };
 
             net::NssConfig nc = {
-                .sp = net::SocketProtocal::Tcp,
+                .sp = net::SocketProtocol::Tcp,
                 .sspNat = ssp_npt,
                 .logicPort = port,
                 .netMgrType = net::NetStackWorkerMgrType::Unique,
@@ -50,7 +50,7 @@ namespace netty {
                     .addr = ip.c_str(),
                     .port = 2210
                 },
-                .sp = net::SocketProtocal::Tcp
+                .sp = net::SocketProtocol::Tcp
             };
 
             for (;;) {

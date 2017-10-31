@@ -21,11 +21,11 @@ namespace netty {
         public:
             PosixTcpConnectionSocket() = default;
             PosixTcpConnectionSocket(net_addr_t peerAddr) {
-                m_real_peer = net_peer_info_t(peerAddr, SocketProtocal::Tcp);
+                m_real_peer = net_peer_info_t(peerAddr, SocketProtocol::Tcp);
             }
 
             PosixTcpConnectionSocket(net_addr_t peerAddr, int sfd) {
-                m_real_peer = net_peer_info_t(peerAddr, SocketProtocal::Tcp);
+                m_real_peer = net_peer_info_t(peerAddr, SocketProtocol::Tcp);
                 m_fd = sfd;
             }
 

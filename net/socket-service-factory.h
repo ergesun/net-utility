@@ -8,7 +8,7 @@
 
 #include "isocket-service.h"
 #include "notify-message.h"
-#include "net-protocal-stacks/nonblocking/nss-config.h"
+#include "net-protocol-stacks/nonblocking/nss-config.h"
 
 namespace netty {
     namespace common {

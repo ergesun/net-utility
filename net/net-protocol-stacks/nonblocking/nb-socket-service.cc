@@ -58,7 +58,7 @@ namespace netty {
             if (UNLIKELY(m_bStopped)) {
                 return false;
             }
-            if (SocketProtocal::Tcp != m->GetPeerInfo().sp) {
+            if (SocketProtocol::Tcp != m->GetPeerInfo().sp) {
                 std::stringstream ss;
                 ss << "Not support now!" << __FILE__ << ":" << __LINE__;
                 throw std::runtime_error(ss.str());
@@ -83,8 +83,8 @@ namespace netty {
         }
 
         bool NBSocketService::Disconnect(const net_peer_info_t &peer) {
-            if (SocketProtocal::Tcp != peer.sp) {
-                std::cerr << "Not support SocketProtocal " << (int32_t)(peer.sp);
+            if (SocketProtocol::Tcp != peer.sp) {
+                std::cerr << "Not support SocketProtocol " << (int32_t)(peer.sp);
                 return false;
             }
 
@@ -108,7 +108,7 @@ namespace netty {
                 return true;
             }
 
-            if (SocketProtocal::Tcp == npt.sp) {
+            if (SocketProtocol::Tcp == npt.sp) {
                 PosixTcpConnectionEventHandler *eventHandler = nullptr;
                 // 既为connect，就是TCP
                 PosixTcpClientSocket *ptcs = new PosixTcpClientSocket(npt.nat);

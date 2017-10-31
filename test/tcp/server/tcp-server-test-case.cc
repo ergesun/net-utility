@@ -11,7 +11,7 @@
 #include "../../../common/buffer.h"
 
 #include "tcp-server-test-case.h"
-#include "../../../net/net-protocal-stacks/msg-worker-managers/unique-worker-manager.h"
+#include "../../../net/net-protocol-stacks/msg-worker-managers/unique-worker-manager.h"
 
 
 namespace netty {
@@ -29,7 +29,7 @@ namespace netty {
             };
 
             net::NssConfig nc = {
-                .sp = net::SocketProtocal::Tcp,
+                .sp = net::SocketProtocol::Tcp,
                 .sspNat = ssp_npt,
                 .logicPort = 2210,
                 .netMgrType = net::NetStackWorkerMgrType::Unique,

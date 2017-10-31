@@ -20,7 +20,7 @@ namespace netty {
          * 无需move构造，无需copy构造。
          */
         struct NssConfig {
-            NssConfig(SocketProtocal sp, std::shared_ptr<net_addr_t> sspNat, uint16_t logicPort,
+            NssConfig(SocketProtocol sp, std::shared_ptr<net_addr_t> sspNat, uint16_t logicPort,
                       NetStackWorkerMgrType mgrType, common::MemPool *memPool,
                       NotifyMessageCallbackHandler msgCallbackHandler, timeval connectTimeout) {
                 this->sp                 = sp;
@@ -32,7 +32,7 @@ namespace netty {
                 this->connectTimeout     = connectTimeout;
             }
 
-            SocketProtocal                          sp;
+            SocketProtocol                          sp;
             std::shared_ptr<net_addr_t>             sspNat;
             uint16_t                                logicPort;
             NetStackWorkerMgrType                   netMgrType;

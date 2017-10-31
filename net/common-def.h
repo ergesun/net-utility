@@ -18,7 +18,7 @@ namespace netty {
             Posix
         };
 
-        enum class SocketProtocal {
+        enum class SocketProtocol {
             None = 0,
             Tcp,
             Udp
@@ -57,15 +57,15 @@ namespace netty {
 
         typedef struct net_peer_info_s {
             net_addr_t nat;
-            SocketProtocal sp;
+            SocketProtocol sp;
 
             net_peer_info_s() {
-                sp = SocketProtocal::None;
+                sp = SocketProtocol::None;
             }
 
-            net_peer_info_s(net_addr_t &n, SocketProtocal s) : nat(n), sp(s) {}
-            net_peer_info_s(net_addr_t &&n, SocketProtocal s) : nat(std::move(n)), sp(s) {}
-            net_peer_info_s(std::string &&addr, uint16_t port, SocketProtocal s) {
+            net_peer_info_s(net_addr_t &n, SocketProtocol s) : nat(n), sp(s) {}
+            net_peer_info_s(net_addr_t &&n, SocketProtocol s) : nat(std::move(n)), sp(s) {}
+            net_peer_info_s(std::string &&addr, uint16_t port, SocketProtocol s) {
                 nat = net_addr_t(std::move(addr), port);
                 sp = s;
             }
