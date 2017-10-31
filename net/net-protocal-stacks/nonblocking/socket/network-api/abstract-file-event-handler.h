@@ -6,18 +6,20 @@
 #ifndef NET_CORE_SOCKETAPI_SOCKET_EVENT_HANDLER_H
 #define NET_CORE_SOCKETAPI_SOCKET_EVENT_HANDLER_H
 
+#include "../../../../../common/common-def.h"
+#include "../../../../../common/reference-counter.h"
+
 #include "../../ievent-handler.h"
 #include "file-descriptor.h"
-#include "../../../../../common/common-def.h"
+#include "../event-drivers/event-worker.h"
 
 namespace netty {
     namespace net {
-        class EventWorker;
         class ANetStackMessageWorker;
-        class AFileEventHandler : public IEventHandler {
+        class AFileEventHandler : public common::ReferenceCounter, public IEventHandler {
         public:
-            AFileEventHandler() = default;
-            explicit AFileEventHandler(FileDescriptor *socketDesc) : m_socketDesc(socketDesc) {}
+            AFileEventHandler() : common::ReferenceCounter(1) {}
+            explicit AFileEventHandler(FileDescriptor *socketDesc) : common::ReferenceCounter(1), m_socketDesc(socketDesc) {}
 
             virtual ~AFileEventHandler() = default;
             /**
@@ -36,6 +38,16 @@ namespace netty {
 
             inline EventWorker* GetOwnWorker() {
                 return m_pOwnEvWorker;
+            }
+
+            void Release() final override {
+                common::ReferenceCounter::Release();
+                if (0 == common::ReferenceCounter::GetRef()) {
+                    if (LIKELY(m_pOwnEvWorker)) {
+                        m_pOwnEvWorker->AddExternalEpDelEvent(this);
+                        m_pOwnEvWorker->Wakeup();
+                    }
+                }
             }
 
             virtual ANetStackMessageWorker* GetStackMsgWorker() = 0;

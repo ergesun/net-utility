@@ -32,10 +32,14 @@ int main(int argc, char **argv) {
 
     std::cout << "\n\n/*********TESTCASE - 4: -->  client communication test**********/" << std::endl;
 
-    if (argc == 2) {
+    if (argc >= 2) {
         std::cout << "has ip input, its test client!\n";
         std::string srvIp = argv[1];
-        TcpClientTest::Run(srvIp);
+        uint32_t port = 2210;
+        if (argc == 3) {
+            port = (uint16_t)atoi(argv[2]);
+        }
+        TcpClientTest::Run(srvIp, port);
 
         exit(EXIT_FAILURE);
     } else {

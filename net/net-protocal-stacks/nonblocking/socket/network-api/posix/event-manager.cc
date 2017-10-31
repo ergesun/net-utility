@@ -102,7 +102,7 @@ namespace netty {
 
         void PosixEventManager::worker_loop(EventWorker *ew) {
             auto events = ew->GetEventsContainer();
-            while (!m_bStopped) {
+            while (!m_bStopped) { // 里面有锁，其具有内存屏障作用会刷新m_bStopped.
                 auto nevents = ew->GetInternalEvent(events, nullptr);
                 auto pendingDeleteEventHandlers = ew->GetExternalEpDelEvents();
 
@@ -135,8 +135,6 @@ namespace netty {
                     ew->AddEvent(addEv.socketEventHandler, addEv.cur_mask, addEv.mask);
                 }
                 addEvs.clear();
-
-                hw_rw_memory_barrier();
             }
         }
 

@@ -3,6 +3,7 @@
  * a Creative Commons Attribution 3.0 Unported License(https://creativecommons.org/licenses/by/3.0/).
  */
 
+#include <iostream>
 #include "nb-socket-service.h"
 #include "socket/network-api/posix/tcp/server-event-handler.h"
 #include "socket/network-api/posix/event-manager.h"
@@ -13,16 +14,14 @@ using namespace std::placeholders;
 
 namespace netty {
     namespace net {
-        NBSocketService::NBSocketService(SocketProtocal sp, std::shared_ptr<net_addr_t> sspNat, uint16_t logicPort,
-                                         std::shared_ptr<INetStackWorkerManager> sspMgr,
-                                         common::MemPool *memPool, NotifyMessageCallbackHandler msgCallbackHandler) :
-            ASocketService(sp, sspNat), m_iLogicPort(logicPort), m_pMemPool(memPool) {
-            assert(memPool);
-            m_msgCallback = msgCallbackHandler;
-            if (sspMgr.get()) {
-                m_pNetStackWorkerManager = sspMgr;
-            } else {
-                m_pNetStackWorkerManager = std::shared_ptr<INetStackWorkerManager>(new UniqueWorkerManager());
+        NBSocketService::NBSocketService(NssConfig nssConfig) :
+            ASocketService(nssConfig.sp, nssConfig.sspNat), m_conf(nssConfig) {
+            assert(nssConfig.memPool);
+            switch (nssConfig.netMgrType) {
+                case NetStackWorkerMgrType::Unique :{
+                    m_sspMgr = std::shared_ptr<INetStackWorkerManager>(new UniqueWorkerManager());
+                    break;
+                }
             }
         }
 
@@ -37,11 +36,11 @@ namespace netty {
             }
             m_bStopped = false;
             hw_rw_memory_barrier();
-            m_pEventManager = new PosixEventManager(m_sp, m_nlt, m_pMemPool, MAX_EVENTS, ioThreadsCnt,
+            m_pEventManager = new PosixEventManager(m_sp, m_nlt, m_conf.memPool, MAX_EVENTS, ioThreadsCnt,
                                                     std::bind(&NBSocketService::on_stack_connect, this, _1),
                                                     std::bind(&NBSocketService::on_logic_connect, this, _1),
                                                     std::bind(&NBSocketService::on_finish, this, _1),
-                                                    m_msgCallback);
+                                                    m_conf.msgCallbackHandler);
             return m_pEventManager->Start(m);
         }
 
@@ -51,7 +50,7 @@ namespace netty {
             }
             m_bStopped = true;
             hw_rw_memory_barrier();
-            m_pNetStackWorkerManager.reset();
+            m_sspMgr.reset();
             return m_pEventManager->Stop();
         }
 
@@ -67,10 +66,10 @@ namespace netty {
 
             bool rc = false;
             auto peer = m->GetPeerInfo();
-            auto handler = m_pNetStackWorkerManager->GetWorkerEventHandler(peer);
+            auto handler = m_sspMgr->GetWorkerEventHandler(peer);
             if (!handler) {
                 if (connect(peer)) {
-                    handler = m_pNetStackWorkerManager->GetWorkerEventHandler(peer);
+                    handler = m_sspMgr->GetWorkerEventHandler(peer);
                 }
             }
 
@@ -83,8 +82,29 @@ namespace netty {
             return rc;
         }
 
+        bool NBSocketService::Disconnect(const net_peer_info_t &peer) {
+            if (SocketProtocal::Tcp != peer.sp) {
+                std::cerr << "Not support SocketProtocal " << (int32_t)(peer.sp);
+                return false;
+            }
+
+            if (UNLIKELY(m_bStopped)) {
+                return false;
+            }
+
+            auto handler = m_sspMgr->RemoveWorkerEventHandler(peer);
+            if (!handler) {
+                return true;
+            }
+
+            handler->GetStackMsgWorker()->ClearMessage();
+            handler->Release();
+
+            return true;
+        }
+
         bool NBSocketService::connect(net_peer_info_t &npt) {
-            if (m_pNetStackWorkerManager->GetWorkerEventHandler(npt)) {
+            if (m_sspMgr->GetWorkerEventHandler(npt)) {
                 return true;
             }
 
@@ -100,7 +120,7 @@ namespace netty {
                     goto Label_failed;
                 }
                 // m_iLogicPort： self logic port(for logic service id)
-                eventHandler = new PosixTcpConnectionEventHandler(ptcs, m_pMemPool, m_msgCallback, m_iLogicPort,
+                eventHandler = new PosixTcpConnectionEventHandler(ptcs, m_conf.memPool, m_conf.msgCallbackHandler, m_conf.logicPort,
                                                                   std::bind(&NBSocketService::on_logic_connect, this, _1));
                 // logic peer info： peer ip:port。
                 eventHandler->GetStackMsgWorker()->GetEventHandler()->GetSocketDescriptor()->SetLogicPeerInfo(net_peer_info_t(npt));
@@ -134,21 +154,26 @@ namespace netty {
             if (UNLIKELY(m_bStopped)) {
                 return false;
             }
-            return m_pNetStackWorkerManager->PutWorkerEventHandler(handler);
+            return m_sspMgr->PutWorkerEventHandler(handler);
         }
 
         void NBSocketService::on_finish(AFileEventHandler *handler) {
             if (UNLIKELY(m_bStopped)) {
                 return;
             }
+
+            // 无需担心并发的时候NBSocketService::Disconnect函数先被调用从而导致handler被释放了本函数下面还在使用。
+            // 因为我们目前的对某个worker的处理都是在同一个线程内按序在PosixEventManager::worker_loop中进行的，
+            // 假如NBSocketService::Disconnect的后续动作先进行，那么本函数压根不会被调用;假如本函数先调用，那么NBSocketService::Disconnect
+            // 的动作一定会排在后面。
             auto lnpt = handler->GetSocketDescriptor()->GetLogicPeerInfo();
             auto rnpt = handler->GetSocketDescriptor()->GetRealPeerInfo();
-            m_pNetStackWorkerManager->RemoveWorkerEventHandler(lnpt, rnpt);
-            auto ew = handler->GetOwnWorker();
-            if (LIKELY(ew)) {
-                ew->AddExternalEpDelEvent(handler);
-                ew->Wakeup();
+            if (!m_sspMgr->RemoveWorkerEventHandler(lnpt, rnpt)) {
+                return;
             }
+
+            handler->GetStackMsgWorker()->ClearMessage();
+            handler->Release();
         }
     } // namespace net
 } // namespace netty

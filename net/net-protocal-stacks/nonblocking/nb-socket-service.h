@@ -14,6 +14,7 @@
 #include "socket/event-drivers/ievent-driver.h"
 #include "../../message.h"
 #include "../../notify-message.h"
+#include "nss-config.h"
 
 // TODO(sunchao): 可配值
 #define MAX_EVENTS  256
@@ -29,13 +30,8 @@ namespace netty {
         public:
             /**
              *
-             * @param nlt 如果为空，则是为仅仅一个服务于client的服务，否则为server信息，会开启server的服务。
-             * @param sspMgr  worker的管理策略。
-             * @param memPool 内存池。
              */
-            NBSocketService(SocketProtocal sp, std::shared_ptr<net_addr_t> sspNat, uint16_t logicPort,
-                            std::shared_ptr<INetStackWorkerManager> sspMgr,
-                            common::MemPool *memPool, NotifyMessageCallbackHandler msgCallbackHandler);
+            explicit NBSocketService(NssConfig nssConfig);
 
             ~NBSocketService() override;
 
@@ -60,6 +56,13 @@ namespace netty {
              */
             bool SendMessage(SndMessage *m) override;
 
+            /**
+             * 断开一个TCP连接。
+             * @param peer
+             * @return
+             */
+            bool Disconnect(const net_peer_info_t &peer) override;
+
         private:
             bool connect(net_peer_info_t &npt);
             void on_stack_connect(AFileEventHandler *handler);
@@ -67,13 +70,10 @@ namespace netty {
             void on_finish(AFileEventHandler *handler);
 
         private:
-            uint16_t                                           m_iLogicPort = 0;
-            std::shared_ptr<INetStackWorkerManager>            m_pNetStackWorkerManager = nullptr;
-            // 关联关系，外部传入的，根据谁创建谁销毁原则，本类无需释放。
-            common::MemPool                                   *m_pMemPool = nullptr;
-            AEventManager                                     *m_pEventManager = nullptr;
-            NotifyMessageCallbackHandler                       m_msgCallback;
-            bool                                               m_bStopped = true;
+            NssConfig                                 m_conf;
+            std::shared_ptr<INetStackWorkerManager>   m_sspMgr;
+            AEventManager                            *m_pEventManager = nullptr;
+            bool                                      m_bStopped      = true;
         }; // class NBSocketService
     }  // namespace net
 } // namespace netty

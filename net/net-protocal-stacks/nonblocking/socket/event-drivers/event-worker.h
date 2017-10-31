@@ -20,7 +20,7 @@ namespace netty {
          * 事件管理器的封装 -- 使用者的直接类，不要使用IEventDriver。
          * -> 需要通过GetInternalEvent和GetExternalEvents两个函数才能获取所有事件。
          */
-        class GCC_INTERNAL EventWorker {
+        class EventWorker {
         public:
             struct EpollAddEvent {
                 EpollAddEvent(AFileEventHandler *h, int32_t curMask, int32_t m)

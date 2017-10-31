@@ -23,14 +23,24 @@ namespace netty {
     namespace test {
         std::mutex              TcpClientTest::s_mtx;
         std::condition_variable TcpClientTest::s_cv;
-        void TcpClientTest::Run(std::string &ip) {
+        void TcpClientTest::Run(std::string &ip, uint16_t port) {
             std::shared_ptr<net::net_addr_t> ssp_npt(nullptr);
             common::MemPool memPool;
-            std::shared_ptr<net::INetStackWorkerManager> sspMgr = std::shared_ptr<net::INetStackWorkerManager>(new net::UniqueWorkerManager());
-            auto netService = net::SocketServiceFactory::CreateService(net::SocketProtocal::Tcp, ssp_npt, 2210, &memPool,
-                                                                       std::bind(&TcpClientTest::recv_msg,
-                                                                                 std::placeholders::_1),
-                                                                        sspMgr);
+            timeval connTimeout = {
+                .tv_sec = 0,
+                .tv_usec = 100 * 1000
+            };
+
+            net::NssConfig nc = {
+                .sp = net::SocketProtocal::Tcp,
+                .sspNat = ssp_npt,
+                .logicPort = port,
+                .netMgrType = net::NetStackWorkerMgrType::Unique,
+                .memPool = &memPool,
+                .msgCallbackHandler = std::bind(recv_msg, std::placeholders::_1),
+                .connectTimeout = connTimeout
+            };
+            auto netService = net::SocketServiceFactory::CreateService(nc);
             if (!netService->Start(2, netty::net::NonBlockingEventModel::Posix)) {
                 throw std::runtime_error("cannot start SocketService");
             }

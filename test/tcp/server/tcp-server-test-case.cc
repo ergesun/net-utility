@@ -23,11 +23,22 @@ namespace netty {
             auto nat = new net::net_addr_t("127.0.0.1", 2210);
             std::shared_ptr<net::net_addr_t> ssp_npt(nat);
             m_mp = new common::MemPool();
+            timeval connTimeout = {
+                .tv_sec = 0,
+                .tv_usec = 100 * 1000
+            };
+
+            net::NssConfig nc = {
+                .sp = net::SocketProtocal::Tcp,
+                .sspNat = ssp_npt,
+                .logicPort = 2210,
+                .netMgrType = net::NetStackWorkerMgrType::Unique,
+                .memPool = m_mp,
+                .msgCallbackHandler = std::bind(recv_msg, std::placeholders::_1),
+                .connectTimeout = connTimeout
+            };
             std::shared_ptr<net::INetStackWorkerManager> sspMgr = std::shared_ptr<net::INetStackWorkerManager>(new net::UniqueWorkerManager());
-            s_ss = net::SocketServiceFactory::CreateService(net::SocketProtocal::Tcp, ssp_npt, 2210, m_mp,
-                                                                       std::bind(&TcpServerTest::recv_msg,
-                                                                                 std::placeholders::_1),
-                                                                        sspMgr);
+            s_ss = net::SocketServiceFactory::CreateService(nc);
             if (!s_ss->Start(2, netty::net::NonBlockingEventModel::Posix)) {
                 throw std::runtime_error("cannot start SocketService");
             }

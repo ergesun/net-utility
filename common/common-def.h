@@ -14,17 +14,20 @@
 /**
  * 控制目标不导出，即仅库内部可见。
  */
-#define GCC_INTERNAL                   __attribute__ ((visibility("hidden")))
+#define GCC_INTERNAL                      __attribute__ ((visibility("hidden")))
 
-#define LIKELY(x)                      __builtin_expect(!!(x), 1)
-#define UNLIKELY(x)                    __builtin_expect(!!(x), 0)
+#define LIKELY(x)                         __builtin_expect(!!(x), 1)
+#define UNLIKELY(x)                       __builtin_expect(!!(x), 0)
 
-#define hw_rw_memory_barrier()         __sync_synchronize()
-#define soft_yield_cpu()               __asm__ ("pause")
-#define hard_yield_cpu()               sched_yield()
-#define atomic_cas(lock, old, set)     __sync_bool_compare_and_swap(lock, old, set)
-#define atomic_zero(lock)              __sync_fetch_and_and(lock, 0)
-#define atomic_addone_and_fetch(lock)  __sync_add_and_fetch(lock, 1)
+#define hw_rw_memory_barrier()            __sync_synchronize()
+#define soft_yield_cpu()                  __asm__ ("pause")
+#define hard_yield_cpu()                  sched_yield()
+#define atomic_cas(lock, old, set)        __sync_bool_compare_and_swap(lock, old, set)
+#define atomic_zero(lock)                 __sync_fetch_and_and(lock, 0)
+#define atomic_fetch(lock)                __sync_fetch_and_and(lock, 1)
+#define atomic_addone_and_fetch(lock)     __sync_add_and_fetch(lock, 1)
+#define atomic_subone_and_fetch(lock)     __sync_sub_and_fetch(lock, 1)
+#define atomic_fetch_and_set(lock, val)   __sync_lock_test_and_set(lock, val)
 
 #define DELETE_PTR(p) if (p) {delete (p); (p) = nullptr;}
 #define DELETE_ARR_PTR(p) if (p) {delete [](p); (p) = nullptr;}

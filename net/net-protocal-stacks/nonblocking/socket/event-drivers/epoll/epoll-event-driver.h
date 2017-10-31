@@ -10,7 +10,7 @@
 
 namespace netty {
     namespace net {
-        class GCC_INTERNAL EpollEventDriver : public IEventDriver {
+        class EpollEventDriver : public IEventDriver {
         public:
             ~EpollEventDriver();
             /**

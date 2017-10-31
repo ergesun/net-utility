@@ -9,7 +9,6 @@
 #include <vector>
 #include <cstdint>
 #include "../../ievent-handler.h"
-#include "../network-api/abstract-file-event-handler.h"
 
 #define EVENT_NONE       0
 #define EVENT_READ       1
@@ -17,7 +16,8 @@
 
 namespace netty {
     namespace net {
-        struct GCC_INTERNAL NetEvent {
+        class AFileEventHandler;
+        struct NetEvent {
             AFileEventHandler  *eh;
             int                 mask;
         };
@@ -28,7 +28,7 @@ namespace netty {
          * For example, Linux will use epoll(2), BSD will use kqueue(2) and select will
          * be used for worst condition.
          */
-        class GCC_INTERNAL IEventDriver {
+        class IEventDriver {
         public:
             virtual ~IEventDriver() {}
 

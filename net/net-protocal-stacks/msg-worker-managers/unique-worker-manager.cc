@@ -10,16 +10,28 @@
 namespace netty {
     namespace net {
         UniqueWorkerManager::~UniqueWorkerManager() {
+            common::SpinLock l(&m_sl);
             for (auto p : m_hmap_workers) {
                 DELETE_PTR(p.second);
             }
             m_hmap_workers.clear();
             m_hmap_rp_lp.clear();
+            m_hmap_handler_rp.clear();
         }
 
-        AFileEventHandler* UniqueWorkerManager::GetWorkerEventHandler(net_peer_info_t logicNpt) {
+        AFileEventHandler* UniqueWorkerManager::GetWorkerEventHandler(const net_peer_info_t &logicNpt) {
             common::SpinLock l(&m_sl);
             return lookup_worker(logicNpt);
+        }
+
+        AFileEventHandler* UniqueWorkerManager::GetWorkerEventHandlerWithRef(const net_peer_info_t &logicNpt) {
+            common::SpinLock l(&m_sl);
+            auto handler = lookup_worker(logicNpt);
+            if (handler) {
+                handler->AddRef();
+            }
+
+            return handler;
         }
 
         bool UniqueWorkerManager::PutWorkerEventHandler(AFileEventHandler *workerEventHandler) {
@@ -33,13 +45,14 @@ namespace netty {
             } else {
                 m_hmap_workers[lnpt] = workerEventHandler;
                 m_hmap_rp_lp[rnpt] = lnpt;
+                m_hmap_handler_rp[uintptr_t(workerEventHandler)] = rnpt;
                 res = true;
             }
 
             return res;
         }
 
-        AFileEventHandler* UniqueWorkerManager::RemoveWorkerEventHandler(net_peer_info_t logicNpt, net_peer_info_t realNpt) {
+        AFileEventHandler* UniqueWorkerManager::RemoveWorkerEventHandler(const net_peer_info_t &logicNpt, const net_peer_info_t &realNpt) {
             common::SpinLock l(&m_sl);
             if (m_hmap_rp_lp.find(realNpt) == m_hmap_rp_lp.end()) {
                 return nullptr;
@@ -55,7 +68,22 @@ namespace netty {
             }
         }
 
-        inline AFileEventHandler *UniqueWorkerManager::lookup_worker(net_peer_info_t &logicNpt) {
+        AFileEventHandler* UniqueWorkerManager::RemoveWorkerEventHandler(const net_peer_info_t &logicNpt) {
+            common::SpinLock l(&m_sl);
+            auto handler = lookup_worker(logicNpt);
+            if (handler) {
+                m_hmap_workers.erase(logicNpt);
+                auto realNpt = m_hmap_handler_rp[uintptr_t(handler)];
+                m_hmap_handler_rp.erase(uintptr_t(handler));
+                m_hmap_rp_lp.erase(realNpt);
+
+                return handler;
+            } else {
+                return nullptr;
+            }
+        }
+
+        inline AFileEventHandler *UniqueWorkerManager::lookup_worker(const net_peer_info_t &logicNpt) {
             auto p = m_hmap_workers.find(logicNpt);
             if (m_hmap_workers.end() != p) {
                 return p->second;

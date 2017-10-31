@@ -15,7 +15,7 @@ namespace netty {
     namespace test {
         class TcpClientTest {
         public:
-            static void Run(std::string &ip);
+            static void Run(std::string &ip, uint16_t port);
 
         private:
             static void recv_msg(std::shared_ptr<net::NotifyMessage> sspNM);

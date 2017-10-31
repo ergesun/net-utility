@@ -11,6 +11,10 @@
 
 namespace netty {
     namespace net {
+        enum class NetStackWorkerMgrType {
+            Unique   = 0
+        };
+
         class AFileEventHandler;
 
         /**
@@ -20,9 +24,32 @@ namespace netty {
         public:
             virtual ~INetStackWorkerManager() = default;
 
-            virtual AFileEventHandler *GetWorkerEventHandler(net_peer_info_t logicNpt) = 0;
+            /**
+             * 获取handler但不增加其引用。
+             * @param npt
+             * @return
+             */
+            virtual AFileEventHandler *GetWorkerEventHandler(const net_peer_info_t &npt) = 0;
+            /**
+             * 获取handler添加引用。
+             * @param npt
+             * @return
+             */
+            virtual AFileEventHandler *GetWorkerEventHandlerWithRef(const net_peer_info_t &npt) = 0;
             virtual bool PutWorkerEventHandler(AFileEventHandler *handler) = 0;
-            virtual AFileEventHandler* RemoveWorkerEventHandler(net_peer_info_t logicNpt, net_peer_info_t realNpt) = 0;
+            /**
+             * 检测到对端连接断开了时，需要调用这个API去移除handler。
+             * @param logicNpt
+             * @param realNpt
+             * @return
+             */
+            virtual AFileEventHandler* RemoveWorkerEventHandler(const net_peer_info_t &logicNpt, const net_peer_info_t &realNpt) = 0;
+            /**
+             * 本端主动断开时，需要调用这个API去移除handler。
+             * @param logicNpt
+             * @return
+             */
+            virtual AFileEventHandler* RemoveWorkerEventHandler(const net_peer_info_t &logicNpt) = 0;
         }; // interface INetStackWorkerManager
     }  // namespace net
 } // namespace netty

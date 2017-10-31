@@ -60,6 +60,11 @@ namespace netty {
              */
             bool InsertMessage(SndMessage *m);
             /**
+             * 清空消息。
+             */
+            void ClearMessage();
+
+            /**
              * 错误: 返回false(无论是[socket错误或对端关闭]还是[codec校验错误])
              * 正常: 返回true(即便是遇到了EAGAIN，只要没有发生错误)
              *
