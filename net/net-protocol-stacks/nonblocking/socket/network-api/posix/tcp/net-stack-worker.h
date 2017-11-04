@@ -36,6 +36,12 @@ namespace netty {
                                    ConnectFunc logicConnect);
             ~PosixTcpNetStackWorker() override;
 
+            /**
+             * 为了对联接进行管理，需要加一层握手逻辑。握手期间通过消息传递必要的连接管理信息，目前连接发起者会在第一条消息中携带逻辑端口信息
+             * 以便连接管理器INetStackWorkerManager通过逻辑端口对连接进行管理。比如UniqueWorkerManager会通过逻辑端口作为连接的唯一标识，
+             * 只保留一个连接。
+             * @return
+             */
             bool Initialize() override;
             /**
              * 错误: 返回false(无论是[socket错误或对端关闭]还是[codec校验错误])

@@ -247,6 +247,10 @@ namespace netty {
 #undef Put_Send_Buffer
         }
 
+        /**
+         * 握手期间需要同步的系统调用send/recv以便控制握手，所以这之前不会把fd交给事件管理器。
+         * @param rm
+         */
         void PosixTcpNetStackWorker::handshake(RcvMessage *rm) {
 #define COMPLETE_AND_FIRE()                   \
         m_bConnHandShakeCompleted = true;     \

@@ -20,20 +20,5 @@ add_library(net SHARED
         ${NPS_NB_SA_POSIX_TCP_SK_SRCS}
         ${NPS_NB_SA_ED_SRCS}
         ${NPS_NB_SA_ED_EP_SRCS}
-        notify-message.h
-        common-def.h
-        net-protocol-stacks/nonblocking/socket/network-api/abstract-event-manager.h
-        net-protocol-stacks/nonblocking/ievent-handler.h
-        net-protocol-stacks/inet-stack-worker-manager.h
-        net-protocol-stacks/nonblocking/socket/event-drivers/ievent-driver.h
-        net-protocol-stacks/nonblocking/socket/event-drivers/factory.h
-        net-protocol-stacks/nonblocking/socket/network-api/file-descriptor.h
-        net-protocol-stacks/nonblocking/socket/network-api/abstract-file-event-handler.h
-        message.h
-        isocket-service.h
-        abstract-socket-service.h
-        iencoder.h
-        net-protocol-stacks/nonblocking/socket/network-api/posix/tcp/connect-messages/connect-request-message.h
-        net-protocol-stacks/nonblocking/socket/network-api/posix/tcp/connect-messages/connect-response-message.h
         )
 
